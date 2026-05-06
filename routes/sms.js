@@ -44,7 +44,7 @@ function composeReply(kind, review) {
   const fn   = firstName(tech.name);
 
   if (kind === 'yes')        return `Got it. ${fn} marked Field Ready. Logged with your name and timestamp — visible in your dashboard now.`;
-  if (kind === 'no')         return `Got it. What should we flag for ${p.object} next ride-along? Reply with a short note, or text SKIP.`;
+  if (kind === 'no')         return `Got it. Anything to flag for ${p.object} next ride-along?`;
   if (kind === 'note_saved') return `Thanks. ${fn} flagged for additional support — note saved to ${p.possessive} ride-along record.`;
   if (kind === 'skip')       return `Thanks. ${fn} flagged for additional ride-along support. We'll prompt you again after ${p.possessive} next field day.`;
   return '';
