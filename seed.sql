@@ -35,8 +35,8 @@ INSERT INTO technician_path_progress (technician_id, path_id, modules_complete, 
   (5, 5, 21, 80, 78, 'on-track'),
   (6, 4, 14, 60, 62, 'on-track'),
   (7, 2, 12, 65, 48, 'behind'),
-  (8, 3,  5, 95, 45, 'stalled'),
-  (9, 6, 21, 78, 80, 'on-track'),
+  (8, 3,  5, 95, 45, 'on-track'),
+  (9, 6, 21, 78, 80, 'stalled'),
   (10, 3, 16, 65, 60, 'on-track');
 
 -- Lauren's ride-along history
