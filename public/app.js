@@ -97,12 +97,12 @@
     } else {
       tbody.innerHTML = rows.map(t => `
         <tr data-id="${t.id}">
-          <td><div class="sc-tech"><div class="av">${escapeHtml(t.initials)}</div><div><div class="name">${escapeHtml(t.name)}</div><div class="id">Tech #${1000 + t.id}</div></div></div></td>
-          <td>${escapeHtml(t.department)}</td>
-          <td>${escapeHtml(t.role)}</td>
-          <td>${escapeHtml(t.manager_name || '—')}</td>
-          <td><div class="sc-path ${t.path.status}"><div class="name">${escapeHtml(t.path.name || '—')}</div><div class="sc-bar"><div style="width: ${t.path.pct}%;"></div></div><div class="pct">${t.path.pct}% · ${statusLabel(t.path.status)}</div></div></td>
-          <td><span class="sc-ready ${t.field_ready_status}"><span class="dot"></span>${readyLabel(t.field_ready_status)}</span></td>
+          <td data-label="Technician"><div class="sc-tech"><div class="av">${escapeHtml(t.initials)}</div><div><div class="name">${escapeHtml(t.name)}</div><div class="id">Tech #${1000 + t.id}</div></div></div></td>
+          <td data-label="Department">${escapeHtml(t.department)}</td>
+          <td data-label="Role">${escapeHtml(t.role)}</td>
+          <td data-label="Manager">${escapeHtml(t.manager_name || '—')}</td>
+          <td data-label="Current training path"><div class="sc-path ${t.path.status}"><div class="name">${escapeHtml(t.path.name || '—')}</div><div class="sc-bar"><div style="width: ${t.path.pct}%;"></div></div><div class="pct">${t.path.pct}% · ${statusLabel(t.path.status)}</div></div></td>
+          <td data-label="Field ready"><span class="sc-ready ${t.field_ready_status}"><span class="dot"></span>${readyLabel(t.field_ready_status)}</span></td>
         </tr>
       `).join('');
       tbody.querySelectorAll('tr[data-id]').forEach(tr => {
@@ -130,6 +130,51 @@
   openSmsBtn.addEventListener('click', () => {
     if (openSmsBtn.disabled) return;
     window.SkillCatSMS.open({ onChange: load });
+  });
+
+  // User menu dropdown
+  const menuTrigger = document.getElementById('user-menu-trigger');
+  const menuPanel   = document.getElementById('user-menu-panel');
+  const menuReset   = document.getElementById('user-menu-reset');
+
+  function closeMenu() {
+    menuPanel.hidden = true;
+    menuTrigger.setAttribute('aria-expanded', 'false');
+  }
+  function openMenu() {
+    menuPanel.hidden = false;
+    menuTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  menuTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (menuPanel.hidden) openMenu(); else closeMenu();
+  });
+  document.addEventListener('click', (e) => {
+    if (!menuPanel.hidden && !menuPanel.contains(e.target) && e.target !== menuTrigger) closeMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menuPanel.hidden) closeMenu();
+  });
+
+  menuReset.addEventListener('click', async () => {
+    menuReset.disabled = true;
+    const titleEl = menuReset.querySelector('.title');
+    const original = titleEl.textContent;
+    titleEl.textContent = 'Resetting…';
+    try {
+      await fetch('/api/admin/reset', { method: 'POST' });
+      await load();
+      titleEl.textContent = 'Demo reset ✓';
+      setTimeout(() => {
+        titleEl.textContent = original;
+        menuReset.disabled = false;
+        closeMenu();
+      }, 900);
+    } catch (err) {
+      titleEl.textContent = 'Reset failed';
+      setTimeout(() => { titleEl.textContent = original; menuReset.disabled = false; }, 1500);
+    }
   });
 
   load();

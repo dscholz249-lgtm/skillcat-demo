@@ -12,13 +12,28 @@
       <div class="sc-shell">
         <header class="sc-header">
           <div class="sc-brand">
-            <span class="sc-wordmark"><span class="skill">Skill</span><span class="cat">Cat</span></span>
+            <img class="sc-logo" src="/skillcat-logo.png" alt="SkillCat" />
             <span class="sc-divider"></span>
             <span class="sc-crumb">Manager dashboard</span>
           </div>
           <div class="sc-user">
             <span class="org">Northeast HVAC Co.</span>
-            <div class="av" title="Mike Daniels">MD</div>
+            <div class="user-menu">
+              <button class="av" id="user-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Mike Daniels">MD</button>
+              <div class="user-menu-panel" id="user-menu-panel" role="menu" hidden>
+                <div class="user-menu-header">
+                  <div class="name">Mike Daniels</div>
+                  <div class="role">Service Manager · Northeast HVAC Co.</div>
+                </div>
+                <button class="user-menu-item" id="user-menu-reset" type="button" role="menuitem">
+                  <span class="icon" aria-hidden="true">⟳</span>
+                  <div class="copy">
+                    <div class="title">Reset demo</div>
+                    <div class="sub">Clear SMS responses and restore both pending reviews</div>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         </header>
         <div class="sc-page">
