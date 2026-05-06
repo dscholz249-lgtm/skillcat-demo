@@ -85,9 +85,7 @@
         </div>
         <div class="actions">
           <button class="btn primary" id="td-resend" type="button" ${isPending ? '' : 'disabled'}>${isPending ? 'Resend review SMS' : 'No pending review'}</button>
-          <button class="btn secondary" type="button" disabled title="Not available in prototype">Schedule ride-along</button>
           <button class="btn secondary" type="button" disabled title="Not available in prototype">Send training nudge</button>
-          <button class="btn secondary" type="button" disabled title="Not available in prototype">View in HR</button>
         </div>
       </div>
     `;
@@ -97,7 +95,6 @@
     if (!t.path || !t.path.id) {
       return `<div class="section"><div class="section-header"><h3>Current training path</h3></div><div class="section-body"><div class="empty-state">No active training path.</div></div></div>`;
     }
-    const overdue = (t.outstanding_assignments || []).filter(a => a.overdue_days > 0).length;
     const tag = `<span class="status-tag ${t.path.status}">${statusLabel(t.path.status)}</span>`;
     const assignments = (t.outstanding_assignments || []).length === 0
       ? `<div class="empty-state">No outstanding assignments.</div>`
@@ -116,11 +113,6 @@
             <div class="path-name">${escapeHtml(t.path.name)}</div>
             <div class="path-bar"><div style="width:${t.path.pct}%;"></div></div>
             <div class="path-pct">${t.path.pct}% complete · ${t.path.modules_complete} of ${t.path.total_modules} modules done</div>
-          </div>
-          <div class="quant-grid">
-            <div class="quant"><p class="lbl">Days in path</p><p class="val">${t.path.days_in_path ?? '—'}</p></div>
-            <div class="quant"><p class="lbl">Cohort avg</p><p class="val">${t.path.cohort_avg_days ?? '—'}</p></div>
-            <div class="quant"><p class="lbl">Overdue</p><p class="val ${overdue > 0 ? 'danger' : ''}">${overdue}</p></div>
           </div>
           <p class="assignments-title">Outstanding assignments</p>
           ${assignments}
