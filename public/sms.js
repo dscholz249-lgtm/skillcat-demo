@@ -296,6 +296,14 @@
 
       // Quick reply Y or N
       const reply = await awaitQuickReply();
+      window.SkillCatTrack && window.SkillCatTrack.capture('sms_reply', {
+        response: reply,
+        review_id: rv.id,
+        tech_id: rv.technician_id,
+        tech_name: rv.tech_name,
+        position: i + 1,
+        total_in_queue: reviews.length
+      });
       appendBubble(chat, 'out', reply, true);
       await delay(PAUSE_MS);
 
@@ -320,6 +328,13 @@
         await delay(PAUSE_MS);
         showSuggestions(rv.technician_id);
         const noteRes = await awaitNote();
+        window.SkillCatTrack && window.SkillCatTrack.capture('sms_note_submitted', {
+          kind: noteRes.kind,
+          review_id: rv.id,
+          tech_id: rv.technician_id,
+          tech_name: rv.tech_name,
+          note_length: noteRes.kind === 'text' ? noteRes.body.length : 0
+        });
         appendBubble(chat, 'out', noteRes.body, true);
         await delay(PAUSE_MS);
 
@@ -348,6 +363,7 @@
 
     function attachReset() {
       resetBtn.addEventListener('click', async () => {
+        window.SkillCatTrack && window.SkillCatTrack.capture('demo_reset', { source: 'simulator' });
         resetBtn.disabled = true;
         resetBtn.textContent = 'Resetting…';
         await fetch('/api/admin/reset', { method: 'POST' });

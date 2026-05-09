@@ -248,9 +248,17 @@
       renderHistory(t) +
       renderNotes();
 
+    window.SkillCatTrack && window.SkillCatTrack.capture('tech_detail_viewed', {
+      tech_id: t.id,
+      tech_name: t.name,
+      field_ready_status: t.field_ready_status,
+      path_status: t.path && t.path.status
+    });
+
     const resend = document.getElementById('td-resend');
     if (resend && !resend.disabled) {
       resend.addEventListener('click', () => {
+        window.SkillCatTrack && window.SkillCatTrack.capture('sms_modal_opened', { source: 'tech_detail_resend', tech_id: t.id });
         window.SkillCatSMS.open({ onChange: load, focusTechId: t.id });
       });
     }

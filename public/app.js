@@ -129,6 +129,7 @@
 
   openSmsBtn.addEventListener('click', () => {
     if (openSmsBtn.disabled) return;
+    window.SkillCatTrack.capture('sms_modal_opened', { source: 'dashboard_cta', pending_count: cache.stats && cache.stats.awaiting_review });
     window.SkillCatSMS.open({ onChange: load });
   });
 
@@ -158,6 +159,7 @@
   });
 
   menuReset.addEventListener('click', async () => {
+    window.SkillCatTrack.capture('demo_reset', { source: 'user_menu' });
     menuReset.disabled = true;
     const titleEl = menuReset.querySelector('.title');
     const original = titleEl.textContent;
@@ -175,6 +177,17 @@
       titleEl.textContent = 'Reset failed';
       setTimeout(() => { titleEl.textContent = original; menuReset.disabled = false; }, 1500);
     }
+  });
+
+  // External link tracking on user-menu doc links
+  menuPanel.querySelectorAll('a.user-menu-item').forEach(a => {
+    a.addEventListener('click', () => {
+      const titleEl = a.querySelector('.title');
+      window.SkillCatTrack.capture('external_link_clicked', {
+        name: titleEl ? titleEl.textContent : 'unknown',
+        href: a.href
+      });
+    });
   });
 
   load();
