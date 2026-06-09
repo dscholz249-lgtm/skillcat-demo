@@ -1,6 +1,20 @@
-node_modules/
-*.log
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Mock-platform DB (recreated on boot)
+mock_platform.db
+*.db
+
+# Env / secrets
 .env
 .env.local
+
+# Logs
+*.log
+
+# macOS
 .DS_Store
-data/
