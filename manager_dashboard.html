@@ -1172,6 +1172,7 @@
 
     <div class="nav-label">Resources</div>
     <nav class="nav-group">
+      <div class="nav-item" data-page="reviews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>Reviews</div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg>Assessments</div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>Troubleshooting</div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg>Manuals</div>
@@ -3219,6 +3220,222 @@
       </div>
     </div>
 
+    <!-- ============ REVIEWS (SEND RIDE-ALONG REVIEWS) ============ -->
+    <div class="page" id="page-reviews">
+      <style>
+        .reviews-intro { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; max-width: 640px; margin: 2px 0 22px; }
+        .review-queue { display: flex; flex-direction: column; gap: 10px; }
+        .review-row { display: flex; align-items: flex-start; gap: 12px; background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; animation: fadeup .2s ease; }
+        .rr-field { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .rr-label { font-size: 10px; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+        .review-select { width: 100%; background: var(--input-bg, #08080a); border: 1px solid var(--border); border-radius: 9px; padding: 11px 34px 11px 13px; color: var(--text); font-family: var(--sans); font-size: 14px; font-weight: 600; outline: none; cursor: pointer; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; transition: border-color .12s; }
+        .review-select:focus { border-color: var(--orange); }
+        .review-select.placeholder { color: var(--text-faint); font-weight: 500; }
+        .rr-arrow { color: var(--text-faint); flex: none; margin-top: 26px; }
+        .rr-arrow svg { width: 18px; height: 18px; stroke-width: 2; }
+        .rr-channel { margin-top: 7px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; height: 14px; }
+        .rr-channel .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .rr-channel.text { color: var(--blue); } .rr-channel.text .dot { background: var(--blue); }
+        .rr-channel.app { color: var(--text-dim); } .rr-channel.app .dot { background: var(--text-faint); }
+        .rr-remove { flex: none; margin-top: 22px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-faint); cursor: pointer; display: grid; place-items: center; transition: all .12s; }
+        .rr-remove:hover { color: var(--red); border-color: rgba(240,88,75,.4); background: rgba(240,88,75,.08); }
+        .rr-remove svg { width: 15px; height: 15px; stroke-width: 2; }
+        .review-add { margin-top: 12px; width: 100%; background: transparent; border: 1px dashed var(--border); border-radius: 12px; padding: 13px; color: var(--text-dim); font-family: var(--sans); font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .12s; }
+        .review-add:hover { border-color: var(--orange); color: var(--text); }
+        .review-add svg { width: 16px; height: 16px; stroke-width: 2; }
+        .reviews-summary { margin-top: 18px; display: flex; align-items: center; gap: 18px; color: var(--text-dim); font-size: 13px; font-weight: 500; }
+        .reviews-summary b { color: var(--text); font-weight: 700; }
+        .reviews-empty { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+        .reviews-empty svg { width: 40px; height: 40px; stroke-width: 1.5; opacity: .5; margin-bottom: 14px; }
+        .reviews-empty .t { font-size: 15px; font-weight: 600; color: var(--text-dim); margin-bottom: 4px; }
+        .reviews-empty .s { font-size: 13px; margin-bottom: 18px; }
+        .reviews-sent { display: flex; align-items: center; gap: 12px; background: rgba(43,208,122,.1); border: 1px solid rgba(43,208,122,.3); border-radius: 12px; padding: 16px 18px; color: var(--green); font-size: 14px; font-weight: 600; animation: fadeup .2s ease; }
+        .reviews-sent svg { width: 20px; height: 20px; stroke-width: 2; flex: none; }
+        .reviews-sent .sub { color: var(--text-dim); font-weight: 500; }
+      </style>
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Send Reviews <span class="topbar-count" id="reviewsCount">0</span></h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost" id="reviewAddBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            Add review
+          </button>
+          <button class="btn btn-primary" id="reviewSendAllBtn" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Send All
+          </button>
+        </div>
+      </header>
+
+      <div class="scroll">
+        <p class="reviews-intro">Queue a ride-along review for each manager–technician pair. After the ride-along, the manager gets one question — is this technician ready to work on their own? Managers opted into SMS get a text; everyone else gets it as a to-do in their app inbox.</p>
+
+        <div class="reviews-sent" id="reviewsSent" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>
+          <span id="reviewsSentText"></span>
+        </div>
+
+        <div class="review-queue" id="reviewQueue"></div>
+
+        <button class="review-add" id="reviewAddBtn2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+          Add another review
+        </button>
+
+        <div class="reviews-summary" id="reviewsSummary" style="display:none;">
+          <span id="reviewsSummaryText"></span>
+        </div>
+
+        <div class="reviews-empty" id="reviewsEmpty" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>
+          <div class="t">No reviews queued</div>
+          <div class="s">Add a manager–technician pair to send a ride-along review.</div>
+          <button class="btn btn-primary" id="reviewsEmptyAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add review</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function initReviews() {
+        var MANAGERS = [
+          { name: 'Eric Park', sms: true },
+          { name: 'Maria Lopez', sms: false },
+          { name: 'James Wilson', sms: true }
+        ];
+        var TECHS = ['David Kim','Amanda Lee','Sarah Johnson','Michael Chen','Emily Rodriguez','Jessica Martinez'];
+
+        var queue = document.getElementById('reviewQueue');
+        if (!queue) return;
+        var countEl = document.getElementById('reviewsCount');
+        var sendBtn = document.getElementById('reviewSendAllBtn');
+        var summary = document.getElementById('reviewsSummary');
+        var summaryText = document.getElementById('reviewsSummaryText');
+        var empty = document.getElementById('reviewsEmpty');
+        var sent = document.getElementById('reviewsSent');
+        var sentText = document.getElementById('reviewsSentText');
+
+        function buildSelect(opts, placeholder, isManager) {
+          var s = document.createElement('select');
+          s.className = 'review-select placeholder';
+          var ph = document.createElement('option');
+          ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true;
+          s.appendChild(ph);
+          opts.forEach(function (o) {
+            var name = isManager ? o.name : o;
+            var opt = document.createElement('option');
+            opt.value = name; opt.textContent = name;
+            s.appendChild(opt);
+          });
+          s.addEventListener('change', function () {
+            s.classList.toggle('placeholder', !s.value);
+            refresh();
+          });
+          return s;
+        }
+
+        function addRow() {
+          sent.style.display = 'none';
+          var row = document.createElement('div');
+          row.className = 'review-row';
+
+          var mField = document.createElement('div'); mField.className = 'rr-field';
+          var mLabel = document.createElement('div'); mLabel.className = 'rr-label'; mLabel.textContent = 'Manager';
+          var mSelect = buildSelect(MANAGERS, 'Select manager…', true);
+          var channel = document.createElement('div'); channel.className = 'rr-channel'; channel.style.display = 'none';
+          mField.appendChild(mLabel); mField.appendChild(mSelect); mField.appendChild(channel);
+
+          var arrow = document.createElement('div'); arrow.className = 'rr-arrow';
+          arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+          var tField = document.createElement('div'); tField.className = 'rr-field';
+          var tLabel = document.createElement('div'); tLabel.className = 'rr-label'; tLabel.textContent = 'Technician';
+          var tSelect = buildSelect(TECHS, 'Select technician…', false);
+          tField.appendChild(tLabel); tField.appendChild(tSelect);
+
+          var rm = document.createElement('button'); rm.className = 'rr-remove'; rm.title = 'Remove';
+          rm.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+          rm.addEventListener('click', function () { row.remove(); refresh(); });
+
+          mSelect.addEventListener('change', function () { updateChannel(mSelect, channel); });
+
+          row.appendChild(mField); row.appendChild(arrow); row.appendChild(tField); row.appendChild(rm);
+          queue.appendChild(row);
+          refresh();
+        }
+
+        function updateChannel(mSelect, channel) {
+          var m = MANAGERS.filter(function (x) { return x.name === mSelect.value; })[0];
+          if (!m) { channel.style.display = 'none'; return; }
+          channel.style.display = '';
+          if (m.sms) {
+            channel.className = 'rr-channel text';
+            channel.innerHTML = '<span class="dot"></span>Gets a text';
+          } else {
+            channel.className = 'rr-channel app';
+            channel.innerHTML = '<span class="dot"></span>App inbox only';
+          }
+        }
+
+        function rows() { return Array.from(queue.querySelectorAll('.review-row')); }
+
+        function completeRows() {
+          return rows().filter(function (r) {
+            var s = r.querySelectorAll('select');
+            return s[0].value && s[1].value;
+          });
+        }
+
+        function refresh() {
+          var all = rows();
+          var complete = completeRows();
+          countEl.textContent = all.length;
+          empty.style.display = all.length ? 'none' : 'block';
+          queue.style.display = all.length ? 'flex' : 'none';
+          sendBtn.disabled = complete.length === 0;
+
+          if (complete.length) {
+            var text = 0, app = 0;
+            complete.forEach(function (r) {
+              var mName = r.querySelectorAll('select')[0].value;
+              var m = MANAGERS.filter(function (x) { return x.name === mName; })[0];
+              if (m && m.sms) text++; else app++;
+            });
+            summary.style.display = 'flex';
+            summaryText.innerHTML = '<b>' + complete.length + '</b> ready to send · '
+              + '<b>' + text + '</b> by text · <b>' + app + '</b> to app inbox';
+          } else {
+            summary.style.display = 'none';
+          }
+        }
+
+        function sendAll() {
+          var complete = completeRows();
+          if (!complete.length) return;
+          var text = 0, app = 0;
+          complete.forEach(function (r) {
+            var mName = r.querySelectorAll('select')[0].value;
+            var m = MANAGERS.filter(function (x) { return x.name === mName; })[0];
+            if (m && m.sms) text++; else app++;
+          });
+          queue.innerHTML = '';
+          refresh();
+          sentText.innerHTML = complete.length + ' review' + (complete.length > 1 ? 's' : '') + ' sent '
+            + '<span class="sub">— ' + text + ' by text, ' + app + ' to the app inbox. Each created a to-do.</span>';
+          sent.style.display = 'flex';
+        }
+
+        document.getElementById('reviewAddBtn').addEventListener('click', addRow);
+        document.getElementById('reviewAddBtn2').addEventListener('click', addRow);
+        document.getElementById('reviewsEmptyAdd').addEventListener('click', addRow);
+        sendBtn.addEventListener('click', sendAll);
+
+        // seed with one empty row so the pattern is obvious on first open
+        addRow();
+      })();
+    </script>
+
     <!-- ============ SEATS ============ -->
     <div class="page" id="page-seats">
       <header class="topbar">
@@ -3961,7 +4178,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', assign: 'Assign', seats: 'Seats', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', assign: 'Assign', seats: 'Seats', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');
