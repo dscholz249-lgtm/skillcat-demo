@@ -1172,6 +1172,7 @@
 
     <div class="nav-label">Resources</div>
     <nav class="nav-group">
+      <div class="nav-item" data-page="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="6" cy="6" r="1.2" fill="currentColor"/><circle cx="6" cy="12" r="1.2" fill="currentColor"/><circle cx="6" cy="18" r="1.2" fill="currentColor"/></svg>Test Roster</div>
       <div class="nav-item" data-page="reviews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>Reviews</div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg>Assessments</div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>Troubleshooting</div>
@@ -1741,8 +1742,12 @@
           </div>
         </div>
 
-        <!-- Stat row: Hire Date / Review / Notes -->
+        <!-- Stat row: Role / Hire Date / Review / Notes -->
         <div class="stat-row">
+          <div class="stat-tile">
+            <div class="stat-label">Role</div>
+            <div class="stat-value">Technician <span class="sub">HVAC Service</span></div>
+          </div>
           <div class="stat-tile">
             <div class="stat-label">Hire Date</div>
             <div class="stat-value">Jan 15, 2024 <span class="sub">2 yr 4 mo</span></div>
@@ -3220,6 +3225,184 @@
       </div>
     </div>
 
+    <!-- ============ TEST ROSTER (mock-stage admin) ============ -->
+    <div class="page" id="page-roster">
+      <style>
+        .roster-intro { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; max-width: 700px; margin: 2px 0 14px; }
+        .roster-warn { display: flex; gap: 10px; align-items: flex-start; background: rgba(241,167,58,.1); border: 1px solid rgba(241,167,58,.28); border-radius: 10px; padding: 11px 14px; color: var(--amber); font-size: 12.5px; line-height: 1.5; margin-bottom: 22px; max-width: 700px; }
+        .roster-warn svg { flex: none; width: 16px; height: 16px; stroke-width: 2; margin-top: 1px; }
+        .roster-warn b { color: var(--text); font-weight: 700; }
+        .roster-section { margin-bottom: 26px; }
+        .roster-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+        .roster-section-head h2 { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin: 0; }
+        .roster-section-head .count { font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+        .roster-card { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .roster-row { display: grid; grid-template-columns: 1.4fr 1fr 1.6fr 0.7fr; gap: 14px; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border-soft); }
+        .roster-row:last-child { border-bottom: none; }
+        .roster-row.head { background: #0e0e11; color: var(--text-faint); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 9px 16px; }
+        .roster-name { font-weight: 700; color: var(--text); }
+        .roster-id { font-family: var(--mono); font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+        .roster-role { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; }
+        .roster-role.mgr { color: var(--orange-bright, var(--orange)); background: rgba(229,83,31,.14); }
+        .roster-role.tech { color: var(--blue); background: rgba(122,167,255,.14); }
+        .roster-channel { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+        .roster-channel b { color: var(--text); font-weight: 700; }
+        .roster-phone-cell { display: flex; gap: 8px; align-items: center; }
+        .roster-phone-input { flex: 1; min-width: 0; background: var(--input-bg, #08080a); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; color: var(--text); font-family: var(--mono); font-size: 12.5px; outline: none; transition: border-color .12s; }
+        .roster-phone-input:focus { border-color: var(--orange); }
+        .roster-phone-input:disabled { opacity: .55; cursor: not-allowed; }
+        .roster-phone-input.dirty { border-color: var(--amber); }
+        .roster-save-btn { flex: none; padding: 7px 12px; border-radius: 8px; background: var(--orange); color: #fff; border: 0; font-family: var(--sans); font-weight: 700; font-size: 12px; cursor: pointer; transition: background .12s, opacity .12s; }
+        .roster-save-btn:disabled { opacity: .35; cursor: not-allowed; }
+        .roster-save-btn:not(:disabled):hover { background: var(--orange-bright, var(--orange)); }
+        .roster-phone-static { font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); }
+        .roster-status { font-size: 11px; font-weight: 600; }
+        .roster-status.ok { color: var(--green); }
+        .roster-status.err { color: var(--red); }
+      </style>
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Test Roster</h1>
+        </div>
+      </header>
+      <div class="scroll">
+        <p class="roster-intro">The live roster from the mock platform. Use this to point SMS testing at your own phone — edit the manager's phone in <b>E.164</b> format (<code>+1XXXXXXXXXX</code>) and hit Save. The mini-app will pick it up on the next batch (it re-fetches the roster on each Send).</p>
+        <div class="roster-warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div><b>Ephemeral storage.</b> The mock seeds on boot — any phone edits are lost on the next Railway redeploy or restart. Update at the start of each test session.</div>
+        </div>
+
+        <div class="roster-section">
+          <div class="roster-section-head">
+            <h2>Managers</h2>
+            <span class="count" id="rosterMgrCount">—</span>
+          </div>
+          <div class="roster-card">
+            <div class="roster-row head">
+              <div>Name</div>
+              <div>Role</div>
+              <div>Phone</div>
+              <div>SMS</div>
+            </div>
+            <div id="rosterMgrRows"><div class="roster-row" style="color:var(--text-faint)">Loading…</div></div>
+          </div>
+        </div>
+
+        <div class="roster-section">
+          <div class="roster-section-head">
+            <h2>Technicians</h2>
+            <span class="count" id="rosterTechCount">—</span>
+          </div>
+          <div class="roster-card">
+            <div class="roster-row head">
+              <div>Name</div>
+              <div>Role</div>
+              <div>ID</div>
+              <div></div>
+            </div>
+            <div id="rosterTechRows"><div class="roster-row" style="color:var(--text-faint)">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function initRoster() {
+        var mgrEl = document.getElementById('rosterMgrRows');
+        var techEl = document.getElementById('rosterTechRows');
+        if (!mgrEl || !techEl) return;
+        var mgrCountEl = document.getElementById('rosterMgrCount');
+        var techCountEl = document.getElementById('rosterTechCount');
+
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+        function isE164(s) { return /^\+\d{8,15}$/.test((s || '').replace(/[\s\-()]/g, '')); }
+
+        function renderManagers(managers) {
+          mgrCountEl.textContent = managers.length;
+          if (!managers.length) { mgrEl.innerHTML = '<div class="roster-row" style="color:var(--text-faint)">No managers in roster.</div>'; return; }
+          mgrEl.innerHTML = '';
+          managers.forEach(function (m) {
+            var row = document.createElement('div'); row.className = 'roster-row';
+            row.innerHTML =
+              '<div><div class="roster-name">' + esc(m.name) + '</div><div class="roster-id">' + esc(m.id) + '</div></div>' +
+              '<div><span class="roster-role mgr">Manager</span></div>' +
+              '<div class="roster-phone-cell">' +
+                '<input type="tel" class="roster-phone-input" data-orig="' + esc(m.phone || '') + '" value="' + esc(m.phone || '') + '" placeholder="+1XXXXXXXXXX" />' +
+                '<button class="roster-save-btn" disabled>Save</button>' +
+                '<span class="roster-status" style="margin-left:6px"></span>' +
+              '</div>' +
+              '<div class="roster-channel">' + (m.sms_opt_in ? '<b>Opted in</b>' : 'App only') + '</div>';
+            var input = row.querySelector('.roster-phone-input');
+            var btn = row.querySelector('.roster-save-btn');
+            var status = row.querySelector('.roster-status');
+            function refreshDirty() {
+              var dirty = input.value.trim() !== input.dataset.orig;
+              input.classList.toggle('dirty', dirty);
+              btn.disabled = !dirty || !isE164(input.value);
+              if (dirty) { status.textContent = ''; status.className = 'roster-status'; }
+            }
+            input.addEventListener('input', refreshDirty);
+            btn.addEventListener('click', async function () {
+              btn.disabled = true; status.textContent = 'Saving…'; status.className = 'roster-status';
+              try {
+                var resp = await fetch('/api/managers/' + encodeURIComponent(m.id), {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ phone: input.value.trim() }),
+                });
+                var j = await resp.json().catch(function(){ return {}; });
+                if (!resp.ok) throw new Error(j.description || j.error || ('HTTP ' + resp.status));
+                input.value = j.phone || input.value.trim();
+                input.dataset.orig = input.value;
+                m.phone = input.value;
+                status.textContent = 'Saved'; status.className = 'roster-status ok';
+                setTimeout(function(){ status.textContent = ''; }, 2500);
+              } catch (e) {
+                status.textContent = e.message; status.className = 'roster-status err';
+              } finally {
+                refreshDirty();
+              }
+            });
+            mgrEl.appendChild(row);
+          });
+        }
+
+        function renderTechs(techs) {
+          techCountEl.textContent = techs.length;
+          if (!techs.length) { techEl.innerHTML = '<div class="roster-row" style="color:var(--text-faint)">No technicians in roster.</div>'; return; }
+          techEl.innerHTML = '';
+          techs.forEach(function (t) {
+            var row = document.createElement('div'); row.className = 'roster-row';
+            row.innerHTML =
+              '<div><div class="roster-name">' + esc(t.name) + '</div></div>' +
+              '<div><span class="roster-role tech">Technician</span></div>' +
+              '<div class="roster-phone-static">' + esc(t.id) + '</div>' +
+              '<div></div>';
+            techEl.appendChild(row);
+          });
+        }
+
+        async function boot() {
+          try {
+            var r = await fetch('/api/ride-along/roster?company_id=co_test').then(function(r){ return r.json(); });
+            renderManagers(r.managers || []);
+            renderTechs(r.technicians || []);
+          } catch (e) {
+            mgrEl.innerHTML = '<div class="roster-row" style="color:var(--red)">Failed to load roster: ' + e.message + '</div>';
+            techEl.innerHTML = '';
+          }
+        }
+
+        // Boot once the page becomes active so the fetch is on-demand.
+        var page = document.getElementById('page-roster');
+        var booted = false;
+        var observer = new MutationObserver(function () {
+          if (page.classList.contains('active') && !booted) { booted = true; boot(); }
+        });
+        observer.observe(page, { attributes: true, attributeFilter: ['class'] });
+      })();
+    </script>
+
     <!-- ============ REVIEWS (SEND RIDE-ALONG REVIEWS) ============ -->
     <div class="page" id="page-reviews">
       <style>
@@ -4222,7 +4405,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', assign: 'Assign', seats: 'Seats', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');

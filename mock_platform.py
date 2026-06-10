@@ -229,6 +229,33 @@ def app_config():
     return jsonify(miniapp_url=MINIAPP_URL, company_id=COMPANY_ID)
 
 
+@APP.patch("/api/managers/<manager_id>")
+def update_manager(manager_id):
+    """Update a manager's phone. Used by the Test Roster admin page so testers
+    can point SMS at their own phone without redeploying the mock.
+
+    Body: {"phone": "+1XXXXXXXXXX"}. Light E.164 validation. Edits are lost on
+    every redeploy / restart (mock seeds on import — by design)."""
+    body = request.get_json(force=True) or {}
+    phone = (body.get("phone") or "").strip()
+    if not phone:
+        abort(400, description="phone required")
+    # Light E.164 check: leading '+' then 8-15 digits.
+    digits = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if not (digits.startswith("+") and digits[1:].isdigit() and 8 <= len(digits[1:]) <= 15):
+        abort(400, description="phone must be E.164 (e.g. +19178264055)")
+    c = db()
+    row = c.execute("SELECT * FROM managers WHERE id=?", (manager_id,)).fetchone()
+    if not row:
+        c.close(); abort(404)
+    c.execute("UPDATE managers SET phone=? WHERE id=?", (digits, manager_id))
+    c.commit()
+    updated = c.execute("SELECT * FROM managers WHERE id=?", (manager_id,)).fetchone()
+    c.close()
+    return jsonify(id=updated["id"], name=updated["name"], phone=updated["phone"],
+                   sms_opt_in=bool(updated["sms_opt_in"]))
+
+
 @APP.get("/api/token")
 def token():
     """Mint a signed iframe context token (models the real JWT handshake)."""
