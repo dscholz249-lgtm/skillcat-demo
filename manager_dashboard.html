@@ -3299,12 +3299,12 @@
 
     <script>
       (function initReviews() {
-        var MANAGERS = [
-          { name: 'Eric Park', sms: true },
-          { name: 'Maria Lopez', sms: false },
-          { name: 'James Wilson', sms: true }
-        ];
-        var TECHS = ['David Kim','Amanda Lee','Sarah Johnson','Michael Chen','Emily Rodriguez','Jessica Martinez'];
+        // Live data — populated from the platform's roster and the runtime
+        // config (mini-app URL). Falls back to read-only state if either fails.
+        var MANAGERS = [];   // [{id, name, phone, sms_opt_in}]
+        var TECHS = [];      // [{id, name}]
+        var CONFIG = { company_id: 'co_test', miniapp_url: '' };
+        var booted = false;
 
         var queue = document.getElementById('reviewQueue');
         if (!queue) return;
@@ -3316,6 +3316,11 @@
         var sent = document.getElementById('reviewsSent');
         var sentText = document.getElementById('reviewsSentText');
 
+        function findManager(id) {
+          for (var i = 0; i < MANAGERS.length; i++) if (MANAGERS[i].id === id) return MANAGERS[i];
+          return null;
+        }
+
         function buildSelect(opts, placeholder, isManager) {
           var s = document.createElement('select');
           s.className = 'review-select placeholder';
@@ -3323,9 +3328,9 @@
           ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true;
           s.appendChild(ph);
           opts.forEach(function (o) {
-            var name = isManager ? o.name : o;
             var opt = document.createElement('option');
-            opt.value = name; opt.textContent = name;
+            opt.value = o.id;
+            opt.textContent = isManager ? o.name + (o.sms_opt_in ? '' : ' (app only)') : o.name;
             s.appendChild(opt);
           });
           s.addEventListener('change', function () {
@@ -3366,10 +3371,10 @@
         }
 
         function updateChannel(mSelect, channel) {
-          var m = MANAGERS.filter(function (x) { return x.name === mSelect.value; })[0];
+          var m = findManager(mSelect.value);
           if (!m) { channel.style.display = 'none'; return; }
           channel.style.display = '';
-          if (m.sms) {
+          if (m.sms_opt_in) {
             channel.className = 'rr-channel text';
             channel.innerHTML = '<span class="dot"></span>Gets a text';
           } else {
@@ -3393,14 +3398,13 @@
           countEl.textContent = all.length;
           empty.style.display = all.length ? 'none' : 'block';
           queue.style.display = all.length ? 'flex' : 'none';
-          sendBtn.disabled = complete.length === 0;
+          sendBtn.disabled = complete.length === 0 || !booted;
 
           if (complete.length) {
             var text = 0, app = 0;
             complete.forEach(function (r) {
-              var mName = r.querySelectorAll('select')[0].value;
-              var m = MANAGERS.filter(function (x) { return x.name === mName; })[0];
-              if (m && m.sms) text++; else app++;
+              var m = findManager(r.querySelectorAll('select')[0].value);
+              if (m && m.sms_opt_in) text++; else app++;
             });
             summary.style.display = 'flex';
             summaryText.innerHTML = '<b>' + complete.length + '</b> ready to send · '
@@ -3410,20 +3414,61 @@
           }
         }
 
-        function sendAll() {
+        async function sendAll() {
           var complete = completeRows();
           if (!complete.length) return;
-          var text = 0, app = 0;
-          complete.forEach(function (r) {
-            var mName = r.querySelectorAll('select')[0].value;
-            var m = MANAGERS.filter(function (x) { return x.name === mName; })[0];
-            if (m && m.sms) text++; else app++;
+          if (!CONFIG.miniapp_url) {
+            sent.style.display = 'flex';
+            sentText.innerHTML = '<span style="color:var(--red)">MINIAPP_URL not set on the platform — set the env var and redeploy.</span>';
+            return;
+          }
+          var pairs = complete.map(function (r) {
+            var s = r.querySelectorAll('select');
+            return { manager_id: s[0].value, technician_id: s[1].value };
           });
-          queue.innerHTML = '';
-          refresh();
-          sentText.innerHTML = complete.length + ' review' + (complete.length > 1 ? 's' : '') + ' sent '
-            + '<span class="sub">— ' + text + ' by text, ' + app + ' to the app inbox. Each created a to-do.</span>';
-          sent.style.display = 'flex';
+          var origLabel = sendBtn.innerHTML;
+          sendBtn.disabled = true;
+          sendBtn.innerHTML = 'Sending…';
+          try {
+            var resp = await fetch(CONFIG.miniapp_url.replace(/\/$/, '') + '/test/start-batch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pairs: pairs }),
+            });
+            var j = await resp.json();
+            if (!resp.ok) throw new Error(j.error || ('HTTP ' + resp.status));
+            queue.innerHTML = '';
+            refresh();
+            sent.style.display = 'flex';
+            sentText.innerHTML = j.created + ' review' + (j.created === 1 ? '' : 's') + ' sent '
+              + '<span class="sub">— ' + j.texted_reviews + ' by text, ' + j.app_only + ' to the app inbox. Each created a to-do.</span>';
+          } catch (e) {
+            sent.style.display = 'flex';
+            sentText.innerHTML = '<span style="color:var(--red)">Failed: ' + e.message + '</span>';
+          } finally {
+            sendBtn.innerHTML = origLabel;
+            refresh();
+          }
+        }
+
+        async function boot() {
+          try {
+            var responses = await Promise.all([
+              fetch('/api/ride-along/roster?company_id=co_test').then(function (r) { return r.json(); }),
+              fetch('/api/config').then(function (r) { return r.json(); }),
+            ]);
+            var roster = responses[0], cfg = responses[1];
+            MANAGERS = roster.managers || [];
+            TECHS = roster.technicians || [];
+            CONFIG = { company_id: cfg.company_id || 'co_test', miniapp_url: cfg.miniapp_url || '' };
+            booted = true;
+            addRow();   // seed with one empty row so the pattern is obvious
+          } catch (e) {
+            console.error('Reviews boot failed', e);
+            empty.style.display = 'block';
+            empty.querySelector('.t').textContent = 'Failed to load roster';
+            empty.querySelector('.s').textContent = e.message;
+          }
         }
 
         document.getElementById('reviewAddBtn').addEventListener('click', addRow);
@@ -3431,8 +3476,7 @@
         document.getElementById('reviewsEmptyAdd').addEventListener('click', addRow);
         sendBtn.addEventListener('click', sendAll);
 
-        // seed with one empty row so the pattern is obvious on first open
-        addRow();
+        boot();
       })();
     </script>
 

@@ -43,6 +43,7 @@ def _preflight(_any):
 DB_PATH = os.environ.get("MOCK_DB", "mock_platform.db")
 TOKEN_SECRET = b"mock-shared-secret-not-for-production"
 COMPANY_ID = "co_test"
+MINIAPP_URL = os.environ.get("MINIAPP_URL", "")
 
 HERE = pathlib.Path(__file__).resolve().parent
 LIVE_SCRIPT = HERE / "ridealong-live.js"
@@ -219,6 +220,13 @@ def write_result(review_id):
     r = c.execute("SELECT * FROM reviews WHERE id=?", (review_id,)).fetchone()
     c.close()
     return jsonify(review_dict(r))
+
+
+@APP.get("/api/config")
+def app_config():
+    """Runtime config consumed by the dashboard prototype — lets the served HTML
+    discover the mini-app's URL without hardcoding it."""
+    return jsonify(miniapp_url=MINIAPP_URL, company_id=COMPANY_ID)
 
 
 @APP.get("/api/token")
