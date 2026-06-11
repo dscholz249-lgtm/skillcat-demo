@@ -35,7 +35,7 @@
   }
 
   // --------------------------------------------------------------- 1. NOTES
-  // The notes header reads "Manager Notes Â· <Name>". We pull ride-along reviews
+  // The notes header reads "Manager Notes · <Name>". We pull ride-along reviews
   // for that person and inject them at the top of the notes list as a distinct
   // entry type (backed by review records, NOT general manager notes).
   function wireNotesPanel() {
@@ -51,7 +51,7 @@
     var head = panel.querySelector(".notes-head .nm");
     var list = panel.querySelector(".notes-list");
     if (!head || !list) return;
-    var name = (head.textContent.split("Â·")[1] || "").trim();
+    var name = (head.textContent.split("·")[1] || "").trim();
     if (!name) return;
     get(API + "/reviews?company_id=" + COMPANY + "&technician_name=" + encodeURIComponent(name))
       .then(function (data) {
@@ -73,7 +73,7 @@
     var when = (r.completed_at || r.created_at || "").slice(0, 10);
     el.innerHTML =
       '<div class="note-meta"><span class="ra-tag">Ride-Along</span> '
-      + escapeHtml(r.manager_name || "Manager") + " Â· " + when + "</div>"
+      + escapeHtml(r.manager_name || "Manager") + " · " + when + "</div>"
       + '<div class="ra-verdict">' + badge + "</div>"
       + (r.note ? '<div class="note-body">' + escapeHtml(r.note) + "</div>" : "");
     return el;
@@ -115,8 +115,8 @@
     row.className = "inbox-row" + (open ? " unread" : "");
     var icClass = open ? "blue" : "green";
     var title = open
-      ? "Ride-Along Review â " + t.technician_name
-      : t.technician_name + " â Review " + (t.readiness === "ready" ? "Ready" : "Not Ready");
+      ? "Ride-Along Review — " + t.technician_name
+      : t.technician_name + " — Review " + (t.readiness === "ready" ? "Ready" : "Not Ready");
     row.innerHTML =
       (open ? '<span class="unread-dot"></span>' : "")
       + '<div class="inbox-ic ' + icClass + '">'
@@ -132,7 +132,7 @@
   function buildDebugPanel() {
     var btn = document.createElement("button");
     btn.id = "ra-dbg-btn";
-    btn.textContent = "â mock";
+    btn.textContent = "⚙ mock";
     btn.onclick = function () {
       var p = document.getElementById("ra-dbg");
       p.style.display = p.style.display === "none" ? "block" : "none";
@@ -144,10 +144,10 @@
     panel.id = "ra-dbg";
     panel.style.display = "none";
     panel.innerHTML =
-      '<div class="ra-dbg-head">Mock platform â debug'
+      '<div class="ra-dbg-head">Mock platform — debug'
       + '<button id="ra-dbg-reset">reset DB</button>'
-      + '<button id="ra-dbg-close">Ã</button></div>'
-      + '<div class="ra-dbg-body"><div id="ra-dbg-content">â¦</div></div>';
+      + '<button id="ra-dbg-close">×</button></div>'
+      + '<div class="ra-dbg-body"><div id="ra-dbg-content">…</div></div>';
     document.body.appendChild(panel);
     panel.querySelector("#ra-dbg-close").onclick = function () { panel.style.display = "none"; };
     panel.querySelector("#ra-dbg-reset").onclick = function () {
@@ -160,17 +160,17 @@
     if (!content || document.getElementById("ra-dbg").style.display === "none") return;
     get(DBG + "/state").then(function (s) {
       var html = "<h4>reviews (" + s.reviews.length + ")</h4>";
-      if (!s.reviews.length) html += '<p class="ra-muted">none yet â send a batch</p>';
+      if (!s.reviews.length) html += '<p class="ra-muted">none yet — send a batch</p>';
       s.reviews.forEach(function (r) {
         var pending = r.status === "pending";
         html += '<div class="ra-dbg-row"><code>' + r.id + "</code> "
           + "<b>" + r.status + "</b>"
-          + (r.readiness ? " Â· " + r.readiness : "")
-          + (r.channel ? " Â· " + r.channel : "")
+          + (r.readiness ? " · " + r.readiness : "")
+          + (r.channel ? " · " + r.channel : "")
           + (pending
             ? ' <button class="ra-sim" data-id="' + r.id + '">simulate in-app complete</button>'
             : "")
-          + (r.note ? '<div class="ra-muted">â' + escapeHtml(r.note) + 'â</div>' : "")
+          + (r.note ? '<div class="ra-muted">“' + escapeHtml(r.note) + '”</div>' : "")
           + "</div>";
       });
       html += "<h4>todos (" + s.todos.length + ")</h4>";
@@ -191,7 +191,7 @@
   function liveBadge() {
     var b = document.createElement("div");
     b.id = "ra-live-badge";
-    b.textContent = "â LIVE Â· mock platform";
+    b.textContent = "● LIVE · mock platform";
     document.body.appendChild(b);
   }
 
