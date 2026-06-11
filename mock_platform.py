@@ -64,7 +64,10 @@ def init_db():
     CREATE TABLE companies   (id TEXT PRIMARY KEY, name TEXT);
     CREATE TABLE managers     (id TEXT PRIMARY KEY, company_id TEXT, name TEXT,
                                phone TEXT, sms_opt_in INTEGER);
-    CREATE TABLE technicians  (id TEXT PRIMARY KEY, company_id TEXT, name TEXT);
+    CREATE TABLE technicians  (id TEXT PRIMARY KEY, company_id TEXT, name TEXT,
+                               field_readiness_state TEXT,
+                               field_readiness_set_by TEXT,
+                               field_readiness_set_at TEXT);
     CREATE TABLE reviews      (id TEXT PRIMARY KEY, company_id TEXT,
                                manager_id TEXT, technician_id TEXT,
                                created_at TEXT, status TEXT, readiness TEXT,
@@ -93,8 +96,8 @@ def init_db():
         ("tech_amanda", "Amanda Lee"),
         ("tech_sarah",  "Sarah Johnson"),
     ]
-    c.executemany("INSERT INTO technicians VALUES (?,?,?)",
-                  [(t[0], COMPANY_ID, t[1]) for t in technicians])
+    c.executemany("INSERT INTO technicians VALUES (?,?,?,?,?,?)",
+                  [(t[0], COMPANY_ID, t[1], None, None, None) for t in technicians])
     c.commit()
     c.close()
     print(f"[mock] seeded DB at {DB_PATH} "
@@ -227,6 +230,56 @@ def app_config():
     """Runtime config consumed by the dashboard prototype — lets the served HTML
     discover the mini-app's URL without hardcoding it."""
     return jsonify(miniapp_url=MINIAPP_URL, company_id=COMPANY_ID)
+
+
+FIELD_READINESS_STATES = ("go", "evaluate", "nogo")
+
+
+def _field_readiness_dict(row):
+    return {
+        "state": row["field_readiness_state"] or "evaluate",
+        "set_by": row["field_readiness_set_by"],
+        "set_at": row["field_readiness_set_at"],
+    }
+
+
+@APP.get("/api/technicians/<technician_id>/field-readiness")
+def get_field_readiness(technician_id):
+    """Read a technician's Field Readiness. Defaults to 'evaluate' when unset.
+    Returns the full {state, set_by, set_at} envelope so the dashboard can
+    surface attribution next to the indicator."""
+    c = db()
+    row = c.execute("SELECT * FROM technicians WHERE id=?", (technician_id,)).fetchone()
+    c.close()
+    if not row:
+        abort(404)
+    return jsonify(_field_readiness_dict(row))
+
+
+@APP.patch("/api/technicians/<technician_id>/field-readiness")
+def patch_field_readiness(technician_id):
+    """Manager sets the Field Readiness state. Records set_by + set_at.
+
+    Body: {"state": "go"|"evaluate"|"nogo", "set_by"?: "<user_id>"}.
+    Auth TODO: only managers/admins on this company should be allowed to set
+    this — the mock accepts any caller until real auth is wired."""
+    body = request.get_json(force=True) or {}
+    state = (body.get("state") or "").strip().lower()
+    if state not in FIELD_READINESS_STATES:
+        abort(400, description="state must be one of " + ", ".join(FIELD_READINESS_STATES))
+    set_by = (body.get("set_by") or "").strip() or "unknown_user"
+    c = db()
+    row = c.execute("SELECT * FROM technicians WHERE id=?", (technician_id,)).fetchone()
+    if not row:
+        c.close(); abort(404)
+    set_at = now_iso()
+    c.execute("""UPDATE technicians
+                 SET field_readiness_state=?, field_readiness_set_by=?, field_readiness_set_at=?
+                 WHERE id=?""", (state, set_by, set_at, technician_id))
+    c.commit()
+    updated = c.execute("SELECT * FROM technicians WHERE id=?", (technician_id,)).fetchone()
+    c.close()
+    return jsonify(_field_readiness_dict(updated))
 
 
 @APP.patch("/api/managers/<manager_id>")

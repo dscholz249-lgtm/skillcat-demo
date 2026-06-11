@@ -422,6 +422,12 @@
   .readiness-option { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; }
   .readiness-option:hover { background: #1a1a1f; }
   .readiness-option .sub { color: var(--text-faint); font-weight: 500; font-size: 11px; margin-left: auto; }
+  .readiness-option:focus { outline: 2px solid var(--orange); outline-offset: -2px; background: #1a1a1f; }
+  .readiness-tile:focus { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .readiness-context { margin-top: 6px; font-size: 11px; color: var(--text-faint); font-weight: 500; line-height: 1.4; }
+  .readiness-context.empty { display: none; }
+  .readiness-context .verdict-ready { color: var(--green); font-weight: 700; }
+  .readiness-context .verdict-not { color: var(--red); font-weight: 700; }
 
   /* Notes panel */
   .notes-panel { display: none; position: fixed; right: 28px; top: 80px; bottom: 100px; width: 380px; background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 14px; z-index: 80; box-shadow: 0 32px 80px -12px rgba(0,0,0,.7); flex-direction: column; }
@@ -1742,8 +1748,33 @@
           </div>
         </div>
 
-        <!-- Stat row: Role / Hire Date / Review / Notes -->
+        <!-- Stat row: Field Readiness / Role / Hire Date / Review / Notes -->
         <div class="stat-row">
+          <div class="stat-tile readiness-tile" id="readinessTile" tabindex="0"
+               role="button" aria-haspopup="listbox" aria-expanded="false"
+               aria-label="Field Readiness: Evaluate">
+            <div class="stat-label">Field Readiness</div>
+            <div class="readiness-row">
+              <span class="readiness-dot evaluate" data-dot></span>
+              <span class="readiness-label evaluate" data-label>Evaluate</span>
+              <span class="chev-small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div>
+            <div class="readiness-context" id="readinessContext" aria-hidden="true"></div>
+            <div class="readiness-menu" role="listbox" aria-label="Set field readiness" id="readinessMenu">
+              <div class="readiness-option" data-readiness="go" role="option" tabindex="-1" aria-selected="false" id="readinessOptionGo">
+                <span class="readiness-dot go"></span><span class="readiness-label go">Go</span>
+                <span class="sub">Field ready</span>
+              </div>
+              <div class="readiness-option" data-readiness="evaluate" role="option" tabindex="-1" aria-selected="true" id="readinessOptionEvaluate">
+                <span class="readiness-dot evaluate"></span><span class="readiness-label evaluate">Evaluate</span>
+                <span class="sub">Needs review</span>
+              </div>
+              <div class="readiness-option" data-readiness="nogo" role="option" tabindex="-1" aria-selected="false" id="readinessOptionNogo">
+                <span class="readiness-dot nogo"></span><span class="readiness-label nogo">No Go</span>
+                <span class="sub">Not ready</span>
+              </div>
+            </div>
+          </div>
           <div class="stat-tile">
             <div class="stat-label">Role</div>
             <div class="stat-value">Technician <span class="sub">HVAC Service</span></div>
@@ -4973,6 +5004,165 @@
       b.addEventListener('click', function() { notesPanel.classList.remove('open'); });
     });
   }
+
+  // Field Readiness — manager-set indicator on Person Detail.
+  // Person Detail is hardcoded to David Kim (tech_david); state persists
+  // server-side via /api/technicians/{id}/field-readiness. The ride-along
+  // verdict surfaces as context only — it does NOT auto-set the state (per
+  // the Field Readiness spec §5; the manager owns the toggle).
+  (function initFieldReadiness() {
+    var TECH_ID = 'tech_david';
+    var TECH_NAME = 'David Kim';
+    var SET_BY = 'mgr_eric';   // TODO: replace with current user once real auth lands
+
+    var tile = document.getElementById('readinessTile');
+    if (!tile) return;
+    var contextEl = document.getElementById('readinessContext');
+    var dot = tile.querySelector('[data-dot]');
+    var label = tile.querySelector('[data-label]');
+    var options = Array.prototype.slice.call(tile.querySelectorAll('.readiness-option'));
+    var optionMap = {};
+    options.forEach(function (o) { optionMap[o.dataset.readiness] = o; });
+
+    var LABELS = { go: 'Go', evaluate: 'Evaluate', nogo: 'No Go' };
+    var currentState = 'evaluate';
+
+    function applyUI(state) {
+      if (!LABELS[state]) state = 'evaluate';
+      currentState = state;
+      dot.className = 'readiness-dot ' + state;
+      label.className = 'readiness-label ' + state;
+      label.textContent = LABELS[state];
+      tile.setAttribute('aria-label', 'Field Readiness: ' + LABELS[state]);
+      options.forEach(function (o) {
+        o.setAttribute('aria-selected', o.dataset.readiness === state ? 'true' : 'false');
+      });
+    }
+
+    function openMenu() {
+      if (tile.classList.contains('open')) return;
+      tile.classList.add('open');
+      tile.setAttribute('aria-expanded', 'true');
+      var sel = optionMap[currentState] || options[0];
+      if (sel) sel.focus();
+    }
+
+    function closeMenu(returnFocus) {
+      if (!tile.classList.contains('open')) return;
+      tile.classList.remove('open');
+      tile.setAttribute('aria-expanded', 'false');
+      if (returnFocus) tile.focus();
+    }
+
+    async function setState(newState) {
+      if (!LABELS[newState] || newState === currentState) {
+        closeMenu(true);
+        return;
+      }
+      var prevState = currentState;
+      applyUI(newState);          // optimistic
+      closeMenu(true);
+      try {
+        var resp = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: newState, set_by: SET_BY }),
+        });
+        var j = await resp.json().catch(function () { return {}; });
+        if (!resp.ok) throw new Error(j.description || j.error || ('HTTP ' + resp.status));
+      } catch (e) {
+        applyUI(prevState);       // rollback
+        var prev = contextEl.innerHTML;
+        contextEl.classList.remove('empty');
+        contextEl.innerHTML = '<span style="color:var(--red)">Failed to save: ' + (e.message || e) + '</span>';
+        setTimeout(function () { contextEl.innerHTML = prev; if (!prev) contextEl.classList.add('empty'); }, 4000);
+      }
+    }
+
+    function focusOption(delta) {
+      if (!tile.classList.contains('open')) return;
+      var active = document.activeElement;
+      var idx = options.indexOf(active);
+      if (idx === -1) idx = options.indexOf(optionMap[currentState] || options[0]);
+      idx = (idx + delta + options.length) % options.length;
+      options[idx].focus();
+    }
+
+    tile.addEventListener('click', function (e) {
+      if (e.target.closest('.readiness-option')) return;
+      if (tile.classList.contains('open')) closeMenu();
+      else openMenu();
+    });
+
+    tile.addEventListener('keydown', function (e) {
+      if (e.target !== tile) return;
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        openMenu();
+      }
+    });
+
+    options.forEach(function (opt) {
+      opt.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setState(opt.dataset.readiness);
+      });
+      opt.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setState(opt.dataset.readiness);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          focusOption(1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          focusOption(-1);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeMenu(true);
+        } else if (e.key === 'Tab') {
+          closeMenu();   // avoid focus trap
+        }
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#readinessTile')) closeMenu();
+    });
+
+    async function refreshContext() {
+      try {
+        var data = await fetch('/api/ride-along/reviews?company_id=co_test&technician_name=' + encodeURIComponent(TECH_NAME)).then(function (r) { return r.json(); });
+        var done = (data.reviews || []).filter(function (r) { return r.status === 'complete'; });
+        if (!done.length) {
+          contextEl.classList.add('empty');
+          contextEl.innerHTML = '';
+          return;
+        }
+        var latest = done[0];   // newest first per the mock
+        var when = (latest.completed_at || latest.created_at || '').slice(0, 10);
+        var verdictText = latest.readiness === 'ready' ? 'Ready' : 'Not yet ready';
+        var verdictClass = latest.readiness === 'ready' ? 'verdict-ready' : 'verdict-not';
+        contextEl.classList.remove('empty');
+        contextEl.innerHTML = 'Last ride-along: <span class="' + verdictClass + '">' + verdictText + '</span> · ' + when;
+      } catch (e) {
+        contextEl.classList.add('empty');
+        contextEl.innerHTML = '';
+      }
+    }
+
+    async function boot() {
+      try {
+        var fr = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness').then(function (r) { return r.json(); });
+        applyUI(fr.state || 'evaluate');
+      } catch (e) {
+        applyUI('evaluate');
+      }
+      refreshContext();
+    }
+
+    boot();
+  })();
 
   // Submit a new note
   document.querySelectorAll('[data-action="submit-note"]').forEach(function(btn) {
