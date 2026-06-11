@@ -353,8 +353,9 @@ def list_todos():
     cid = request.args.get("company_id", COMPANY_ID)
     c = db()
     rows = c.execute("""
-        SELECT td.*, m.name AS manager_name, t.name AS technician_name,
-               r.status AS review_status, r.readiness AS readiness
+        SELECT td.*, m.name AS manager_name, t.id AS technician_id, t.name AS technician_name,
+               r.status AS review_status, r.readiness AS readiness, r.note AS note,
+               r.channel AS channel, r.completed_at AS completed_at
         FROM todos td
         JOIN reviews r ON r.id = td.review_id
         JOIN managers m ON m.id = td.manager_id
@@ -363,8 +364,10 @@ def list_todos():
     c.close()
     return jsonify(todos=[dict(
         id=r["id"], review_id=r["review_id"], status=r["status"],
-        manager_name=r["manager_name"], technician_name=r["technician_name"],
-        review_status=r["review_status"], readiness=r["readiness"],
+        manager_id=r["manager_id"], manager_name=r["manager_name"],
+        technician_id=r["technician_id"], technician_name=r["technician_name"],
+        review_status=r["review_status"], readiness=r["readiness"], note=r["note"],
+        channel=r["channel"], completed_at=r["completed_at"],
         created_at=r["created_at"]) for r in rows])
 
 

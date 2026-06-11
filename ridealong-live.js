@@ -119,6 +119,7 @@
     var row = document.createElement("div");
     var open = t.status === "open";
     row.className = "inbox-row" + (open ? " unread" : "");
+    row.style.cursor = "pointer";
     var icClass = open ? "blue" : "green";
     var title = open
       ? "Ride-Along Review — " + t.technician_name
@@ -129,8 +130,13 @@
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">'
       + '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>'
       + '<div class="inbox-meta"><div class="inbox-title">' + escapeHtml(title) + "</div>"
-      + '<div class="inbox-time">via ' + escapeHtml(t.manager_name) + "</div></div>"
+      + '<div class="inbox-time">SkillCat · ' + escapeHtml(t.manager_name) + "</div></div>"
       + (open ? '<span class="pri pri-high">Action</span>' : "");
+    row.addEventListener("click", function () {
+      if (typeof window.__openRideAlongDetail === "function") {
+        window.__openRideAlongDetail(t.review_id);
+      }
+    });
     return row;
   }
 

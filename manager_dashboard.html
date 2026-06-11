@@ -2589,6 +2589,76 @@
       </div>
     </div>
 
+    <!-- ============ RIDE-ALONG REVIEW DETAIL (in-app review screen) ============ -->
+    <div class="page" id="page-ridealong-detail">
+      <style>
+        .ra-sender { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; color: var(--orange, #e5531f); background: rgba(229,83,31,.14); }
+        .ra-detail-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; }
+        .ra-detail-status.open { color: var(--blue); background: rgba(122,167,255,.14); }
+        .ra-detail-status.resolved { color: var(--green); background: rgba(43,208,122,.14); }
+        .ra-prompt { font-size: 17px; font-weight: 500; line-height: 1.5; color: var(--text); margin: 22px 0 24px; max-width: 640px; }
+        .ra-verdict-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; max-width: 640px; }
+        .ra-verdict-btn { flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 22px; border-radius: 12px; font-family: var(--sans); font-size: 15px; font-weight: 700; cursor: pointer; transition: all .14s; background: transparent; border: 1.5px solid var(--border); color: var(--text-dim); }
+        .ra-verdict-btn .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; transition: box-shadow .14s; }
+        .ra-verdict-btn.ready .dot { background: var(--green); }
+        .ra-verdict-btn.not .dot { background: var(--red); }
+        .ra-verdict-btn.ready:hover:not(:disabled) { border-color: var(--green); color: var(--green); background: rgba(43,208,122,.06); }
+        .ra-verdict-btn.not:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: rgba(240,88,75,.06); }
+        .ra-verdict-btn.selected.ready { border-color: var(--green); color: var(--green); background: rgba(43,208,122,.1); }
+        .ra-verdict-btn.selected.ready .dot { box-shadow: 0 0 0 4px rgba(43,208,122,.24); }
+        .ra-verdict-btn.selected.not { border-color: var(--red); color: var(--red); background: rgba(240,88,75,.1); }
+        .ra-verdict-btn.selected.not .dot { box-shadow: 0 0 0 4px rgba(240,88,75,.24); }
+        .ra-verdict-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .ra-note-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; max-width: 640px; }
+        .ra-note-label .opt { font-weight: 500; color: var(--text-faint); margin-left: 4px; }
+        .ra-note-sub { font-size: 12px; color: var(--text-faint); margin-bottom: 10px; max-width: 640px; }
+        .ra-note-input { width: 100%; max-width: 640px; background: var(--input-bg, #08080a); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; min-height: 96px; resize: vertical; outline: none; transition: border-color .12s; box-sizing: border-box; }
+        .ra-note-input:focus { border-color: var(--orange); }
+        .ra-note-input:disabled { opacity: .55; cursor: not-allowed; }
+        .ra-submit-row { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+        .ra-submit-status { font-size: 12.5px; font-weight: 600; color: var(--text-faint); }
+        .ra-submit-status.err { color: var(--red); }
+        .ra-completed-card { background: rgba(43,208,122,.06); border: 1px solid rgba(43,208,122,.22); border-radius: 12px; padding: 18px 22px; max-width: 640px; }
+        .ra-completed-head { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+        .ra-completed-head .check-ic { width: 22px; height: 22px; border-radius: 50%; background: var(--green); display: grid; place-items: center; color: #000; flex: none; }
+        .ra-completed-head .check-ic svg { width: 13px; height: 13px; stroke-width: 3; }
+        .ra-completed-row { display: flex; gap: 12px; font-size: 13px; color: var(--text-dim); padding: 5px 0; }
+        .ra-completed-row b { color: var(--text); font-weight: 700; min-width: 76px; }
+        .ra-completed-row.note { flex-direction: column; gap: 6px; padding-top: 10px; }
+        .ra-completed-row.note .body { color: var(--text); padding: 9px 12px; background: rgba(255,255,255,.03); border-radius: 8px; line-height: 1.5; }
+        .ra-detail-loading { color: var(--text-faint); }
+        .ra-detail-error { color: var(--red); }
+      </style>
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn btn-ghost btn-sm" onclick="showPage('inbox')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 6l-6 6 6 6"/></svg>
+            Back to Inbox
+          </button>
+        </div>
+      </header>
+
+      <div class="scroll">
+        <div class="inbox-detail-hero">
+          <div class="hero-icon-disc blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div class="hero-content">
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+              <span class="ra-sender">SkillCat</span>
+              <span class="ra-detail-status open" id="raDetailStatus">Action Required</span>
+            </div>
+            <h1 class="hero-title" id="raDetailTitle">Ride-Along Review</h1>
+            <div class="hero-sub" id="raDetailSub">—</div>
+          </div>
+        </div>
+
+        <div class="detail-body" id="raDetailBody">
+          <p class="ra-detail-loading">Loading…</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ ASSIGN ============ -->
     <div class="page" id="page-assign">
       <header class="topbar">
@@ -4436,7 +4506,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');
@@ -5183,6 +5253,186 @@
 
     boot();
     setInterval(poll, POLL_INTERVAL_MS);
+  })();
+
+  // In-app review screen — the dashboard counterpart of the SMS conversation.
+  // Opened from the Inbox via window.__openRideAlongDetail(reviewId), which
+  // ridealong-live.js wires to the inbox row click.
+  (function initRideAlongDetail() {
+    var page = document.getElementById('page-ridealong-detail');
+    if (!page) return;
+    var statusEl = page.querySelector('#raDetailStatus');
+    var titleEl = page.querySelector('#raDetailTitle');
+    var subEl = page.querySelector('#raDetailSub');
+    var bodyEl = page.querySelector('#raDetailBody');
+
+    var SET_BY = 'mgr_eric';  // TODO: pull from real auth context when wired
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+        + ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function renderForm(reviewId, technicianId, techName) {
+      var prompt = "Based on today's ride-along, is " + esc(techName) + " ready to run service calls on their own?";
+      bodyEl.innerHTML =
+        '<p class="ra-prompt">' + prompt + '</p>' +
+        '<div class="ra-verdict-row">' +
+          '<button class="ra-verdict-btn ready" data-verdict="ready"><span class="dot"></span>Ready</button>' +
+          '<button class="ra-verdict-btn not" data-verdict="not_ready"><span class="dot"></span>Not Ready</button>' +
+        '</div>' +
+        '<div class="ra-note-label">Note <span class="opt">(optional)</span></div>' +
+        '<div class="ra-note-sub">Anything to flag for next time?</div>' +
+        '<textarea class="ra-note-input" id="raNoteInput" placeholder="Type a note…"></textarea>' +
+        '<div class="ra-submit-row">' +
+          '<button class="btn btn-primary" id="raSubmitBtn" disabled>Submit</button>' +
+          '<span class="ra-submit-status" id="raSubmitStatus"></span>' +
+        '</div>';
+
+      var verdictBtns = bodyEl.querySelectorAll('.ra-verdict-btn');
+      var submitBtn = bodyEl.querySelector('#raSubmitBtn');
+      var statusBox = bodyEl.querySelector('#raSubmitStatus');
+      var noteInput = bodyEl.querySelector('#raNoteInput');
+      var selectedVerdict = null;
+
+      verdictBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          verdictBtns.forEach(function (x) { x.classList.remove('selected'); });
+          b.classList.add('selected');
+          selectedVerdict = b.dataset.verdict;
+          submitBtn.disabled = false;
+        });
+      });
+
+      submitBtn.addEventListener('click', async function () {
+        if (!selectedVerdict) return;
+        var note = noteInput.value.trim() || null;
+        submitBtn.disabled = true;
+        verdictBtns.forEach(function (b) { b.disabled = true; });
+        noteInput.disabled = true;
+        statusBox.className = 'ra-submit-status';
+        statusBox.textContent = 'Submitting…';
+        try {
+          var resultResp = await fetch('/api/ride-along/reviews/' + encodeURIComponent(reviewId) + '/result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              company_id: 'co_test',
+              readiness: selectedVerdict,
+              note: note,
+              channel: 'app',
+              completed_at: new Date().toISOString(),
+            }),
+          });
+          var resultJson = await resultResp.json().catch(function () { return {}; });
+          if (resultResp.status === 409) {
+            // Already complete elsewhere (e.g. SMS race) — show the canonical state.
+            await loadAndRender(reviewId);
+            return;
+          }
+          if (!resultResp.ok) throw new Error(resultJson.error || resultJson.description || ('HTTP ' + resultResp.status));
+
+          // Match the SMS flow: also auto-update Field Readiness from the verdict.
+          var newReadiness = selectedVerdict === 'ready' ? 'go' : 'nogo';
+          try {
+            await fetch('/api/technicians/' + encodeURIComponent(technicianId) + '/field-readiness', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ state: newReadiness, set_by: SET_BY }),
+            });
+          } catch (e) {
+            // Don't fail the submit; the review result is the canonical record and wrote OK.
+            console.warn('[ridealong-detail] field-readiness PATCH failed', e);
+          }
+          await loadAndRender(reviewId);
+        } catch (e) {
+          statusBox.className = 'ra-submit-status err';
+          statusBox.textContent = 'Failed: ' + (e.message || e);
+          submitBtn.disabled = false;
+          verdictBtns.forEach(function (b) { b.disabled = false; });
+          noteInput.disabled = false;
+        }
+      });
+    }
+
+    function renderCompleted(review, techName, managerName) {
+      var ready = review.readiness === 'ready';
+      var verdictLabel = ready ? 'Ready' : 'Not yet ready';
+      var verdictColor = ready ? 'var(--green)' : 'var(--red)';
+      var channelLabel = (review.channel || 'sms').toUpperCase();
+      var when = formatDate(review.completed_at);
+
+      var noteRow = review.note
+        ? '<div class="ra-completed-row note"><b>Note</b><div class="body">' + esc(review.note) + '</div></div>'
+        : '<div class="ra-completed-row"><b>Note</b><span style="color:var(--text-faint)">No note provided</span></div>';
+
+      bodyEl.innerHTML =
+        '<p class="ra-prompt">Based on today\'s ride-along, is ' + esc(techName) + ' ready to run service calls on their own?</p>' +
+        '<div class="ra-completed-card">' +
+          '<div class="ra-completed-head">' +
+            '<span class="check-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5L20 7"/></svg></span>' +
+            'Review submitted' +
+          '</div>' +
+          '<div class="ra-completed-row"><b>Verdict</b><span style="color:' + verdictColor + ';font-weight:700">' + verdictLabel + '</span></div>' +
+          '<div class="ra-completed-row"><b>By</b><span>' + esc(managerName) + '</span></div>' +
+          '<div class="ra-completed-row"><b>Channel</b><span>' + esc(channelLabel) + '</span></div>' +
+          '<div class="ra-completed-row"><b>When</b><span>' + esc(when) + '</span></div>' +
+          noteRow +
+        '</div>';
+    }
+
+    async function loadAndRender(reviewId) {
+      bodyEl.innerHTML = '<p class="ra-detail-loading">Loading…</p>';
+      titleEl.textContent = 'Ride-Along Review';
+      subEl.textContent = '—';
+      try {
+        // Pull canonical review + todos (todos give us the manager+tech names + IDs).
+        var [review, todosResp] = await Promise.all([
+          fetch('/api/ride-along/reviews/' + encodeURIComponent(reviewId)).then(function (r) {
+            if (!r.ok) throw new Error('Review HTTP ' + r.status);
+            return r.json();
+          }),
+          fetch('/api/ride-along/todos?company_id=co_test').then(function (r) { return r.json(); }),
+        ]);
+        var todo = (todosResp.todos || []).find(function (t) { return t.review_id === reviewId; });
+        if (!todo) {
+          bodyEl.innerHTML = '<p class="ra-detail-error">Review not found in current to-do list.</p>';
+          return;
+        }
+        var techName = todo.technician_name || 'this technician';
+        var managerName = todo.manager_name || 'Manager';
+
+        titleEl.textContent = 'Ride-Along Review — ' + techName;
+        subEl.textContent = 'For ' + managerName + ' · ' + formatDate(todo.created_at);
+
+        if (review.status === 'complete') {
+          statusEl.textContent = 'Resolved';
+          statusEl.className = 'ra-detail-status resolved';
+          renderCompleted(review, techName, managerName);
+        } else {
+          statusEl.textContent = 'Action Required';
+          statusEl.className = 'ra-detail-status open';
+          renderForm(review.review_id, todo.technician_id, techName);
+        }
+      } catch (e) {
+        bodyEl.innerHTML = '<p class="ra-detail-error">Failed to load: ' + esc(e.message || e) + '</p>';
+      }
+    }
+
+    // Exposed for ridealong-live.js to call from inbox row clicks.
+    window.__openRideAlongDetail = function (reviewId) {
+      if (typeof showPage === 'function') showPage('ridealong-detail');
+      loadAndRender(reviewId);
+    };
   })();
 
   // Submit a new note
