@@ -5208,25 +5208,72 @@
       if (!e.target.closest('#readinessTile')) closeMenu();
     });
 
+    function relativeTimeFromNow(iso) {
+      if (!iso) return null;
+      var t = new Date(iso).getTime();
+      if (isNaN(t)) return null;
+      var diff = Math.max(0, Date.now() - t);
+      var sec = Math.floor(diff / 1000);
+      if (sec < 60) return 'just now';
+      var min = Math.floor(sec / 60);
+      if (min < 60) return min + 'm ago';
+      var hr = Math.floor(min / 60);
+      if (hr < 24) return hr + 'h ago';
+      var day = Math.floor(hr / 24);
+      if (day < 7) return day + 'd ago';
+      var wk = Math.floor(day / 7);
+      if (wk < 4) return wk + 'w ago';
+      var mo = Math.floor(day / 30);
+      return mo + 'mo ago';
+    }
+
+    function updateNotesTile(rideAlongDone) {
+      var tile = document.getElementById('notesTile');
+      if (!tile) return;
+      var valueEl = tile.querySelector('.stat-value');
+      if (!valueEl) return;
+      var notesPanel = document.getElementById('notesPanel');
+      // Static notes already in the DOM (prototype hardcoded + user-submitted via the
+      // notes panel Submit form). Ride-along entries are .note-ridealong and only get
+      // injected when the panel opens — counted from the data instead so we stay
+      // accurate before the user has opened the panel.
+      var staticCount = notesPanel
+        ? notesPanel.querySelectorAll('.notes-list .note:not(.note-ridealong)').length
+        : 0;
+      var total = staticCount + (rideAlongDone || []).length;
+      // Most recent timestamp: prefer the latest ride-along's completed_at; fall back
+      // to "4d ago" (matches the static "Eric Park · 4 days ago" prototype note).
+      var relative = (rideAlongDone && rideAlongDone.length)
+        ? (relativeTimeFromNow(rideAlongDone[0].completed_at || rideAlongDone[0].created_at) || '4d ago')
+        : '4d ago';
+      valueEl.innerHTML = total + ' note' + (total === 1 ? '' : 's')
+        + ' <span class="sub">last ' + relative + '</span>';
+    }
+
     async function refreshContext() {
+      var done = [];
       try {
         var data = await fetch('/api/ride-along/reviews?company_id=co_test&technician_name=' + encodeURIComponent(TECH_NAME)).then(function (r) { return r.json(); });
-        var done = (data.reviews || []).filter(function (r) { return r.status === 'complete'; });
-        if (!done.length) {
-          contextEl.classList.add('empty');
-          contextEl.innerHTML = '';
-          return;
-        }
+        done = (data.reviews || []).filter(function (r) { return r.status === 'complete'; });
+      } catch (e) {
+        // fall through with done=[]; UI degrades to "no ride-along context" + static-only count
+      }
+
+      // 1. Ride-along verdict context line under the Field Readiness tile.
+      if (!done.length) {
+        contextEl.classList.add('empty');
+        contextEl.innerHTML = '';
+      } else {
         var latest = done[0];   // newest first per the mock
         var when = (latest.completed_at || latest.created_at || '').slice(0, 10);
         var verdictText = latest.readiness === 'ready' ? 'Ready' : 'Not yet ready';
         var verdictClass = latest.readiness === 'ready' ? 'verdict-ready' : 'verdict-not';
         contextEl.classList.remove('empty');
         contextEl.innerHTML = 'Last ride-along: <span class="' + verdictClass + '">' + verdictText + '</span> · ' + when;
-      } catch (e) {
-        contextEl.classList.add('empty');
-        contextEl.innerHTML = '';
       }
+
+      // 2. Notes tile count + most recent timestamp.
+      updateNotesTile(done);
     }
 
     async function boot() {
