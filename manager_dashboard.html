@@ -5027,6 +5027,13 @@
     var LABELS = { go: 'Go', evaluate: 'Evaluate', nogo: 'No Go' };
     var currentState = 'evaluate';
 
+    // Polling guards: pause while the dropdown is open, the tab is hidden, or
+    // we're within the cooldown after a user-initiated change (avoids the poll
+    // racing the in-flight PATCH and briefly flickering back to the old state).
+    var POLL_INTERVAL_MS = 5000;
+    var USER_CHANGE_COOLDOWN_MS = 2000;
+    var lastUserChangeAt = 0;
+
     function applyUI(state) {
       if (!LABELS[state]) state = 'evaluate';
       currentState = state;
@@ -5062,6 +5069,7 @@
       var prevState = currentState;
       applyUI(newState);          // optimistic
       closeMenu(true);
+      lastUserChangeAt = Date.now();
       try {
         var resp = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness', {
           method: 'PATCH',
@@ -5161,7 +5169,20 @@
       refreshContext();
     }
 
+    async function poll() {
+      if (document.hidden) return;
+      if (tile.classList.contains('open')) return;
+      if (Date.now() - lastUserChangeAt < USER_CHANGE_COOLDOWN_MS) return;
+      try {
+        var fr = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness').then(function (r) { return r.json(); });
+        var newState = fr.state || 'evaluate';
+        if (newState !== currentState) applyUI(newState);   // no-flicker: only swap on change
+      } catch (e) { /* silent — next poll will retry */ }
+      refreshContext();   // ride-along context can change independently (new review, same verdict, newer date)
+    }
+
     boot();
+    setInterval(poll, POLL_INTERVAL_MS);
   })();
 
   // Submit a new note

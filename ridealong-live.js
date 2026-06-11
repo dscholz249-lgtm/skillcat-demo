@@ -45,6 +45,12 @@
       if (panel.classList.contains("open")) loadNotesForOpenPanel(panel);
     });
     observer.observe(panel, { attributes: true, attributeFilter: ["class"] });
+    // Poll while the panel is open so new ride-along entries land without
+    // requiring the user to close and reopen. Skip when tab is hidden.
+    setInterval(function () {
+      if (document.hidden) return;
+      if (panel.classList.contains("open")) loadNotesForOpenPanel(panel);
+    }, 5000);
   }
 
   function loadNotesForOpenPanel(panel) {
