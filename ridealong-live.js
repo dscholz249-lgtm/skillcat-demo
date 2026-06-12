@@ -78,7 +78,7 @@
       + (ready ? "Ready" : "Not yet ready") + "</span>";
     var when = (r.completed_at || r.created_at || "").slice(0, 10);
     el.innerHTML =
-      '<div class="note-meta"><span class="ra-tag">Ride-Along</span> '
+      '<div class="note-meta"><span class="ra-tag">Review</span> '
       + escapeHtml(r.manager_name || "Manager") + " · " + when + "</div>"
       + '<div class="ra-verdict">' + badge + "</div>"
       + (r.note ? '<div class="note-body">' + escapeHtml(r.note) + "</div>" : "");
@@ -99,7 +99,7 @@
         group = document.createElement("div");
         group.id = "ra-inbox-group";
         group.className = "inbox-group";
-        group.innerHTML = '<div class="inbox-group-head">Ride-Along Reviews</div>'
+        group.innerHTML = '<div class="inbox-group-head">Reviews</div>'
           + '<div class="card" id="ra-inbox-card"></div>';
         var filters = scroll.querySelector(".inbox-filters");
         if (filters && filters.nextSibling) scroll.insertBefore(group, filters.nextSibling);
@@ -122,7 +122,7 @@
     row.style.cursor = "pointer";
     var icClass = open ? "blue" : "green";
     var title = open
-      ? "Ride-Along Review — " + t.technician_name
+      ? "Review — " + t.technician_name
       : t.technician_name + " — Review " + (t.readiness === "ready" ? "Ready" : "Not Ready");
     row.innerHTML =
       (open ? '<span class="unread-dot"></span>' : "")

@@ -1725,12 +1725,12 @@
       <div class="scroll">
         <div class="person-header">
           <div class="person-header-left">
-            <h1>David Kim
+            <h1><span id="personName">David Kim</span>
               <button class="edit-pencil" title="Edit person">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg>
               </button>
             </h1>
-            <div class="person-sub">Equipment Specialist · Washington · david.kim@example.com</div>
+            <div class="person-sub" id="personSub">Equipment Specialist · Washington · david.kim@example.com</div>
           </div>
           <div class="person-header-cta">
             <button class="btn btn-ghost btn-sm">
@@ -2049,7 +2049,7 @@
       <!-- Notes panel -->
       <div class="notes-panel" id="notesPanel">
         <div class="notes-head">
-          <div class="nm">Manager Notes · David Kim</div>
+          <div class="nm" id="notesPanelHeader">Manager Notes · David Kim</div>
           <button class="icon-btn" data-close-notes title="Close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
@@ -2648,7 +2648,7 @@
               <span class="ra-sender">SkillCat</span>
               <span class="ra-detail-status open" id="raDetailStatus">Action Required</span>
             </div>
-            <h1 class="hero-title" id="raDetailTitle">Ride-Along Review</h1>
+            <h1 class="hero-title" id="raDetailTitle">Review</h1>
             <div class="hero-sub" id="raDetailSub">—</div>
           </div>
         </div>
@@ -3542,7 +3542,7 @@
       </header>
 
       <div class="scroll">
-        <p class="reviews-intro">Queue a ride-along review for each manager–technician pair. After the ride-along, the manager gets one question — is this technician ready to work on their own? Managers opted into SMS get a text; everyone else gets it as a to-do in their app inbox.</p>
+        <p class="reviews-intro">Queue a review for each manager–technician pair. After the manager has worked with the technician, they get one question — is this technician ready to work on their own? Managers opted into SMS get a text; everyone else gets it as a to-do in their app inbox.</p>
 
         <div class="reviews-sent" id="reviewsSent" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>
@@ -3569,7 +3569,7 @@
         <div class="reviews-empty" id="reviewsEmpty" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>
           <div class="t">No reviews queued</div>
-          <div class="s">Add a manager–technician pair to send a ride-along review.</div>
+          <div class="s">Add a manager–technician pair to send a review.</div>
           <button class="btn btn-primary" id="reviewsEmptyAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add review</button>
         </div>
       </div>
@@ -4671,11 +4671,58 @@
     });
   });
 
+  // ---------------- PERSON DETAIL ROUTING ----------------
+  // People row click → Person Detail for that technician. We look the name up
+  // in the platform's roster; if found, Field Readiness + Notes get wired to
+  // that tech's real data. If not (the People page has many prototype names
+  // that aren't on the platform), the page still opens with the right name in
+  // the header but the platform-backed surfaces degrade to default state.
+  var personDetailRosterCache = null;
+  function getPersonDetailRoster() {
+    if (personDetailRosterCache) return Promise.resolve(personDetailRosterCache);
+    return fetch('/api/ride-along/roster?company_id=co_test')
+      .then(function (r) { return r.json(); })
+      .then(function (data) { personDetailRosterCache = data; return data; })
+      .catch(function () { return { managers: [], technicians: [] }; });
+  }
+
+  function loadPersonDetail(techId, techName) {
+    window._currentTech = { id: techId, name: techName };
+    // Update header without disturbing the edit-pencil button next to the h1.
+    var nameEl = document.getElementById('personName');
+    if (nameEl) nameEl.textContent = techName;
+    var subEl = document.getElementById('personSub');
+    if (subEl) {
+      if (techId === 'tech_david') {
+        subEl.textContent = 'Equipment Specialist · Washington · david.kim@example.com';
+      } else {
+        // Generic placeholder sub-line for non-default techs.
+        var emailSlug = techName.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '');
+        subEl.textContent = 'Technician · HVAC Service · ' + emailSlug + '@example.com';
+      }
+    }
+    var notesHeader = document.getElementById('notesPanelHeader');
+    if (notesHeader) notesHeader.textContent = 'Manager Notes · ' + techName;
+    if (typeof window.__rebootFieldReadiness === 'function') window.__rebootFieldReadiness();
+    if (typeof showPage === 'function') showPage('person');
+  }
+  window.__loadPersonDetail = loadPersonDetail;
+
   // Row click → person detail (skip when clicking checkbox)
-  document.querySelectorAll('[data-go-person]').forEach(row => {
-    row.addEventListener('click', e => {
+  document.querySelectorAll('[data-go-person]').forEach(function (row) {
+    row.addEventListener('click', function (e) {
       if (e.target.closest('.cb-cell')) return;
-      showPage('person');
+      var pplName = row.querySelector('.ppl-name');
+      var firstTd = row.querySelector('td:not(.cb-cell)');
+      var name = pplName
+        ? pplName.textContent.trim()
+        : (firstTd ? firstTd.textContent.trim() : '');
+      if (!name) { showPage('person'); return; }
+      getPersonDetailRoster().then(function (roster) {
+        var tech = (roster.technicians || []).find(function (t) { return t.name === name; });
+        var techId = tech ? tech.id : 'unknown_' + name.toLowerCase().replace(/[^a-z]+/g, '_');
+        loadPersonDetail(techId, name);
+      });
     });
   });
 
@@ -5069,13 +5116,18 @@
   }
 
   // Field Readiness — manager-set indicator on Person Detail.
-  // Person Detail is hardcoded to David Kim (tech_david); state persists
-  // server-side via /api/technicians/{id}/field-readiness. The ride-along
-  // verdict surfaces as context only — it does NOT auto-set the state (per
-  // the Field Readiness spec §5; the manager owns the toggle).
+  // Person Detail is dynamic now: window._currentTech holds the {id, name} of
+  // whoever was clicked into. Defaults to David Kim so direct navigation /
+  // page refresh on /person still works. State persists server-side via
+  // /api/technicians/{id}/field-readiness. The SMS verdict ALSO updates this
+  // state automatically (product decision after the original spec §5).
   (function initFieldReadiness() {
-    var TECH_ID = 'tech_david';
-    var TECH_NAME = 'David Kim';
+    var DEFAULT_TECH = { id: 'tech_david', name: 'David Kim' };
+    function currentTech() {
+      var t = window._currentTech;
+      if (t && t.id && t.name) return t;
+      return DEFAULT_TECH;
+    }
     var SET_BY = 'mgr_eric';   // TODO: replace with current user once real auth lands
 
     var tile = document.getElementById('readinessTile');
@@ -5134,7 +5186,7 @@
       closeMenu(true);
       lastUserChangeAt = Date.now();
       try {
-        var resp = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness', {
+        var resp = await fetch('/api/technicians/' + encodeURIComponent(currentTech().id) + '/field-readiness', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ state: newState, set_by: SET_BY }),
@@ -5246,7 +5298,7 @@
     async function refreshContext() {
       var done = [];
       try {
-        var data = await fetch('/api/ride-along/reviews?company_id=co_test&technician_name=' + encodeURIComponent(TECH_NAME)).then(function (r) { return r.json(); });
+        var data = await fetch('/api/ride-along/reviews?company_id=co_test&technician_name=' + encodeURIComponent(currentTech().name)).then(function (r) { return r.json(); });
         done = (data.reviews || []).filter(function (r) { return r.status === 'complete'; });
       } catch (e) {
         // fall through with done=[]; UI degrades to "no ride-along context" + static-only count
@@ -5262,7 +5314,7 @@
         var verdictText = latest.readiness === 'ready' ? 'Ready' : 'Not yet ready';
         var verdictClass = latest.readiness === 'ready' ? 'verdict-ready' : 'verdict-not';
         contextEl.classList.remove('empty');
-        contextEl.innerHTML = 'Last ride-along: <span class="' + verdictClass + '">' + verdictText + '</span> · ' + when;
+        contextEl.innerHTML = 'Last review: <span class="' + verdictClass + '">' + verdictText + '</span> · ' + when;
       }
 
       // 2. Notes tile count + most recent timestamp.
@@ -5270,8 +5322,13 @@
     }
 
     async function boot() {
+      // Optimistic reset to default so when the user navigates between techs
+      // we don't briefly flash the prior tech's state.
+      applyUI('evaluate');
+      contextEl.classList.add('empty');
+      contextEl.innerHTML = '';
       try {
-        var fr = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness').then(function (r) { return r.json(); });
+        var fr = await fetch('/api/technicians/' + encodeURIComponent(currentTech().id) + '/field-readiness').then(function (r) { return r.json(); });
         applyUI(fr.state || 'evaluate');
       } catch (e) {
         applyUI('evaluate');
@@ -5284,12 +5341,15 @@
       if (tile.classList.contains('open')) return;
       if (Date.now() - lastUserChangeAt < USER_CHANGE_COOLDOWN_MS) return;
       try {
-        var fr = await fetch('/api/technicians/' + encodeURIComponent(TECH_ID) + '/field-readiness').then(function (r) { return r.json(); });
+        var fr = await fetch('/api/technicians/' + encodeURIComponent(currentTech().id) + '/field-readiness').then(function (r) { return r.json(); });
         var newState = fr.state || 'evaluate';
         if (newState !== currentState) applyUI(newState);   // no-flicker: only swap on change
       } catch (e) { /* silent — next poll will retry */ }
-      refreshContext();   // ride-along context can change independently (new review, same verdict, newer date)
+      refreshContext();   // review context can change independently (new review, same verdict, newer date)
     }
+
+    // Exposed so the People row click handler can reboot the tile for a new tech.
+    window.__rebootFieldReadiness = boot;
 
     boot();
     setInterval(poll, POLL_INTERVAL_MS);
@@ -5432,7 +5492,7 @@
 
     async function loadAndRender(reviewId) {
       bodyEl.innerHTML = '<p class="ra-detail-loading">Loading…</p>';
-      titleEl.textContent = 'Ride-Along Review';
+      titleEl.textContent = 'Review';
       subEl.textContent = '—';
       try {
         // Pull canonical review + todos (todos give us the manager+tech names + IDs).
@@ -5451,7 +5511,7 @@
         var techName = todo.technician_name || 'this technician';
         var managerName = todo.manager_name || 'Manager';
 
-        titleEl.textContent = 'Ride-Along Review — ' + techName;
+        titleEl.textContent = 'Review — ' + techName;
         subEl.textContent = 'For ' + managerName + ' · ' + formatDate(todo.created_at);
 
         if (review.status === 'complete') {
