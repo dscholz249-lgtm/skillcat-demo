@@ -2236,6 +2236,80 @@
           </div>
 
         </section>
+
+        <!-- Tasks -->
+        <section class="section">
+          <style>
+            .task-list { padding: 4px 0; }
+            .task-row { display: flex; align-items: center; gap: 13px; padding: 12px 16px; border-bottom: 1px solid var(--border-soft); cursor: pointer; transition: background .12s; }
+            .task-row:last-child { border-bottom: none; }
+            .task-row:hover { background: #16161a; }
+            .task-row-icon { width: 34px; height: 34px; border-radius: 9px; flex: none; display: grid; place-items: center; background: #1c1c21; color: var(--text-dim); }
+            .task-row-icon svg { width: 17px; height: 17px; stroke-width: 1.9; }
+            .task-row-icon.orange { background: rgba(229,83,31,.14); color: var(--orange, #e5531f); }
+            .task-row-icon.blue   { background: rgba(122,167,255,.14); color: var(--blue); }
+            .task-row-icon.amber  { background: rgba(241,167,58,.14);  color: var(--amber); }
+            .task-row-icon.green  { background: rgba(43,208,122,.14);  color: var(--green); }
+            .task-row-meta { flex: 1; min-width: 0; }
+            .task-row-title { font-weight: 600; font-size: 13.5px; color: var(--text); }
+            .task-row-sub { font-family: var(--mono); font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+            .task-row-arrow { color: var(--text-faint); display: inline-flex; }
+            .task-row-arrow svg { width: 16px; height: 16px; stroke-width: 2; }
+            .task-row-custom-badge { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--orange, #e5531f); background: rgba(229,83,31,.14); padding: 2px 6px; border-radius: 5px; margin-left: 8px; }
+          </style>
+          <div class="section-head">
+            <div class="section-title">
+              <h2>Tasks</h2>
+              <span class="hint">Bite-sized quizzes, exams, and hands-on activities</span>
+            </div>
+            <div class="section-ctas">
+              <button class="btn btn-primary btn-sm" onclick="window.__openTaskWizard && window.__openTaskWizard()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+                Create Custom Task
+              </button>
+            </div>
+          </div>
+
+          <!-- Hands-On -->
+          <div class="lib-cat open" style="animation-delay:.04s">
+            <div class="lib-cat-head" data-toggle-cat>
+              <span class="lib-cat-dot" style="background:var(--orange)"></span>
+              <span class="lib-cat-title">Hands-On</span>
+              <span class="lib-cat-count">5 tasks</span>
+              <span class="lib-cat-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div>
+            <div class="lib-cat-body">
+              <div class="task-list" id="taskList-hands-on"></div>
+            </div>
+          </div>
+
+          <!-- Quizzes -->
+          <div class="lib-cat" style="animation-delay:.06s">
+            <div class="lib-cat-head" data-toggle-cat>
+              <span class="lib-cat-dot" style="background:var(--blue)"></span>
+              <span class="lib-cat-title">Quizzes</span>
+              <span class="lib-cat-count">6 tasks</span>
+              <span class="lib-cat-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div>
+            <div class="lib-cat-body">
+              <div class="task-list" id="taskList-quiz"></div>
+            </div>
+          </div>
+
+          <!-- Final Exams -->
+          <div class="lib-cat" style="animation-delay:.08s">
+            <div class="lib-cat-head" data-toggle-cat>
+              <span class="lib-cat-dot" style="background:var(--amber)"></span>
+              <span class="lib-cat-title">Final Exams</span>
+              <span class="lib-cat-count">4 tasks</span>
+              <span class="lib-cat-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div>
+            <div class="lib-cat-body">
+              <div class="task-list" id="taskList-exam"></div>
+            </div>
+          </div>
+
+        </section>
       </div>
     </div>
 
@@ -2655,6 +2729,433 @@
 
         <div class="detail-body" id="raDetailBody">
           <p class="ra-detail-loading">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TASK DETAIL ============ -->
+    <div class="page" id="page-task-detail">
+      <style>
+        .task-detail-type-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; }
+        .task-detail-type-badge.hands-on { color: var(--orange,#e5531f); background: rgba(229,83,31,.14); }
+        .task-detail-type-badge.quiz     { color: var(--blue);  background: rgba(122,167,255,.14); }
+        .task-detail-type-badge.exam     { color: var(--amber); background: rgba(241,167,58,.14); }
+        .task-detail-usage { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--text-dim); padding: 3px 10px; border-radius: 999px; background: #15151a; border: 1px solid var(--border); }
+        .task-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; max-width: 880px; }
+        .task-detail-grid.single { grid-template-columns: 1fr; }
+        .td-card { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+        .td-card.full { grid-column: 1 / -1; }
+        .td-label { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+        .td-value { font-size: 14px; line-height: 1.55; color: var(--text); }
+        .td-value .muted { color: var(--text-faint); }
+        .td-value.mono { font-family: var(--mono); font-size: 12.5px; }
+        .td-checklist { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.55; color: var(--text); }
+        .td-checklist li { margin: 4px 0; }
+        .td-file-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+        .td-file-list li { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); padding: 6px 10px; background: rgba(255,255,255,.03); border-radius: 7px; }
+        .td-file-list li svg { width: 14px; height: 14px; color: var(--text-faint); stroke-width: 1.8; }
+        .td-kv { display: flex; gap: 12px; font-size: 13px; color: var(--text-dim); padding: 3px 0; }
+        .td-kv b { color: var(--text); font-weight: 700; min-width: 130px; }
+        .task-detail-actions { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 60%, transparent); padding: 18px 0 6px; display: flex; justify-content: flex-end; gap: 10px; margin-top: 28px; max-width: 880px; }
+      </style>
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn btn-ghost btn-sm" onclick="showPage('library')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 6l-6 6 6 6"/></svg>
+            Back to Library
+          </button>
+        </div>
+      </header>
+      <div class="scroll">
+        <div class="person-header" id="taskDetailHero">
+          <div class="person-header-left">
+            <h1 style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span id="taskDetailName">Task</span>
+              <span id="taskDetailTypeBadge" class="task-detail-type-badge hands-on">Hands-On</span>
+            </h1>
+            <div class="person-sub" id="taskDetailSub">—</div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+              <span class="task-detail-usage" id="taskDetailUsage">—</span>
+              <span class="task-detail-usage" id="taskDetailVisibility">Tenant scope</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="taskDetailBody">
+          <p class="ra-detail-loading">Loading…</p>
+        </div>
+
+        <div class="task-detail-actions">
+          <button class="btn btn-primary" id="taskDetailEditBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg>
+            Edit Task
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TASK WIZARD (Create / Edit) ============ -->
+    <div class="page" id="page-task-wizard">
+      <style>
+        .tw-mode-banner { display: inline-flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; background: rgba(122,167,255,.14); color: var(--blue); margin-left: 10px; }
+        .tw-mode-banner.edit { background: rgba(241,167,58,.14); color: var(--amber); }
+        .tw-step-wrap { display: none; padding: 6px 0 24px; max-width: 720px; }
+        .tw-step-wrap.active { display: block; }
+        .tw-step-q { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 8px 0 6px; }
+        .tw-step-sub { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; margin-bottom: 22px; max-width: 600px; }
+        .tw-group { margin-bottom: 18px; }
+        .tw-label { display: flex; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .tw-label .req { color: var(--orange,#e5531f); }
+        .tw-label .opt { font-weight: 500; color: var(--text-faint); }
+        .tw-help { font-size: 12px; color: var(--text-faint); margin-top: 6px; line-height: 1.5; }
+        .tw-input, .tw-textarea, .tw-select { width: 100%; background: #08080a; border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; color: var(--text); font-family: var(--sans); font-size: 14px; outline: none; transition: border-color .12s; box-sizing: border-box; }
+        .tw-input:focus, .tw-textarea:focus, .tw-select:focus { border-color: var(--orange); }
+        .tw-textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+        .tw-select { -webkit-appearance: none; appearance: none; cursor: pointer; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .tw-inline-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tw-inline-row .tw-group { flex: 1; min-width: 200px; margin-bottom: 0; }
+        .tw-type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; max-width: 720px; }
+        .tw-type-card { background: #0c0c0f; border: 1.5px solid var(--border); border-radius: 12px; padding: 18px; cursor: pointer; transition: all .14s; display: flex; flex-direction: column; gap: 8px; text-align: left; font-family: var(--sans); color: var(--text); }
+        .tw-type-card:hover { border-color: var(--orange,#e5531f); background: #131316; }
+        .tw-type-card.selected { border-color: var(--orange,#e5531f); background: rgba(229,83,31,.08); }
+        .tw-type-card.disabled { opacity: .42; cursor: not-allowed; }
+        .tw-type-card .ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; }
+        .tw-type-card .ic svg { width: 18px; height: 18px; stroke-width: 1.9; }
+        .tw-type-card.hands-on .ic { background: rgba(229,83,31,.14); color: var(--orange,#e5531f); }
+        .tw-type-card.quiz     .ic { background: rgba(122,167,255,.14); color: var(--blue); }
+        .tw-type-card.exam     .ic { background: rgba(241,167,58,.14);  color: var(--amber); }
+        .tw-type-card .t { font-size: 14.5px; font-weight: 700; }
+        .tw-type-card .d { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+        .tw-type-card .soon { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); margin-top: 4px; }
+        .tw-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 540px; }
+        .tw-toggle { background: #0c0c0f; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all .14s; text-align: left; color: var(--text); font-family: var(--sans); }
+        .tw-toggle:hover { border-color: var(--orange,#e5531f); }
+        .tw-toggle.selected { border-color: var(--orange,#e5531f); background: rgba(229,83,31,.08); }
+        .tw-toggle .t { font-weight: 700; font-size: 14px; }
+        .tw-toggle .d { font-size: 12px; color: var(--text-dim); margin-top: 4px; line-height: 1.45; }
+        .tw-files-add { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px dashed var(--border); border-radius: 8px; background: transparent; color: var(--text-dim); cursor: pointer; font: 600 12.5px var(--sans); transition: all .12s; }
+        .tw-files-add:hover { border-color: var(--orange,#e5531f); color: var(--text); border-style: solid; }
+        .tw-files-list { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 6px; }
+        .tw-files-list li { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); padding: 6px 10px; background: rgba(255,255,255,.03); border-radius: 7px; }
+        .tw-files-list li svg.fi { width: 14px; height: 14px; color: var(--text-faint); }
+        .tw-files-list li .rm { margin-left: auto; background: transparent; border: 0; color: var(--text-faint); cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+        .tw-files-list li .rm:hover { color: var(--red); background: rgba(240,88,75,.08); }
+        .tw-derived { background: rgba(43,208,122,.06); border: 1px solid rgba(43,208,122,.22); border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 12.5px; color: var(--text-dim); line-height: 1.5; max-width: 540px; }
+        .tw-derived b { color: var(--green); font-weight: 700; }
+        .tw-placement-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .tw-placement-card { flex: 1; min-width: 240px; background: #0c0c0f; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; transition: all .14s; font-family: var(--sans); color: var(--text); text-align: left; }
+        .tw-placement-card:hover { border-color: var(--orange,#e5531f); }
+        .tw-placement-card.selected { border-color: var(--orange,#e5531f); background: rgba(229,83,31,.08); }
+        .tw-placement-card .t { font-weight: 700; font-size: 14px; }
+        .tw-placement-card .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.45; }
+        .tw-tier-warn { display: flex; gap: 10px; align-items: flex-start; background: rgba(241,167,58,.1); border: 1px solid rgba(241,167,58,.28); border-radius: 10px; padding: 11px 14px; color: var(--amber); font-size: 12.5px; line-height: 1.5; margin: 14px 0; max-width: 600px; }
+        .tw-tier-warn svg { flex: none; width: 16px; height: 16px; stroke-width: 2; margin-top: 1px; }
+        .tw-tier-warn b { color: var(--text); font-weight: 700; }
+        .tw-impact { background: rgba(122,167,255,.06); border: 1px solid rgba(122,167,255,.22); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 0 0 18px; max-width: 720px; display: flex; gap: 10px; align-items: flex-start; }
+        .tw-impact svg { flex: none; width: 16px; height: 16px; stroke-width: 2; color: var(--blue); margin-top: 1px; }
+        .tw-impact b { color: var(--blue); font-weight: 700; }
+        .tw-footer { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 60%, transparent); padding: 18px 0 6px; display: flex; justify-content: space-between; align-items: center; margin-top: 18px; max-width: 720px; }
+        .tw-footer .left { display: flex; gap: 10px; }
+        .tw-footer .right { display: flex; gap: 10px; }
+        .tw-final-card { background: rgba(43,208,122,.06); border: 1px solid rgba(43,208,122,.22); border-radius: 12px; padding: 18px 22px; max-width: 540px; margin-top: 18px; }
+        .tw-final-card .h { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+        .tw-final-card .check-ic { width: 22px; height: 22px; border-radius: 50%; background: var(--green); display: grid; place-items: center; color: #000; }
+        .tw-final-card .check-ic svg { width: 13px; height: 13px; stroke-width: 3; }
+        .tw-final-card .d { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+      </style>
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn btn-ghost btn-sm" id="twCancelBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 6l-6 6 6 6"/></svg>
+            <span>Cancel</span>
+          </button>
+          <h1 class="topbar-title" style="font-size:18px; margin:0 0 0 12px; display:inline-flex; align-items:center;">
+            <span id="twTitle">Create Task</span>
+            <span id="twModeBanner" class="tw-mode-banner">New</span>
+          </h1>
+        </div>
+      </header>
+
+      <div class="stepper">
+        <div class="step active" data-tw-step="1"><span class="step-num">1</span><span class="step-label">Type</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-tw-step="2"><span class="step-num">2</span><span class="step-label">Content</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-tw-step="3"><span class="step-num">3</span><span class="step-label">Submission &amp; Review</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-tw-step="4"><span class="step-num">4</span><span class="step-label">Placement &amp; Publish</span></div>
+      </div>
+
+      <div class="scroll">
+        <div id="twImpact" class="tw-impact" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div><b>In use across <span id="twImpactCount">—</span> certifications/paths.</b> Saving content changes will reflect everywhere it's referenced. Existing learner state is preserved according to where each learner is in the task.</div>
+        </div>
+
+        <!-- STEP 1: Type -->
+        <div class="tw-step-wrap active" data-tw-body="1">
+          <h2 class="tw-step-q">What type of task?</h2>
+          <p class="tw-step-sub">Pick the kind of activity learners will do. You can change this later only by deleting and recreating.</p>
+          <div class="tw-type-grid">
+            <button type="button" class="tw-type-card hands-on selected" data-tw-type="hands-on">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+              <div class="t">Hands-On</div>
+              <div class="d">Learner performs work in the field and submits proof. Reviewer scores it.</div>
+            </button>
+            <button type="button" class="tw-type-card quiz" data-tw-type="quiz">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg></div>
+              <div class="t">Quiz</div>
+              <div class="d">Short multiple-choice or short-answer assessment with auto-grade.</div>
+            </button>
+            <button type="button" class="tw-type-card exam" data-tw-type="exam">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg></div>
+              <div class="t">Final Exam</div>
+              <div class="d">Longer-form assessment, often gated to end of a certification.</div>
+            </button>
+          </div>
+          <p class="tw-step-sub" style="margin-top:18px; font-size:12.5px;">For this build, the Create flow is fully wired for Hands-On. Quiz and Final Exam will route through the same screens with their own field sets in a follow-on pass.</p>
+        </div>
+
+        <!-- STEP 2: Content -->
+        <div class="tw-step-wrap" data-tw-body="2">
+          <h2 class="tw-step-q">Define the task</h2>
+          <p class="tw-step-sub">Name it, write the instructions, list the tools, and define what reviewers should check for. The reviewer checklist is hidden from learners.</p>
+
+          <div class="tw-group">
+            <label class="tw-label" for="twName">Task name <span class="req">*</span></label>
+            <input type="text" id="twName" class="tw-input" placeholder="e.g. Equipment Inspection" />
+            <div class="tw-help">Shown to learners and to whoever is assigning the task.</div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label" for="twInstructions">Instructions <span class="req">*</span></label>
+            <textarea id="twInstructions" class="tw-textarea" placeholder="Step-by-step instructions for the learner..."></textarea>
+            <div class="tw-help">Plain text. Reference files are listed separately below.</div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label" for="twTools">Tools &amp; materials required <span class="opt">(recommended)</span></label>
+            <textarea id="twTools" class="tw-textarea" style="min-height:60px;" placeholder="e.g. pressure gauge, multimeter, camera"></textarea>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label">Reference files <span class="opt">(optional)</span></label>
+            <ul class="tw-files-list" id="twFilesList"></ul>
+            <button type="button" class="tw-files-add" id="twAddFileBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+              Attach file
+            </button>
+            <div class="tw-help">PDFs, images, or short videos learners can reference while they work.</div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label" for="twChecklist">Reviewer checklist <span class="req">*</span></label>
+            <textarea id="twChecklist" class="tw-textarea" placeholder="Verify: 4 photos uploaded · pressure recorded · damage noted ..."></textarea>
+            <div class="tw-help"><b>Hidden from learners.</b> Used by the reviewer to grade consistently.</div>
+          </div>
+
+          <div class="tw-inline-row">
+            <div class="tw-group">
+              <label class="tw-label" for="twVisibility">Visibility</label>
+              <select id="twVisibility" class="tw-select">
+                <option value="tenant">Tenant — visible to this company only</option>
+                <option value="private">Private — only the creator</option>
+              </select>
+            </div>
+            <div class="tw-group">
+              <label class="tw-label" for="twTime">Time to complete <span class="opt">(optional)</span></label>
+              <input type="text" id="twTime" class="tw-input" placeholder="e.g. 30 min" />
+            </div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label" for="twDesc">Description <span class="opt">(optional)</span></label>
+            <input type="text" id="twDesc" class="tw-input" placeholder="One-line summary for catalogs and search" />
+          </div>
+        </div>
+
+        <!-- STEP 3: Submission & Review -->
+        <div class="tw-step-wrap" data-tw-body="3">
+          <h2 class="tw-step-q">How do they submit, and how is it scored?</h2>
+          <p class="tw-step-sub">The completion criterion is derived from the review mode — pick one and the other configures itself.</p>
+
+          <div class="tw-group">
+            <label class="tw-label">Project description char limit <span class="opt">(0 = hide field)</span></label>
+            <input type="number" id="twDescLimit" class="tw-input" value="500" min="0" max="5000" />
+            <div class="tw-help">How long a written explanation the learner can attach. Set to 0 to skip the text field entirely.</div>
+          </div>
+
+          <div class="tw-inline-row">
+            <div class="tw-group">
+              <label class="tw-label">Media files — max count <span class="opt">(0 = text only)</span></label>
+              <input type="number" id="twMediaCount" class="tw-input" value="4" min="0" max="20" />
+            </div>
+            <div class="tw-group">
+              <label class="tw-label">Accepted media types</label>
+              <select id="twMediaTypes" class="tw-select">
+                <option value="images">Images</option>
+                <option value="images,videos">Images + Videos</option>
+                <option value="images,videos,audio">Images + Videos + Audio</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label">Max attempts</label>
+            <select id="twAttempts" class="tw-select">
+              <option>1</option><option>2</option><option>3</option>
+              <option selected>4</option><option>5</option><option>6</option>
+              <option>7</option><option>8</option><option>9</option>
+              <option>10</option><option value="unlimited">Unlimited</option>
+            </select>
+            <div class="tw-help">Prior attempts are preserved; the learner can edit until reviewed, locked once reviewed.</div>
+          </div>
+
+          <div class="tw-group">
+            <label class="tw-label">Review mode <span class="req">*</span></label>
+            <div class="tw-toggle-row">
+              <button type="button" class="tw-toggle selected" data-tw-review="with">
+                <div class="t">With Review</div>
+                <div class="d">Reviewer (not the creator) scores 0–10 with optional feedback.</div>
+              </button>
+              <button type="button" class="tw-toggle" data-tw-review="none">
+                <div class="t">No Review</div>
+                <div class="d">Submission alone counts as complete. No scoring.</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="tw-group" id="twPassingWrap">
+            <label class="tw-label">Passing score</label>
+            <input type="number" id="twPassing" class="tw-input" value="7" min="0" max="10" style="max-width:140px;" />
+            <div class="tw-help">A score at or above this is "passed." Reviewer cannot be the creator.</div>
+          </div>
+
+          <div class="tw-derived" id="twDerived">
+            Completion criterion: <b id="twCompletionLabel">Passing Grade from Reviewer</b>
+          </div>
+        </div>
+
+        <!-- STEP 4: Placement & Publish -->
+        <div class="tw-step-wrap" data-tw-body="4">
+          <h2 class="tw-step-q">Place it and publish</h2>
+          <p class="tw-step-sub">Where does this task live? You can place it once and reference it from many certifications and paths, or drop it directly on an employee's path.</p>
+
+          <div class="tw-group">
+            <label class="tw-label">Placement mode</label>
+            <div class="tw-placement-row">
+              <button type="button" class="tw-placement-card selected" data-tw-placement="bundle">
+                <div class="t">Bundle</div>
+                <div class="d">Add to a custom certification so it can be assigned in groups.</div>
+              </button>
+              <button type="button" class="tw-placement-card" data-tw-placement="direct">
+                <div class="t">Direct</div>
+                <div class="d">Assign directly to an employee's path. Skips bundling.</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="tw-group" id="twPlaceBundleWrap">
+            <label class="tw-label">Custom certification</label>
+            <select id="twPlaceBundle" class="tw-select">
+              <option>Van Hook HVAC Standards</option>
+              <option>Junior Tech Onboarding</option>
+              <option>— Create new —</option>
+            </select>
+          </div>
+
+          <div class="tw-group" id="twPlaceDirectWrap" style="display:none;">
+            <label class="tw-label">Assign to path</label>
+            <select id="twPlaceDirect" class="tw-select">
+              <option>Field Tech Foundations Path</option>
+              <option>HVAC Foundations Path</option>
+              <option>Senior Tech Path</option>
+            </select>
+          </div>
+
+          <div class="tw-inline-row">
+            <div class="tw-group">
+              <label class="tw-label">Industries / Sub-Industries <span class="opt">(optional)</span></label>
+              <select id="twIndustry" class="tw-select">
+                <option value="">Not tagged</option>
+                <option>HVAC Service</option>
+                <option>HVAC Install</option>
+                <option>Refrigeration</option>
+                <option>Plumbing</option>
+              </select>
+            </div>
+            <div class="tw-group">
+              <label class="tw-label">Skills mapped <span class="opt">(optional)</span></label>
+              <select id="twSkills" class="tw-select">
+                <option value="">Not mapped</option>
+                <option>EPA Recovery</option>
+                <option>Pressure Testing</option>
+                <option>Electrical Diagnostics</option>
+                <option>Customer Communication</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tw-inline-row">
+            <div class="tw-group">
+              <label class="tw-label">Access restrictions <span class="opt">(optional)</span></label>
+              <select id="twAccess" class="tw-select">
+                <option value="">None</option>
+                <option>Lead techs and above</option>
+                <option>Approved by manager</option>
+              </select>
+            </div>
+            <div class="tw-group">
+              <label class="tw-label">Force order <span class="opt">(optional)</span></label>
+              <select id="twForce" class="tw-select">
+                <option value="">Off</option>
+                <option>Must follow prior task</option>
+              </select>
+            </div>
+            <div class="tw-group">
+              <label class="tw-label">Due date <span class="opt">(optional)</span></label>
+              <input type="date" id="twDue" class="tw-input" />
+            </div>
+          </div>
+
+          <div class="tw-tier-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>
+            <div><b>Subscription tier — Pro.</b> Used 6 of 25 custom tasks. Lower tiers cap at Essential 1 / Growth 5.</div>
+          </div>
+        </div>
+
+        <div class="tw-footer">
+          <div class="left">
+            <button class="btn btn-ghost" id="twBackBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 6l-6 6 6 6"/></svg>
+              Back
+            </button>
+          </div>
+          <div class="right">
+            <button class="btn btn-ghost" id="twSaveDraftBtn">Save draft</button>
+            <button class="btn btn-primary" id="twNextBtn">
+              Continue
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="btn btn-primary" id="twPublishBtn" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 13l4 4L19 7"/></svg>
+              Publish
+            </button>
+          </div>
+        </div>
+
+        <div class="tw-final-card" id="twFinalCard" style="display:none;">
+          <div class="h">
+            <span class="check-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5L20 7"/></svg></span>
+            <span id="twFinalHeader">Task published</span>
+          </div>
+          <div class="d">
+            <span id="twFinalBody">Live in the Library. Reflects everywhere it's used.</span>
+            <div style="margin-top:14px; display:flex; gap:10px;">
+              <button class="btn btn-ghost btn-sm" onclick="showPage('library')">Back to Library</button>
+              <button class="btn btn-ghost btn-sm" id="twFinalAnotherBtn">Create another</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -4499,7 +5000,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', 'task-detail': 'Library', 'task-wizard': 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');
@@ -5533,6 +6034,513 @@
       if (typeof showPage === 'function') showPage('ridealong-detail');
       loadAndRender(reviewId);
     };
+  })();
+
+  // Tasks — Library Tasks section + Task Detail + Create/Edit Wizard.
+  // All client-side prototype data — there is no /api/tasks endpoint yet on the
+  // mock; the wizard's Publish call surfaces a confirmation card but doesn't
+  // round-trip. Hands-On is the fully-built flow per the spec; Quiz and Final
+  // Exam share the same screens with a different field set (TBD).
+  (function initTasks() {
+    var fileIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="fi"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg>';
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+
+    var TASKS = [
+      // Hands-On
+      { id: 'task_eq_insp', type: 'hands-on', name: 'Equipment Inspection', duration: '30 min',
+        description: 'Pre-service inspection of an HVAC unit. Photo + pressure log.',
+        instructions: 'Photograph the unit from all four sides. Test refrigerant pressure at the service ports. Inspect coils for damage, dirt, or corrosion. Verify electrical connections are tight and not corroded. Note any abnormalities in the submission.',
+        tools: 'Pressure gauge, flashlight, multimeter, camera/phone, inspection checklist clipboard',
+        files: ['HVAC_Inspection_Checklist.pdf', 'Inspection_Photo_Guide.pdf'],
+        checklist: 'Verify: 4 photos uploaded · pressure readings recorded · all visible damage noted · recommendation provided',
+        visibility: 'tenant', time: '30 min', descLimit: 500, mediaCount: 4, mediaTypes: 'images', attempts: '4',
+        review: 'with', passing: 7, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: 'Pressure Testing', usedIn: { certs: 2, paths: 3 } },
+      { id: 'task_refr_rec', type: 'hands-on', name: 'Refrigerant Recovery Demonstration', duration: '45 min',
+        description: 'Recover refrigerant per EPA 608 procedure on a live unit.',
+        instructions: 'Connect recovery machine to high and low service ports. Recover R-410A to ≤ 10 inHg vacuum. Document machine readings before and after. Demonstrate proper cylinder hookup and weight tracking.',
+        tools: 'Recovery machine, refrigerant cylinder, manifold gauges, scale, micron gauge',
+        files: ['EPA608_Recovery_Procedure.pdf'],
+        checklist: 'Verify: end vacuum ≤ 10 inHg · cylinder weight logged · safety steps demoed · video of machine running',
+        visibility: 'tenant', time: '45 min', descLimit: 500, mediaCount: 3, mediaTypes: 'images,videos', attempts: '3',
+        review: 'with', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'Refrigeration', skills: 'EPA Recovery', usedIn: { certs: 1, paths: 2 } },
+      { id: 'task_ptest', type: 'hands-on', name: 'Pressure Test Procedure', duration: '40 min',
+        description: 'Perform a nitrogen pressure test on new linesets and document results.',
+        instructions: 'Pressurize system with dry nitrogen to 300 psig. Hold for 30 minutes. Inspect every joint with soap solution. Document hold pressure, ambient temp, and any leaks found.',
+        tools: 'Nitrogen tank with regulator, soap solution, manifold gauges, pressure log sheet',
+        files: ['Nitrogen_Pressure_Test_SOP.pdf'],
+        checklist: 'Verify: 30-min hold passed · start/end pressures logged · ambient temp recorded · all joints inspected',
+        visibility: 'tenant', time: '40 min', descLimit: 400, mediaCount: 2, mediaTypes: 'images', attempts: '3',
+        review: 'with', passing: 7, placement: 'bundle', bundle: 'Junior Tech Onboarding',
+        industry: 'HVAC Install', skills: 'Pressure Testing', usedIn: { certs: 1, paths: 1 } },
+      { id: 'task_panel', type: 'hands-on', name: 'Electrical Panel Wiring', duration: '60 min',
+        description: 'Wire a residential disconnect to the panel per code.',
+        instructions: 'Mount the disconnect within reach of the unit. Pull and land wires per nameplate amperage. Torque all lugs to spec. Photograph the finished work with cover on and off.',
+        tools: 'Torque screwdriver, MC connectors, fish tape, voltmeter, label maker, code book',
+        files: ['NEC_Disconnect_Article.pdf', 'Lug_Torque_Spec_Sheet.pdf'],
+        checklist: 'Verify: amperage matches nameplate · torque marks visible · cover labeled · 2 photos (open + closed)',
+        visibility: 'tenant', time: '60 min', descLimit: 500, mediaCount: 2, mediaTypes: 'images', attempts: '4',
+        review: 'with', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Install', skills: 'Electrical Diagnostics', usedIn: { certs: 2, paths: 2 } },
+      { id: 'task_walk', type: 'hands-on', name: 'Customer Walkthrough', duration: '20 min',
+        description: 'Recorded walkthrough explaining service performed to the customer.',
+        instructions: 'Record a 2–3 minute walkthrough explaining what you did and why. Show the customer where they can reach controls. Confirm next-service recommendation in writing on the invoice.',
+        tools: 'Phone camera, invoice tablet',
+        files: [],
+        checklist: 'Verify: clear audio · service summary covered · next-step recommendation given · customer acknowledged on invoice',
+        visibility: 'tenant', time: '20 min', descLimit: 300, mediaCount: 1, mediaTypes: 'images,videos', attempts: '5',
+        review: 'with', passing: 7, placement: 'bundle', bundle: 'Junior Tech Onboarding',
+        industry: 'HVAC Service', skills: 'Customer Communication', usedIn: { certs: 1, paths: 3 } },
+
+      // Quizzes
+      { id: 'task_q_hvac', type: 'quiz', name: 'HVAC Fundamentals Quiz', duration: '15 min',
+        description: '20 multiple-choice questions on basic HVAC theory.',
+        instructions: 'Answer all 20 questions. Two attempts allowed. 70% passing.',
+        tools: '—', files: ['Fundamentals_Slide_Deck.pdf'],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '15 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '2',
+        review: 'none', passing: 7, placement: 'bundle', bundle: 'Junior Tech Onboarding',
+        industry: 'HVAC Service', skills: '', usedIn: { certs: 1, paths: 2 } },
+      { id: 'task_q_epa', type: 'quiz', name: 'EPA 608 Prep Quiz', duration: '20 min',
+        description: 'Pre-test for the EPA 608 Universal certification exam.',
+        instructions: 'Answer all 25 questions. Open-book.',
+        tools: 'EPA 608 study guide', files: ['EPA608_Study_Guide.pdf'],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '20 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: 'unlimited',
+        review: 'none', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'Refrigeration', skills: 'EPA Recovery', usedIn: { certs: 2, paths: 1 } },
+      { id: 'task_q_tools', type: 'quiz', name: 'Tool Identification Quiz', duration: '10 min',
+        description: 'Identify common HVAC tools from photos.',
+        instructions: 'You will see 15 tool photos. Pick the correct name and primary use.',
+        tools: '—', files: [],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '10 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '3',
+        review: 'none', passing: 7, placement: 'bundle', bundle: 'Junior Tech Onboarding',
+        industry: 'HVAC Service', skills: '', usedIn: { certs: 1, paths: 1 } },
+      { id: 'task_q_safety', type: 'quiz', name: 'Safety Procedures Quiz', duration: '12 min',
+        description: 'Workplace safety basics, lockout/tagout, PPE.',
+        instructions: '15 questions on field safety procedures.',
+        tools: 'OSHA quick reference', files: ['Safety_Procedures.pdf'],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '12 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '3',
+        review: 'none', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: '', usedIn: { certs: 3, paths: 4 } },
+      { id: 'task_q_refr', type: 'quiz', name: 'Refrigerant Handling Quiz', duration: '15 min',
+        description: 'Quick check on R-410A, R-32, and recovery procedures.',
+        instructions: '20 questions, 70% passing.',
+        tools: '—', files: [],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '15 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '2',
+        review: 'none', passing: 7, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'Refrigeration', skills: 'EPA Recovery', usedIn: { certs: 1, paths: 2 } },
+      { id: 'task_q_diag', type: 'quiz', name: 'Diagnostics Decision Tree', duration: '18 min',
+        description: 'Walk through 8 diagnostic scenarios — pick next step.',
+        instructions: 'Scenario-based. No two-attempts allowed.',
+        tools: '—', files: ['Diagnostics_Decision_Tree.pdf'],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '18 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '1',
+        review: 'none', passing: 7, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: 'Electrical Diagnostics', usedIn: { certs: 1, paths: 1 } },
+
+      // Final Exams
+      { id: 'task_x_osha', type: 'exam', name: 'OSHA 10 Final Exam', duration: '90 min',
+        description: 'Comprehensive final for the OSHA 10 certification.',
+        instructions: '50 questions, 70% passing. Timed: 90 min. One retake.',
+        tools: 'None — closed-book.', files: [],
+        checklist: 'Auto-graded; scored above passing = pass',
+        visibility: 'tenant', time: '90 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '2',
+        review: 'none', passing: 7, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: '', usedIn: { certs: 1, paths: 0 } },
+      { id: 'task_x_epa', type: 'exam', name: 'EPA 608 Universal Exam', duration: '120 min',
+        description: 'Proctored final for EPA 608 Universal certification.',
+        instructions: 'Proctored. 100 questions. 75% passing on Universal section.',
+        tools: 'EPA-approved calculator', files: ['EPA608_Study_Guide.pdf'],
+        checklist: 'Auto-graded; reviewer verifies proctor confirmation',
+        visibility: 'tenant', time: '120 min', descLimit: 100, mediaCount: 1, mediaTypes: 'images', attempts: '3',
+        review: 'with', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'Refrigeration', skills: 'EPA Recovery', usedIn: { certs: 2, paths: 1 } },
+      { id: 'task_x_svc', type: 'exam', name: 'HVAC Service Final', duration: '75 min',
+        description: 'End-of-path exam for the HVAC Service Foundations bundle.',
+        instructions: '40 questions. 75% passing.',
+        tools: '—', files: [],
+        checklist: 'Auto-graded',
+        visibility: 'tenant', time: '75 min', descLimit: 0, mediaCount: 0, mediaTypes: 'images', attempts: '2',
+        review: 'none', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: '', usedIn: { certs: 1, paths: 1 } },
+      { id: 'task_x_cert', type: 'exam', name: 'Master Certification Exam', duration: '180 min',
+        description: 'Capstone for senior techs — multi-section.',
+        instructions: 'Three sections (theory, scenarios, hands-on review). Min 80% in each.',
+        tools: 'Code book, calculator', files: [],
+        checklist: 'Reviewer signs off on hands-on section',
+        visibility: 'tenant', time: '180 min', descLimit: 500, mediaCount: 4, mediaTypes: 'images,videos', attempts: '2',
+        review: 'with', passing: 8, placement: 'bundle', bundle: 'Van Hook HVAC Standards',
+        industry: 'HVAC Service', skills: 'Electrical Diagnostics', usedIn: { certs: 1, paths: 0 } },
+    ];
+
+    var TYPE_META = {
+      'hands-on': { label: 'Hands-On', listEl: 'taskList-hands-on', iconClass: 'orange',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>' },
+      'quiz': { label: 'Quiz', listEl: 'taskList-quiz', iconClass: 'blue',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg>' },
+      'exam': { label: 'Final Exam', listEl: 'taskList-exam', iconClass: 'amber',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>' },
+    };
+
+    function findTask(id) { for (var i = 0; i < TASKS.length; i++) if (TASKS[i].id === id) return TASKS[i]; return null; }
+
+    // ---------- Render Library Tasks ----------
+    function renderTaskLists() {
+      Object.keys(TYPE_META).forEach(function (type) {
+        var meta = TYPE_META[type];
+        var el = document.getElementById(meta.listEl);
+        if (!el) return;
+        var tasks = TASKS.filter(function (t) { return t.type === type; });
+        el.innerHTML = tasks.map(function (t) {
+          var reviewLabel = t.review === 'with' ? 'With Review · pass ' + t.passing : 'No Review';
+          return '<div class="task-row" data-task-id="' + esc(t.id) + '">' +
+            '<div class="task-row-icon ' + meta.iconClass + '">' + meta.icon + '</div>' +
+            '<div class="task-row-meta">' +
+              '<div class="task-row-title">' + esc(t.name) + '</div>' +
+              '<div class="task-row-sub">' + esc(meta.label) + ' · ' + esc(t.duration) + ' · ' + esc(reviewLabel) + '</div>' +
+            '</div>' +
+            '<span class="task-row-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span>' +
+          '</div>';
+        }).join('');
+        el.querySelectorAll('.task-row').forEach(function (row) {
+          row.addEventListener('click', function () { openTaskDetail(row.dataset.taskId); });
+        });
+        // Update the count in the accordion header
+        var head = el.closest('.lib-cat').querySelector('.lib-cat-count');
+        if (head) head.textContent = tasks.length + ' task' + (tasks.length === 1 ? '' : 's');
+      });
+    }
+
+    // ---------- Task Detail ----------
+    var detailNameEl = document.getElementById('taskDetailName');
+    var detailBadgeEl = document.getElementById('taskDetailTypeBadge');
+    var detailSubEl = document.getElementById('taskDetailSub');
+    var detailUsageEl = document.getElementById('taskDetailUsage');
+    var detailVisibilityEl = document.getElementById('taskDetailVisibility');
+    var detailBodyEl = document.getElementById('taskDetailBody');
+    var detailEditBtn = document.getElementById('taskDetailEditBtn');
+    var detailCurrentId = null;
+
+    function renderTaskDetail(task) {
+      detailCurrentId = task.id;
+      var meta = TYPE_META[task.type];
+      detailNameEl.textContent = task.name;
+      detailBadgeEl.textContent = meta.label;
+      detailBadgeEl.className = 'task-detail-type-badge ' + task.type;
+      detailSubEl.textContent = task.description || '';
+      detailUsageEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px;stroke-width:2;"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+        + 'In ' + task.usedIn.certs + ' certification' + (task.usedIn.certs === 1 ? '' : 's')
+        + ' · ' + task.usedIn.paths + ' path' + (task.usedIn.paths === 1 ? '' : 's');
+      detailVisibilityEl.textContent = task.visibility === 'tenant' ? 'Tenant scope' : (task.visibility === 'private' ? 'Private' : 'Global');
+
+      var reviewLine = task.review === 'with'
+        ? 'With Review · passing score ' + task.passing + '/10'
+        : 'No Review — submission alone counts as complete';
+      var completionLine = task.review === 'with'
+        ? 'Passing Grade from Reviewer (≥' + task.passing + '/10)'
+        : 'Submission Made';
+      var mediaLine = task.mediaCount === 0
+        ? 'Text only'
+        : task.mediaCount + ' file' + (task.mediaCount === 1 ? '' : 's') + ' · ' + task.mediaTypes.replace(/,/g, ', ');
+
+      var filesHtml = task.files && task.files.length
+        ? '<ul class="td-file-list">' + task.files.map(function (f) {
+            return '<li>' + fileIconSvg + esc(f) + '</li>';
+          }).join('') + '</ul>'
+        : '<div class="td-value"><span class="muted">No reference files.</span></div>';
+
+      detailBodyEl.innerHTML =
+        '<div class="task-detail-grid">' +
+          '<div class="td-card full">' +
+            '<div class="td-label">Instructions</div>' +
+            '<div class="td-value">' + esc(task.instructions) + '</div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Tools &amp; Materials</div>' +
+            '<div class="td-value">' + esc(task.tools) + '</div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Reference Files</div>' +
+            filesHtml +
+          '</div>' +
+          '<div class="td-card full">' +
+            '<div class="td-label">Reviewer Checklist <span style="color:var(--text-faint); font-weight:600; text-transform:none; letter-spacing:0; font-size:11px;">— hidden from learners</span></div>' +
+            '<div class="td-value">' + esc(task.checklist) + '</div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Submission</div>' +
+            '<div class="td-kv"><b>Description</b><span>' + (task.descLimit > 0 ? task.descLimit + ' char limit' : 'Hidden') + '</span></div>' +
+            '<div class="td-kv"><b>Media</b><span>' + esc(mediaLine) + '</span></div>' +
+            '<div class="td-kv"><b>Max attempts</b><span>' + esc(String(task.attempts)) + '</span></div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Review</div>' +
+            '<div class="td-kv"><b>Mode</b><span>' + esc(reviewLine) + '</span></div>' +
+            '<div class="td-kv"><b>Completion</b><span>' + esc(completionLine) + '</span></div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Placement</div>' +
+            '<div class="td-kv"><b>' + (task.placement === 'bundle' ? 'Custom Cert' : 'Direct Path') + '</b><span>' + esc(task.bundle || task.placement) + '</span></div>' +
+            '<div class="td-kv"><b>Time to complete</b><span>' + esc(task.time) + '</span></div>' +
+          '</div>' +
+          '<div class="td-card">' +
+            '<div class="td-label">Tagging</div>' +
+            '<div class="td-kv"><b>Industry</b><span>' + (task.industry || '<span class="muted">—</span>') + '</span></div>' +
+            '<div class="td-kv"><b>Skills</b><span>' + (task.skills || '<span class="muted">—</span>') + '</span></div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function openTaskDetail(taskId) {
+      var task = findTask(taskId);
+      if (!task) return;
+      renderTaskDetail(task);
+      if (typeof showPage === 'function') showPage('task-detail');
+    }
+    window.__openTaskDetail = openTaskDetail;
+
+    detailEditBtn.addEventListener('click', function () {
+      if (detailCurrentId) openTaskWizard(detailCurrentId);
+    });
+
+    // ---------- Task Wizard ----------
+    var wizardPage = document.getElementById('page-task-wizard');
+    var wizardSteps = Array.prototype.slice.call(wizardPage.querySelectorAll('.step[data-tw-step]'));
+    var wizardBodies = Array.prototype.slice.call(wizardPage.querySelectorAll('[data-tw-body]'));
+    var twTitle = document.getElementById('twTitle');
+    var twModeBanner = document.getElementById('twModeBanner');
+    var twBack = document.getElementById('twBackBtn');
+    var twNext = document.getElementById('twNextBtn');
+    var twPublish = document.getElementById('twPublishBtn');
+    var twSaveDraft = document.getElementById('twSaveDraftBtn');
+    var twCancel = document.getElementById('twCancelBtn');
+    var twImpact = document.getElementById('twImpact');
+    var twImpactCount = document.getElementById('twImpactCount');
+    var twFinalCard = document.getElementById('twFinalCard');
+    var twFinalHeader = document.getElementById('twFinalHeader');
+    var twFinalBody = document.getElementById('twFinalBody');
+    var twFooter = wizardPage.querySelector('.tw-footer');
+    var twFinalAnother = document.getElementById('twFinalAnotherBtn');
+    var twPassingWrap = document.getElementById('twPassingWrap');
+    var twCompletionLabel = document.getElementById('twCompletionLabel');
+    var twPlaceBundleWrap = document.getElementById('twPlaceBundleWrap');
+    var twPlaceDirectWrap = document.getElementById('twPlaceDirectWrap');
+    var twFilesList = document.getElementById('twFilesList');
+    var twAddFileBtn = document.getElementById('twAddFileBtn');
+
+    var wizardState = { mode: 'create', editingId: null, currentStep: 1, type: 'hands-on', review: 'with', placement: 'bundle', files: [] };
+
+    function setStep(n) {
+      wizardState.currentStep = n;
+      wizardSteps.forEach(function (s) {
+        var sn = Number(s.dataset.twStep);
+        s.classList.toggle('active', sn === n);
+        s.classList.toggle('complete', sn < n);
+      });
+      wizardBodies.forEach(function (b) {
+        b.classList.toggle('active', Number(b.dataset.twBody) === n);
+      });
+      twBack.style.visibility = n === 1 ? 'hidden' : 'visible';
+      twNext.style.display = n < 4 ? 'inline-flex' : 'none';
+      twPublish.style.display = n < 4 ? 'none' : 'inline-flex';
+      var scroll = wizardPage.querySelector('.scroll');
+      if (scroll) scroll.scrollTop = 0;
+    }
+
+    function renderFiles() {
+      twFilesList.innerHTML = wizardState.files.map(function (f, idx) {
+        return '<li>' + fileIconSvg + '<span>' + esc(f) + '</span>' +
+          '<button class="rm" data-rm-idx="' + idx + '" title="Remove" aria-label="Remove file">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px;stroke-width:2;"><path d="M6 6l12 12M6 18L18 6"/></svg>' +
+          '</button></li>';
+      }).join('');
+      twFilesList.querySelectorAll('.rm').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          wizardState.files.splice(Number(btn.dataset.rmIdx), 1);
+          renderFiles();
+        });
+      });
+    }
+
+    function applyDerivedCompletion() {
+      var withReview = wizardState.review === 'with';
+      twCompletionLabel.textContent = withReview ? 'Passing Grade from Reviewer' : 'Submission Made';
+      twPassingWrap.style.display = withReview ? '' : 'none';
+    }
+
+    function applyDerivedPlacement() {
+      twPlaceBundleWrap.style.display = wizardState.placement === 'bundle' ? '' : 'none';
+      twPlaceDirectWrap.style.display = wizardState.placement === 'direct' ? '' : 'none';
+    }
+
+    function resetForm() {
+      document.getElementById('twName').value = '';
+      document.getElementById('twInstructions').value = '';
+      document.getElementById('twTools').value = '';
+      document.getElementById('twChecklist').value = '';
+      document.getElementById('twVisibility').value = 'tenant';
+      document.getElementById('twTime').value = '';
+      document.getElementById('twDesc').value = '';
+      document.getElementById('twDescLimit').value = 500;
+      document.getElementById('twMediaCount').value = 4;
+      document.getElementById('twMediaTypes').value = 'images';
+      document.getElementById('twAttempts').value = '4';
+      document.getElementById('twPassing').value = 7;
+      document.getElementById('twDue').value = '';
+      wizardState.files = [];
+      renderFiles();
+      // Reset selections
+      wizardState.type = 'hands-on';
+      wizardPage.querySelectorAll('[data-tw-type]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twType === 'hands-on');
+      });
+      wizardState.review = 'with';
+      wizardPage.querySelectorAll('[data-tw-review]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twReview === 'with');
+      });
+      wizardState.placement = 'bundle';
+      wizardPage.querySelectorAll('[data-tw-placement]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twPlacement === 'bundle');
+      });
+      applyDerivedCompletion();
+      applyDerivedPlacement();
+    }
+
+    function prefillFromTask(task) {
+      document.getElementById('twName').value = task.name || '';
+      document.getElementById('twInstructions').value = task.instructions || '';
+      document.getElementById('twTools').value = task.tools || '';
+      document.getElementById('twChecklist').value = task.checklist || '';
+      document.getElementById('twVisibility').value = task.visibility || 'tenant';
+      document.getElementById('twTime').value = task.time || '';
+      document.getElementById('twDesc').value = task.description || '';
+      document.getElementById('twDescLimit').value = task.descLimit;
+      document.getElementById('twMediaCount').value = task.mediaCount;
+      document.getElementById('twMediaTypes').value = task.mediaTypes;
+      document.getElementById('twAttempts').value = String(task.attempts);
+      document.getElementById('twPassing').value = task.passing;
+      wizardState.files = (task.files || []).slice();
+      renderFiles();
+      wizardState.type = task.type;
+      wizardPage.querySelectorAll('[data-tw-type]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twType === task.type);
+      });
+      wizardState.review = task.review;
+      wizardPage.querySelectorAll('[data-tw-review]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twReview === task.review);
+      });
+      wizardState.placement = task.placement;
+      wizardPage.querySelectorAll('[data-tw-placement]').forEach(function (b) {
+        b.classList.toggle('selected', b.dataset.twPlacement === task.placement);
+      });
+      applyDerivedCompletion();
+      applyDerivedPlacement();
+    }
+
+    function openTaskWizard(editingId) {
+      // Hide any prior final card / show footer
+      twFinalCard.style.display = 'none';
+      twFooter.style.display = '';
+
+      if (editingId) {
+        var task = findTask(editingId);
+        if (!task) return;
+        wizardState.mode = 'edit';
+        wizardState.editingId = editingId;
+        twTitle.textContent = 'Edit Task';
+        twModeBanner.textContent = 'Editing';
+        twModeBanner.className = 'tw-mode-banner edit';
+        twImpact.style.display = '';
+        twImpactCount.textContent = task.usedIn.certs + ' certifications · ' + task.usedIn.paths + ' paths';
+        prefillFromTask(task);
+      } else {
+        wizardState.mode = 'create';
+        wizardState.editingId = null;
+        twTitle.textContent = 'Create Task';
+        twModeBanner.textContent = 'New';
+        twModeBanner.className = 'tw-mode-banner';
+        twImpact.style.display = 'none';
+        resetForm();
+      }
+      setStep(1);
+      if (typeof showPage === 'function') showPage('task-wizard');
+    }
+    window.__openTaskWizard = openTaskWizard;
+
+    // Type cards
+    wizardPage.querySelectorAll('[data-tw-type]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        wizardPage.querySelectorAll('[data-tw-type]').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        wizardState.type = btn.dataset.twType;
+      });
+    });
+
+    // Review mode
+    wizardPage.querySelectorAll('[data-tw-review]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        wizardPage.querySelectorAll('[data-tw-review]').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        wizardState.review = btn.dataset.twReview;
+        applyDerivedCompletion();
+      });
+    });
+
+    // Placement mode
+    wizardPage.querySelectorAll('[data-tw-placement]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        wizardPage.querySelectorAll('[data-tw-placement]').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        wizardState.placement = btn.dataset.twPlacement;
+        applyDerivedPlacement();
+      });
+    });
+
+    // File attach — fake; prompts for a name and adds to list
+    twAddFileBtn.addEventListener('click', function () {
+      var n = window.prompt('Filename (no upload — just demo)', 'Reference_File.pdf');
+      if (!n) return;
+      wizardState.files.push(n);
+      renderFiles();
+    });
+
+    // Step nav
+    twNext.addEventListener('click', function () {
+      if (wizardState.currentStep < 4) setStep(wizardState.currentStep + 1);
+    });
+    twBack.addEventListener('click', function () {
+      if (wizardState.currentStep > 1) setStep(wizardState.currentStep - 1);
+    });
+    twPublish.addEventListener('click', function () {
+      var verb = wizardState.mode === 'edit' ? 'updated' : 'published';
+      twFinalHeader.textContent = 'Task ' + verb;
+      twFinalBody.textContent = wizardState.mode === 'edit'
+        ? 'Changes are live. Existing learner state was preserved per content vs. completion-criteria rules.'
+        : 'Live in the Library. Reflects everywhere it\'s used.';
+      twFinalCard.style.display = '';
+      twFooter.style.display = 'none';
+    });
+    twSaveDraft.addEventListener('click', function () {
+      // Prototype no-op — Save draft just navigates back.
+      if (typeof showPage === 'function') showPage('library');
+    });
+    twCancel.addEventListener('click', function () {
+      if (typeof showPage === 'function') showPage(wizardState.mode === 'edit' ? 'task-detail' : 'library');
+    });
+    twFinalAnother.addEventListener('click', function () {
+      openTaskWizard();
+    });
+
+    renderTaskLists();
   })();
 
   // Submit a new note
