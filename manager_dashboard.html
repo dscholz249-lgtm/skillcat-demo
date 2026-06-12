@@ -5323,7 +5323,7 @@
     }
 
     function renderForm(reviewId, technicianId, techName) {
-      var prompt = "Based on today's ride-along, is " + esc(techName) + " ready to run service calls on their own?";
+      var prompt = "Is " + esc(techName) + " ready to run service calls on their own?";
       bodyEl.innerHTML =
         '<p class="ra-prompt">' + prompt + '</p>' +
         '<div class="ra-verdict-row">' +
@@ -5416,7 +5416,7 @@
         : '<div class="ra-completed-row"><b>Note</b><span style="color:var(--text-faint)">No note provided</span></div>';
 
       bodyEl.innerHTML =
-        '<p class="ra-prompt">Based on today\'s ride-along, is ' + esc(techName) + ' ready to run service calls on their own?</p>' +
+        '<p class="ra-prompt">Is ' + esc(techName) + ' ready to run service calls on their own?</p>' +
         '<div class="ra-completed-card">' +
           '<div class="ra-completed-head">' +
             '<span class="check-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5L20 7"/></svg></span>' +
