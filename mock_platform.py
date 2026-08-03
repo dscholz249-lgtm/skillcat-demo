@@ -21,7 +21,10 @@ This is throwaway. No real auth, no real data. SQLite file is recreated on boot.
 import os, json, sqlite3, hmac, hashlib, base64, datetime, pathlib
 from flask import Flask, request, jsonify, Response, abort
 
+from portfolio_mock import (portfolio_bp, create_portfolio_tables, seed_portfolio)
+
 APP = Flask(__name__)
+APP.register_blueprint(portfolio_bp)
 
 
 # Mock-only CORS: lets a separately-hosted mini-app call the API cross-origin.
@@ -98,6 +101,11 @@ def init_db():
     ]
     c.executemany("INSERT INTO technicians VALUES (?,?,?,?,?,?)",
                   [(t[0], COMPANY_ID, t[1], None, None, None) for t in technicians])
+
+    # --- Portfolio / Technician's Notes (screens 1b + 2a) --------------------
+    create_portfolio_tables(c)
+    seed_portfolio(c)
+
     c.commit()
     c.close()
     print(f"[mock] seeded DB at {DB_PATH} "

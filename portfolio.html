@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SkillCat — Technician Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0a0b;
+    --raised: #121214;
+    --overlay: #17171b;
+    --border: #242428;
+    --border-soft: #1a1a1e;
+    --hairline: rgba(64,64,64,.5);
+    --hairline-soft: rgba(64,64,64,.4);
+    --text: #f4f4f5;
+    --text-dim: #a1a1aa;
+    --text-faint: #6c6c75;
+    --text-quiet: #565661;
+    --body: #d9d9de;
+    --body-soft: #c2c2c9;
+    --orange: #e5531f;
+    --orange-bright: #f4702f;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Hanken Grotesk', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px 80px; gap: 16px; }
+
+  .page-eyebrow { width: 100%; max-width: 1080px; display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: .04em; }
+  .page-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+  .page-eyebrow .share { margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    background: var(--raised); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; color: var(--text-dim); cursor: pointer; font-family: var(--mono);
+    font-size: 11px; transition: background .14s, color .14s; }
+  .page-eyebrow .share:hover { background: var(--overlay); color: var(--text); }
+  .page-eyebrow .share svg { width: 13px; height: 13px; stroke-width: 1.9; }
+
+  .dossier { width: 100%; max-width: 1080px; background: #0d0d0d;
+    border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden;
+    display: grid; grid-template-columns: 312px 1fr; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+
+  /* ---------------- LEFT RAIL ---------------- */
+  .rail { background: #141414; border-right: 1px solid var(--hairline);
+    padding: 32px 26px; display: flex; flex-direction: column; gap: 26px; }
+  .rail-divider { height: 1px; background: var(--hairline); }
+  .rail-label { font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-faint); }
+
+  .identity { display: flex; flex-direction: column; gap: 16px; }
+  .identity h1 { font-weight: 700; font-size: 30px; line-height: 1.1; letter-spacing: -.01em;
+    color: #fff; }
+  .identity .role { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); margin-top: -8px; }
+
+  .stamp-row { display: flex; align-items: center; gap: 12px; }
+  .seal { width: 64px; height: 64px; flex: none; }
+  .stamp-meta .ready { font-weight: 600; font-size: 13px; color: #fff; }
+  .stamp-meta .mono { font-family: var(--mono); font-size: 11px; line-height: 1.4;
+    color: var(--text-faint); }
+
+  .cloud { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .cloud .sk { position: relative; line-height: 1.15; }
+  .cloud .sk sup { font-family: var(--mono); font-weight: 500; position: relative; top: -.7em;
+    margin-left: 3px; }
+  .sk-t5 { font-weight: 700; font-size: 22px; color: #fff; }
+  .sk-t5 sup { color: var(--orange-bright); font-size: 10px; }
+  .sk-t3 { font-weight: 600; font-size: 18px; color: #e8e8e8; }
+  .sk-t3 sup { color: var(--orange-bright); font-size: 9px; }
+  .sk-t2 { font-weight: 500; font-size: 15px; color: var(--text-dim); }
+  .sk-t2 sup { color: var(--text-faint); font-size: 9px; }
+  .sk-t1 { font-weight: 400; font-size: 13px; color: var(--text-faint); }
+  .sk-t1 sup { color: var(--text-quiet); font-size: 9px; }
+
+  .vouchers { display: flex; flex-direction: column; gap: 14px; }
+  .voucher { display: flex; align-items: center; gap: 11px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; flex: none; background: #1f1f1f;
+    border: 1px solid var(--hairline); display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 11px; color: var(--text-dim); }
+  .voucher .vn { font-weight: 500; font-size: 13px; color: #fff; }
+  .voucher .vr { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+
+  /* ---------------- RIGHT COLUMN ---------------- */
+  .narr { padding: 32px 34px 34px; display: flex; flex-direction: column; gap: 24px; }
+  .intro { font-size: 16px; line-height: 1.7; color: #e8e8e8; text-wrap: pretty; }
+
+  .review-card { background: #141414; border-radius: 12px;
+    box-shadow: inset 0 0 0 1px var(--hairline); padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 10px; }
+  .review-head { display: flex; align-items: center; gap: 10px; }
+  .review-head .lbl { font-weight: 600; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-faint); }
+  .badge { font-family: var(--mono); font-weight: 500; font-size: 9.5px; color: var(--text-faint);
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 4px 6px; letter-spacing: .02em;
+    text-transform: uppercase; }
+  .review-body { font-family: var(--mono); font-size: 14px; line-height: 1.7; color: #c8c8c8; }
+  .review-foot { font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--text-quiet); }
+
+  .range-row { display: flex; align-items: center; gap: 14px; }
+  .range-row .showing { font-weight: 600; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-faint); }
+  .dropdown { position: relative; }
+  .dd-trigger { display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: rgba(240,85,35,.10); box-shadow: inset 0 0 0 1px rgba(240,85,35,.45);
+    color: #fff; font-weight: 600; font-size: 13px; border-radius: 8px; padding: 9px 13px; }
+  .dd-trigger svg { width: 13px; height: 13px; stroke-width: 2.2; opacity: .8; }
+  .dd-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+    min-width: 190px; background: #1a1a1a; border-radius: 8px; padding: 6px;
+    box-shadow: inset 0 0 0 1px var(--hairline), 0 18px 40px rgba(0,0,0,.55); }
+  .dd-menu.open { display: block; }
+  .dd-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    font-weight: 500; font-size: 13px; color: var(--text-dim); padding: 10px 12px;
+    border-radius: 8px; cursor: pointer; box-shadow: inset 0 0 0 1px transparent; }
+  .dd-opt:hover { background: rgba(255,255,255,.04); color: #fff; }
+  .dd-opt.selected { font-weight: 600; color: #fff; background: rgba(240,85,35,.10);
+    box-shadow: inset 0 0 0 1px rgba(240,85,35,.45); }
+  .dd-opt .count { font-family: var(--mono); font-size: 12px; color: var(--orange-bright); }
+  .range-meta { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+
+  .timeline { display: flex; flex-direction: column; gap: 14px; }
+  .note { background: #141414; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--hairline);
+    padding: 18px 20px; }
+  .note-head { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 12px; }
+  .note-type { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    display: inline-flex; align-items: center; gap: 8px; }
+  .note-type.mgr { color: var(--orange-bright); }
+  .note-type.tech { color: var(--text-dim); }
+  .note-meta { font-family: var(--mono); font-size: 11px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+
+  .clampable { position: relative; }
+  .note-clip { overflow: hidden; }
+  .note-clip.collapsed { max-height: 132px;
+    -webkit-mask-image: linear-gradient(#000 68%, rgba(0,0,0,.15));
+    mask-image: linear-gradient(#000 68%, rgba(0,0,0,.15)); }
+  .note-body { font-size: 15px; line-height: 1.65; }
+  .note-body.mgr { color: #fff; }
+  .note-body.tech { color: #e8e8e8; }
+
+  .media-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .media { width: 150px; height: 104px; border-radius: 8px; background: #0d0d0d;
+    border: 1px dashed rgba(64,64,64,.9); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; }
+  .media .m-k { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-quiet);
+    text-transform: uppercase; }
+  .media .m-s { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+
+  .audio { display: flex; align-items: center; gap: 14px; background: #0d0d0d; border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--hairline); padding: 12px 16px; margin-bottom: 12px; }
+  .audio .play { width: 34px; height: 34px; flex: none; border-radius: 50%; background: #1f1f1f;
+    border: 1px solid var(--hairline); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; }
+  .audio .play svg { width: 13px; height: 13px; fill: #fff; }
+  .audio .dur { font-family: var(--mono); font-size: 17px; color: #fff; letter-spacing: .02em; }
+  .provenance { font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--text-quiet);
+    margin-top: 10px; }
+
+  .note-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--hairline-soft); }
+  .note-foot .avatar { width: 24px; height: 24px; font-size: 9px; }
+  .note-foot .fmeta { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+
+  .showmore { margin-top: 12px; display: inline-flex; align-items: center;
+    font-family: var(--mono); font-weight: 500; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-dim); background: transparent;
+    box-shadow: inset 0 0 0 1px var(--hairline); border: 0; border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; transition: background .14s, color .14s; }
+  .showmore:hover { background: rgba(255,255,255,.04); color: #fff; }
+
+  .pinned-badge { font-family: var(--mono); font-weight: 500; font-size: 9.5px; color: var(--text-faint);
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 3px 6px; letter-spacing: .06em; }
+
+  .empty-tl { font-family: var(--mono); font-size: 12.5px; color: var(--text-faint);
+    padding: 40px 0; text-align: center; }
+
+  @media (max-width: 860px) {
+    .dossier { grid-template-columns: 1fr; }
+    .rail { border-right: 0; border-bottom: 1px solid var(--hairline); }
+  }
+</style>
+</head>
+<body>
+  <div class="page-eyebrow">
+    <span class="dot"></span> SKILLCAT · TECHNICIAN PORTFOLIO · PUBLIC LINK
+    <button class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+      Copy share link
+    </button>
+  </div>
+
+  <div class="dossier" id="dossier" aria-busy="true"></div>
+
+<script>
+(function () {
+  "use strict";
+  var TID = "__TECHNICIAN_ID__";
+  var root = document.getElementById("dossier");
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  document.getElementById("shareBtn").addEventListener("click", function () {
+    var btn = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject())
+      .then(function () { btn.lastChild.textContent = " Link copied"; })
+      .catch(function () { btn.lastChild.textContent = " " + location.href; });
+  });
+
+  fetch("/api/portfolio/" + encodeURIComponent(TID) + "?view=public")
+    .then(function (r) { if (!r.ok) throw new Error("not found"); return r.json(); })
+    .then(render)
+    .catch(function () {
+      root.removeAttribute("aria-busy");
+      root.style.display = "block";
+      root.style.padding = "48px";
+      root.innerHTML = '<div class="empty-tl">No public portfolio found for this link.</div>';
+    });
+
+  // ---- readiness seal (inline SVG, circular text) -------------------------
+  function seal(d) {
+    var ring = (d.readiness.status || "FIELD READY").toUpperCase()
+      + " · " + d.readiness.attestation_count + " ATTESTATIONS · "
+      + (d.technician.employer || "").toUpperCase() + " · ";
+    var l1 = ((d.readiness.status || "FIELD READY").split(" ")[0] || "FIELD").toUpperCase();
+    var l2 = ((d.readiness.status || "FIELD READY").split(" ").slice(1).join(" ") || "READY").toUpperCase();
+    return ''
+      + '<svg class="seal" viewBox="0 0 100 100">'
+      +   '<defs>'
+      +     '<linearGradient id="sg" x1="0" y1="1" x2="0" y2="0">'
+      +       '<stop offset="0%" stop-color="rgba(144,51,21,.9)"/>'
+      +       '<stop offset="70.91%" stop-color="rgba(240,85,35,.9)"/>'
+      +     '</linearGradient>'
+      +     '<path id="sp" d="M 50 50 m -39 0 a 39 39 0 1 1 78 0 a 39 39 0 1 1 -78 0" />'
+      +   '</defs>'
+      +   '<circle cx="50" cy="50" r="49" fill="none" stroke="rgba(240,85,35,.25)" stroke-width=".8"/>'
+      +   '<circle cx="50" cy="50" r="33" fill="none" stroke="rgba(240,85,35,.45)" stroke-width=".8"/>'
+      +   '<circle cx="50" cy="50" r="31" fill="url(#sg)" opacity=".16"/>'
+      +   '<text font-family="var(--mono)" font-size="7.6" letter-spacing="1.9" fill="#f4702f">'
+      +     '<textPath href="#sp" startOffset="0">' + esc(ring) + '</textPath>'
+      +   '</text>'
+      +   '<text x="50" y="47" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="13" fill="#fff">' + esc(l1) + '</text>'
+      +   '<text x="50" y="60" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="13" fill="#fff">' + esc(l2) + '</text>'
+      + '</svg>';
+  }
+
+  function skillTier(count) {
+    if (count >= 5) return "sk-t5";
+    if (count >= 3) return "sk-t3";
+    if (count >= 2) return "sk-t2";
+    return "sk-t1";
+  }
+
+  function initials(name) {
+    return (name || "").split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase();
+  }
+
+  function renderNote(n) {
+    var isMgr = n.author_role === "manager";
+    var att = n.attestation;
+    // type label + meta
+    var typeLabel, metaBits = [n.date_label];
+    if (n.time_label) metaBits.push(n.time_label);
+    metaBits.push((n.source_channel || "").toUpperCase());
+    if (isMgr && att) {
+      typeLabel = '<span class="note-type mgr">Attested by ' + esc(att.manager_name) + '</span>';
+      if (n.pinned) typeLabel += '<span class="pinned-badge">PINNED</span>';
+    } else {
+      var t = n.source_channel === "voice" ? "Voice note" : "Field note";
+      typeLabel = '<span class="note-type tech">' + t + ' · ' + esc(n.author_name) + '</span>';
+    }
+
+    var inner = "";
+    if (n.transcript) {
+      var tr = n.transcript;
+      inner += '<div class="audio">'
+        + '<span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>'
+        + '<span class="dur">' + esc(tr.position) + ' / ' + esc(tr.duration) + '</span></div>';
+      inner += '<div class="note-body tech">' + esc(tr.text) + '</div>';
+      var prov = "Auto-transcribed";
+      if (n.capture_label && n.receipt_label)
+        prov += ' · captured ' + esc(n.capture_label) + ', received ' + esc(n.receipt_label);
+      inner += '<div class="provenance">' + prov + '</div>';
+    } else {
+      inner += '<div class="note-body ' + (isMgr ? "mgr" : "tech") + '">' + esc(n.body) + '</div>';
+      if (n.media && n.media.length) {
+        inner += '<div class="media-row">' + n.media.map(function (m) {
+          return '<div class="media"><span class="m-k">PHOTO</span><span class="m-s">'
+            + esc(m.label) + '</span></div>';
+        }).join("") + '</div>';
+      }
+    }
+    if (isMgr && att) {
+      inner += '<div class="note-foot"><span class="avatar">' + esc(initials(att.manager_name))
+        + '</span><span class="fmeta">' + esc(att.role) + ', ' + esc(att.company)
+        + ' · ' + esc(att.published_label) + '</span></div>';
+    }
+
+    return '<div class="note">'
+      + '<div class="note-head">' + typeLabel + '<span class="note-meta">'
+      +   metaBits.filter(Boolean).join(' · ') + '</span></div>'
+      + '<div class="clampable"><div class="note-clip collapsed">' + inner + '</div></div>'
+      + '<button class="showmore">Show more</button>'
+      + '</div>';
+  }
+
+  function render(d) {
+    var s = d.sections;
+    var rail = "";
+    rail += '<div class="identity">'
+      + '<h1>' + esc(d.technician.name) + '</h1>'
+      + '<div class="role">' + esc(d.technician.title) + '<br>' + esc(d.technician.employer)
+      +   ' · ' + esc(d.technician.region) + '</div>';
+    if (s.readiness) {
+      rail += '<div class="stamp-row">' + seal(d)
+        + '<div class="stamp-meta"><div class="ready">' + esc(d.readiness.status) + '</div>'
+        + '<div class="mono">' + esc(d.readiness.confirmed_label) + '<br>'
+        + d.readiness.attestation_count + ' attestations</div></div></div>';
+    }
+    rail += '</div>';
+
+    if (s.attested_skills && d.attested_skills.length) {
+      rail += '<div class="rail-divider"></div>'
+        + '<div class="rail-label">Attested skills</div>'
+        + '<div class="cloud">' + d.attested_skills.map(function (sk) {
+          return '<span class="sk ' + skillTier(sk.count) + '">' + esc(sk.skill)
+            + '<sup>' + sk.count + '</sup></span>';
+        }).join("") + '</div>';
+    }
+
+    if (d.vouchers.length) {
+      rail += '<div class="rail-divider"></div>'
+        + '<div class="rail-label">Vouched for by</div><div class="vouchers">'
+        + d.vouchers.map(function (v) {
+          return '<div class="voucher"><span class="avatar">' + esc(initials(v.name))
+            + '</span><div><div class="vn">' + esc(v.name) + '</div>'
+            + '<div class="vr">' + esc(v.role) + ' · ' + v.note_count + ' notes</div></div></div>';
+        }).join("") + '</div>';
+    }
+
+    var narr = "";
+    if (s.intro) narr += '<div class="intro">' + esc(d.technician.intro) + '</div>';
+    if (s.review_note) {
+      narr += '<div class="review-card"><div class="review-head">'
+        + '<span class="lbl">Review Note</span>'
+        + '<span class="badge">Generated from ' + d.review_note.source_note_count + ' manager notes</span>'
+        + '</div><div class="review-body">' + esc(d.review_note.body) + '</div>'
+        + '<div class="review-foot">Updated automatically as new notes are published · owned by '
+        + esc((d.technician.name || "").split(" ")[0]) + '</div></div>';
+    }
+
+    // date-range control
+    var ranges = [["month", "Past month"], ["6months", "Past 6 months"],
+                  ["year", "Past year"], ["all", "All time"]];
+    var shown = d.notes.length;
+    narr += '<div class="range-row"><span class="showing">Showing</span>'
+      + '<div class="dropdown"><div class="dd-trigger" id="ddTrigger">'
+      +   '<span id="ddValue">Past 6 months</span>'
+      +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>'
+      + '</div><div class="dd-menu" id="ddMenu">'
+      + ranges.map(function (r) {
+          var sel = r[0] === "6months";
+          return '<div class="dd-opt' + (sel ? ' selected' : '') + '" data-range="' + r[0] + '">'
+            + '<span>' + r[1] + '</span>' + (sel ? '<span class="count">' + shown + '</span>' : '')
+            + '</div>';
+        }).join("")
+      + '</div></div>'
+      + '<span class="range-meta">' + shown + ' notes · Jan – Jun 2026</span></div>';
+
+    // timeline
+    narr += '<div class="timeline">';
+    if (!d.notes.length) narr += '<div class="empty-tl">No public notes in this range yet.</div>';
+    else narr += d.notes.map(renderNote).join("");
+    narr += '</div>';
+
+    root.innerHTML = '<div class="rail">' + rail + '</div><div class="narr">' + narr + '</div>';
+    root.removeAttribute("aria-busy");
+    wire();
+  }
+
+  function wire() {
+    // Show more / less per card
+    root.querySelectorAll(".showmore").forEach(function (btn) {
+      var clip = btn.previousElementSibling.querySelector(".note-clip");
+      // Hide the control entirely when content isn't tall enough to clamp.
+      if (clip.scrollHeight <= clip.clientHeight + 4) { btn.style.display = "none"; return; }
+      btn.addEventListener("click", function () {
+        var collapsed = clip.classList.toggle("collapsed");
+        btn.textContent = collapsed ? "Show more" : "Show less";
+      });
+    });
+    // Date-range dropdown (demo: updates the label; single seeded range)
+    var trig = document.getElementById("ddTrigger");
+    var menu = document.getElementById("ddMenu");
+    if (trig) {
+      trig.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("open"); });
+      document.addEventListener("click", function () { menu.classList.remove("open"); });
+      menu.querySelectorAll(".dd-opt").forEach(function (opt) {
+        opt.addEventListener("click", function () {
+          menu.querySelectorAll(".dd-opt").forEach(function (o) {
+            o.classList.remove("selected");
+            var cnt = o.querySelector(".count"); if (cnt) cnt.remove();
+          });
+          opt.classList.add("selected");
+          document.getElementById("ddValue").textContent = opt.querySelector("span").textContent;
+          menu.classList.remove("open");
+        });
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>

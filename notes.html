@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SkillCat — Your Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0a0b; --raised: #141414; --overlay: #17171b; --sunken: #0d0d0d;
+    --border: #242428; --hairline: rgba(64,64,64,.5); --hairline-soft: rgba(64,64,64,.4);
+    --text: #f4f4f5; --text-dim: #a1a1aa; --text-faint: #6c6c75; --text-quiet: #565661;
+    --orange: #e5531f; --orange-bright: #f4702f; --orange-ring: rgba(240,85,35,.45);
+    --mono: 'JetBrains Mono', ui-monospace, monospace; --sans: 'Hanken Grotesk', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px 80px; gap: 16px; }
+
+  .page-eyebrow { width: 100%; max-width: 1080px; display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: .04em; }
+  .page-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+
+  .dossier { width: 100%; max-width: 1080px; background: var(--sunken);
+    border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden;
+    display: grid; grid-template-columns: 312px 1fr; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+
+  .rail { background: var(--raised); border-right: 1px solid var(--hairline);
+    padding: 32px 26px; display: flex; flex-direction: column; gap: 24px; }
+  .rail-divider { height: 1px; background: var(--hairline); }
+  .rail-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-faint); margin-bottom: 12px; }
+
+  .rail h1 { font-weight: 700; font-size: 30px; line-height: 1.1; color: #fff; }
+  .rail .subline { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); margin-top: 6px; }
+
+  .link-row { display: flex; align-items: center; gap: 12px; }
+  .link-row .lv { font-weight: 600; font-size: 13px; color: #fff; }
+  .link-row .cnt { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+  .helper { font-size: 11.5px; line-height: 1.55; color: var(--text-faint); margin-top: 10px; }
+  .quiet-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-weight: 600; font-size: 13px; color: var(--text-dim); background: transparent; border: 0;
+    box-shadow: inset 0 0 0 1px var(--hairline); border-radius: 8px; padding: 12px 14px; cursor: pointer;
+    margin-top: 14px; transition: background .14s, color .14s; text-decoration: none; }
+  .quiet-btn:hover { background: rgba(255,255,255,.04); color: #fff; }
+
+  .section-rows { display: flex; flex-direction: column; gap: 4px; }
+  .section-rows .srow { display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0; }
+  .section-rows .srow span { font-size: 13px; color: #e8e8e8; }
+
+  .channels { font-size: 12.5px; line-height: 1.6; color: var(--text-dim); }
+  .channels .ident { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: #fff; }
+  .channels .verified { font-family: var(--mono); font-size: 11px; color: var(--text-quiet); margin-top: 10px; }
+
+  /* toggle */
+  .toggle { width: 42px; height: 24px; border-radius: 999px; background: #2a2a30; position: relative;
+    cursor: pointer; flex: none; transition: background .16s; border: 0; padding: 0; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; transition: transform .16s; }
+  .toggle.on { background: var(--orange); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* right column */
+  .narr { padding: 32px 34px 34px; display: flex; flex-direction: column; gap: 22px; }
+  .cap-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .cap-head .lbl { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-faint); }
+  .cap-head .hint { font-family: var(--mono); font-size: 11.5px; color: var(--text-quiet); }
+  .messanger { display: flex; align-items: center; gap: 10px; background: var(--raised); border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--hairline); padding: 10px 12px; }
+  .messanger input { flex: 1; background: transparent; border: 0; outline: 0; color: #fff;
+    font-family: var(--mono); font-size: 14px; }
+  .messanger input::placeholder { color: var(--text-faint); }
+  .messanger .ic { width: 20px; height: 20px; color: var(--text-faint); cursor: pointer; flex: none; }
+  .messanger .send { width: 34px; height: 34px; border-radius: 50%; background: var(--orange);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; border: 0; }
+  .messanger .send svg { width: 15px; height: 15px; fill: #fff; stroke: #fff; }
+  .cap-row { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .cap-tile { flex: 1 1 240px; display: flex; align-items: center; gap: 12px; background: var(--raised);
+    border-radius: 10px; box-shadow: inset 0 0 0 1px var(--hairline); padding: 14px 16px; color: var(--text-dim);
+    font-weight: 600; font-size: 13px; cursor: pointer; }
+  .cap-tile .ci { width: 34px; height: 34px; border-radius: 50%; background: #1f1f1f; flex: none;
+    display: flex; align-items: center; justify-content: center; }
+  .cap-tile .ci svg { width: 16px; height: 16px; stroke: var(--text-dim); fill: none; }
+  .cap-tile .sub { display: block; font-weight: 400; font-size: 11px; color: var(--text-faint); }
+
+  .card { background: var(--raised); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--hairline);
+    padding: 20px 22px; }
+  .card.editing { box-shadow: inset 0 0 0 1px var(--orange-ring); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .card-head .lbl { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-faint); }
+  .card-head .edit-meta { font-family: var(--mono); font-size: 11px; color: var(--orange-bright); }
+  .badge { font-family: var(--mono); font-weight: 500; font-size: 9.5px; color: var(--text-faint);
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 4px 6px; text-transform: uppercase; }
+
+  .intro-edit { width: 100%; background: transparent; border: 0; outline: 0; resize: none; color: #fff;
+    font-family: var(--sans); font-size: 16px; line-height: 1.7; caret-color: var(--orange); }
+  .card-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .btn-cta { display: inline-flex; align-items: center; justify-content: center; flex: 1; font-weight: 700;
+    font-size: 14px; color: #fff; border: 0; border-radius: 10px; padding: 14px 18px; cursor: pointer;
+    background: linear-gradient(0deg, rgba(138,49,20,.95) 0%, var(--orange) 70.91%); }
+  .btn-text { font-weight: 600; font-size: 13px; color: var(--text-dim); background: transparent; border: 0;
+    box-shadow: inset 0 0 0 1px var(--hairline); border-radius: 10px; padding: 14px 18px; cursor: pointer; }
+  .btn-text:hover { background: rgba(255,255,255,.04); color: #fff; }
+
+  .review-body { font-family: var(--mono); font-size: 14px; line-height: 1.7; color: #c8c8c8; margin: 10px 0; }
+  .review-foot { font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--text-quiet); }
+
+  .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .tl-head .t { font-weight: 600; font-size: 15px; color: #fff; }
+  .tl-head .right { display: flex; align-items: center; gap: 10px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 12.5px;
+    border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+  .pill.sel { background: rgba(240,85,35,.10); box-shadow: inset 0 0 0 1px var(--orange-ring); color: #fff; }
+  .pill.ghost { background: var(--raised); box-shadow: inset 0 0 0 1px var(--hairline); color: var(--text-dim); }
+  .pill svg { width: 12px; height: 12px; stroke-width: 2.2; }
+
+  .timeline { display: flex; flex-direction: column; gap: 14px; }
+  .note { background: var(--raised); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--hairline);
+    padding: 18px 20px; }
+  .note.reorderable { cursor: grab; }
+  .note.dragging { opacity: .4; }
+  .note-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .note-type { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    display: inline-flex; align-items: center; gap: 8px; }
+  .note-type.mgr { color: var(--orange-bright); }
+  .note-type.tech { color: var(--text-dim); }
+  .note-meta { font-family: var(--mono); font-size: 11px; color: var(--text-faint); text-transform: uppercase; white-space: nowrap; }
+  .lock-badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-weight: 500;
+    font-size: 9.5px; color: var(--text-faint); border: 1px solid var(--hairline); border-radius: 8px;
+    padding: 3px 6px; letter-spacing: .04em; }
+  .lock-badge svg { width: 10px; height: 10px; stroke: var(--text-faint); fill: none; }
+
+  .note-body { font-size: 15px; line-height: 1.65; }
+  .note-body.mgr { color: #fff; }
+  .note-body.tech { color: #e8e8e8; }
+  .note-body[contenteditable="true"] { outline: 0; box-shadow: inset 0 0 0 1px var(--orange-ring);
+    border-radius: 8px; padding: 8px 10px; caret-color: var(--orange); }
+
+  .media-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .media { position: relative; width: 150px; height: 104px; border-radius: 8px; background: var(--sunken);
+    border: 1px dashed rgba(64,64,64,.9); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; }
+  .media .m-k { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-quiet); text-transform: uppercase; }
+  .media .m-s { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+  .media .del { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 6px;
+    background: rgba(13,13,13,.85); box-shadow: inset 0 0 0 1px rgba(64,64,64,.6); display: flex;
+    align-items: center; justify-content: center; cursor: pointer; border: 0; }
+  .media .del svg { width: 11px; height: 11px; stroke: var(--text-dim); fill: none; }
+  .media.add { width: 96px; border-style: solid; box-shadow: inset 0 0 0 1px var(--hairline);
+    border: 0; cursor: pointer; }
+  .media.add svg { width: 18px; height: 18px; stroke: var(--text-faint); fill: none; }
+
+  .audio { display: flex; align-items: center; gap: 14px; background: var(--sunken); border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--hairline); padding: 12px 16px; }
+  .audio .play { width: 34px; height: 34px; border-radius: 50%; background: #1f1f1f; border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+  .audio .play svg { width: 13px; height: 13px; fill: #fff; }
+  .audio .dur { font-family: var(--mono); font-size: 17px; color: #fff; }
+
+  .correct-panel { background: var(--sunken); border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(240,85,35,.35);
+    padding: 14px 16px; margin-top: 12px; }
+  .correct-panel .eyebrow { font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: .16em;
+    color: var(--orange-bright); text-transform: uppercase; margin-bottom: 8px; }
+  .correct-panel .ctext { font-size: 15px; line-height: 1.6; color: #fff; outline: 0; }
+  .correct-panel .ctext[contenteditable="true"] { caret-color: var(--orange); }
+  .correct-panel .hl { background: rgba(240,85,35,.18); box-shadow: inset 0 0 0 1px rgba(240,85,35,.4);
+    border-radius: 5px; padding: 0 4px; }
+  .correct-panel .chelp { font-family: var(--mono); font-size: 11px; color: var(--text-quiet); margin-top: 10px; }
+
+  .note-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--hairline-soft); }
+  .foot-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .foot-left .prov { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+  .mini-btn { font-family: var(--mono); font-weight: 500; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-dim); background: transparent; box-shadow: inset 0 0 0 1px var(--hairline);
+    border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer; transition: background .14s, color .14s; }
+  .mini-btn:hover { background: rgba(255,255,255,.04); color: #fff; }
+  .mini-btn.active { color: var(--orange-bright); box-shadow: inset 0 0 0 1px var(--orange-ring); }
+  .foot-right { display: flex; align-items: center; gap: 10px; }
+  .foot-right .pub-lbl { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+
+  .empty-state { border-radius: 12px; box-shadow: inset 0 0 0 1px var(--hairline); padding: 26px 22px;
+    background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 12px, transparent 12px 24px); }
+  .empty-state h3 { font-weight: 600; font-size: 16px; color: #fff; }
+  .empty-state p { font-size: 13.5px; line-height: 1.65; color: var(--text-dim); margin-top: 8px; }
+  .empty-state p .m { font-family: var(--mono); color: #fff; }
+  .empty-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .btn-secondary { font-weight: 700; font-size: 14px; color: #fff; border: 0; border-radius: 10px;
+    padding: 13px 18px; cursor: pointer; background: #1f1f24; box-shadow: inset 0 0 0 1px var(--hairline); }
+
+  /* confirm modal */
+  .modal-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center;
+    justify-content: center; z-index: 100; }
+  .modal-scrim.open { display: flex; }
+  .modal { width: 440px; max-width: calc(100vw - 40px); background: #17171b; border-radius: 12px;
+    box-shadow: inset 0 0 0 1px var(--hairline), 0 24px 60px rgba(0,0,0,.6); padding: 24px; }
+  .modal h4 { font-weight: 700; font-size: 17px; color: #fff; }
+  .modal p { font-size: 13.5px; line-height: 1.6; color: var(--text-dim); margin-top: 10px; }
+  .modal-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+    background: #17171b; box-shadow: inset 0 0 0 1px var(--hairline), 0 18px 40px rgba(0,0,0,.55);
+    color: #fff; font-size: 13px; padding: 12px 18px; border-radius: 10px; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 120; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) { .dossier { grid-template-columns: 1fr; }
+    .rail { border-right: 0; border-bottom: 1px solid var(--hairline); } }
+</style>
+</head>
+<body>
+  <div class="page-eyebrow"><span class="dot"></span> SKILLCAT · TECHNICIAN'S NOTES · EDIT VIEW (technician-owned)</div>
+  <div class="dossier" id="dossier" aria-busy="true"></div>
+
+  <div class="modal-scrim" id="modalScrim">
+    <div class="modal">
+      <h4 id="modalTitle">Make this public?</h4>
+      <p id="modalBody"></p>
+      <div class="modal-actions">
+        <button class="btn-text" id="modalCancel">Cancel</button>
+        <button class="btn-cta" style="flex:none;padding:12px 20px" id="modalConfirm">Make public</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var TID = "__TECHNICIAN_ID__";
+  var API = "/api/portfolio/" + encodeURIComponent(TID);
+  var root = document.getElementById("dossier");
+  var state = null;
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function initials(n) { return (n || "").split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase(); }
+
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+
+  function patchPortfolio(body) {
+    return fetch(API, { method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+  function patchNote(id, body) {
+    return fetch(API + "/notes/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+
+  function load() {
+    fetch(API + "?view=owner").then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { state = d; render(); })
+      .catch(function () { root.removeAttribute("aria-busy"); root.style.display = "block";
+        root.style.padding = "48px"; root.innerHTML = "No portfolio found for this technician."; });
+  }
+  load();
+
+  // ---- confirm modal ------------------------------------------------------
+  function confirmPublic(audience, onYes) {
+    var scrim = document.getElementById("modalScrim");
+    document.getElementById("modalBody").textContent =
+      "This item will appear on your public portfolio link — visible to " + audience
+      + ". Nothing goes public until you confirm.";
+    scrim.classList.add("open");
+    var confirm = document.getElementById("modalConfirm");
+    var cancel = document.getElementById("modalCancel");
+    function close() { scrim.classList.remove("open"); confirm.onclick = null; cancel.onclick = null; }
+    confirm.onclick = function () { close(); onYes(); };
+    cancel.onclick = close;
+    scrim.onclick = function (e) { if (e.target === scrim) close(); };
+  }
+
+  function render() {
+    var d = state, s = d.sections, t = d.technician;
+    // ---- rail ----
+    var rail = ''
+      + '<div><h1>Your Notes</h1><div class="subline">' + esc(t.name) + ' · ' + esc(t.title)
+      +   '<br>' + esc(t.employer) + ' · ' + esc(t.region) + '</div></div>'
+      + '<div class="rail-divider"></div>'
+      + '<div><div class="rail-label">Public portfolio link</div>'
+      +   '<div class="link-row"><span class="lv">' + (t.link_live ? "Link is live" : "Link is off") + '</span>'
+      +     '<span class="cnt">' + t.items_shown + ' of ' + t.items_total + ' items shown</span>'
+      +     '<button class="toggle ' + (t.link_live ? "on" : "") + '" style="margin-left:auto" id="linkToggle" aria-label="Public link"></button></div>'
+      +   '<div class="helper">Only items you mark public appear here. Manager notes must be published to you first.</div>'
+      +   '<a class="quiet-btn" href="/portfolio/' + encodeURIComponent(TID) + '" target="_blank" rel="noopener">Preview public view →</a>'
+      + '</div>'
+      + '<div class="rail-divider"></div>'
+      + '<div><div class="rail-label">Sections in public view</div><div class="section-rows">'
+      +   sectionRow("intro", "Intro", s.intro)
+      +   sectionRow("readiness", "Field readiness", s.readiness)
+      +   sectionRow("review_note", "Review Note", s.review_note)
+      +   sectionRow("attested_skills", "Attested skills", s.attested_skills)
+      + '</div></div>'
+      + '<div class="rail-divider"></div>'
+      + '<div><div class="rail-label">Where notes come from</div><div class="channels">'
+      +   'Text or MMS to <span class="ident">' + esc(t.channel_phone) + '</span><br>'
+      +   'Email <span class="ident">' + esc(t.channel_email) + '</span><br>Or reply to any SkillCat email.'
+      +   '<div class="verified">Verified: ' + esc(t.verified_phone) + ' · ' + esc(t.verified_email) + '</div>'
+      + '</div></div>';
+
+    // ---- capture bar ----
+    var narr = ''
+      + '<div><div class="cap-head"><span class="lbl">Add to your notebook</span>'
+      +   '<span class="hint">or just text it — nothing here is required</span></div>'
+      + '<div class="messanger" style="margin-top:12px">'
+      +   '<input id="capInput" placeholder="What did you work on?" />'
+      +   '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8"/></svg>'
+      +   '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>'
+      +   '<button class="send" id="capSend"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-6-7-2z"/></svg></button>'
+      + '</div>'
+      + '<div class="cap-row">'
+      +   '<div class="cap-tile"><span class="ci"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></span>Record Audio<span class="sub">Tap to record audio</span></div>'
+      +   '<div class="cap-tile"><span class="ci"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 17l5-4 3 2 4-4 6 5"/></svg></span>Add Photos or Videos<span class="sub">Drag in or browse</span></div>'
+      + '</div></div>';
+
+    // ---- intro editing card ----
+    narr += '<div class="card editing"><div class="card-head"><span class="lbl">Your intro</span>'
+      + '<span class="edit-meta" id="introCount">EDITING · ' + (t.intro || "").length + ' / 400</span></div>'
+      + '<textarea class="intro-edit" id="introEdit" maxlength="400" rows="3">' + esc(t.intro) + '</textarea>'
+      + '<div class="card-actions"><button class="btn-cta" id="introSave">Save intro</button>'
+      + '<button class="btn-text" id="introCancel">Cancel</button></div></div>';
+
+    // ---- review note ----
+    narr += '<div class="card"><div class="card-head"><span class="lbl">Review Note</span>'
+      + '<span class="badge">Generated · yours to keep</span></div>'
+      + '<div class="review-body">' + esc(d.review_note.body) + '</div>'
+      + '<div class="review-foot">Rewrites itself when a manager publishes a new note · you can hide it, not edit it</div></div>';
+
+    // ---- timeline header ----
+    narr += '<div class="tl-head"><span class="t">Your timeline · ' + t.items_total + ' items</span>'
+      + '<div class="right"><span class="pill sel">Past 6 months <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>'
+      + '<span class="pill ghost" id="reorderBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Reorder</span></div></div>';
+
+    // ---- timeline cards ----
+    narr += '<div class="timeline" id="timeline">' + d.notes.map(renderNote).join("") + '</div>';
+
+    // ---- empty state ----
+    narr += '<div class="empty-state"><h3>Nothing yet from this week</h3>'
+      + '<p>Text a photo or a voice note to <span class="m">' + esc(t.channel_phone)
+      + '</span> while you\'re on the job — it lands here with the time you sent it. You never have to open the app.</p>'
+      + '<div class="empty-actions"><button class="btn-secondary">Save the number</button>'
+      + '<button class="btn-text" style="flex:none">Email me the address</button></div></div>';
+
+    root.innerHTML = '<div class="rail">' + rail + '</div><div class="narr">' + narr + '</div>';
+    root.removeAttribute("aria-busy");
+    wire();
+  }
+
+  function sectionRow(key, label, on) {
+    return '<div class="srow"><span>' + label + '</span>'
+      + '<button class="toggle ' + (on ? "on" : "") + '" data-section="' + key + '" aria-label="' + label + '"></button></div>';
+  }
+
+  function renderNote(n) {
+    var isMgr = n.author_role === "manager";
+    var att = n.attestation;
+    var metaBits = [n.date_label]; if (n.time_label) metaBits.push(n.time_label);
+    metaBits.push((n.source_channel || "").toUpperCase());
+
+    var head;
+    if (isMgr && att) {
+      head = '<span class="note-type mgr">Attested by ' + esc(att.manager_name) + '</span>'
+        + '<span class="lock-badge"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>Theirs to edit</span>';
+    } else {
+      var lbl = n.source_channel === "voice" ? "Your voice note" : "Your field note";
+      head = '<span class="note-type tech">' + lbl + '</span>';
+    }
+
+    var body = "";
+    if (n.transcript) {
+      var tr = n.transcript;
+      // highlight the corrected word inline
+      var text = esc(tr.text);
+      if (tr.corrected) text = text.replace(esc(tr.corrected),
+        '<span class="hl">' + esc(tr.corrected) + '</span>');
+      body += '<div class="audio"><span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>'
+        + '<span class="dur">' + esc(tr.position) + ' / ' + esc(tr.duration) + '</span></div>';
+      body += '<div class="correct-panel"><div class="eyebrow">Correcting transcript</div>'
+        + '<div class="ctext" data-note="' + n.id + '">' + text + '</div>'
+        + '<div class="chelp">Heard “' + esc(tr.heard) + '” · your audio is never overwritten</div></div>';
+    } else {
+      body += '<div class="note-body ' + (isMgr ? "mgr" : "tech") + '" data-note="' + n.id
+        + '"' + (isMgr ? '' : '') + '>' + esc(n.body) + '</div>';
+      if (!isMgr) {
+        var media = (n.media || []).map(function (m) {
+          return '<div class="media"><button class="del"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>'
+            + '<span class="m-k">PHOTO</span><span class="m-s">' + esc(m.label) + '</span></div>';
+        }).join("");
+        media += '<div class="media add"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-4 3 2 4-4 6 5"/><path d="M12 8v0"/></svg>'
+          + '<span class="m-s" style="color:var(--text-faint)">ADD MEDIA</span></div>';
+        body += '<div class="media-row">' + media + '</div>';
+      }
+    }
+
+    // footer
+    var footLeft, footRight;
+    if (isMgr && att) {
+      footLeft = '<span class="prov">' + esc(att.role) + ', ' + esc(att.company) + ' · ' + esc(att.published_label) + '</span>';
+      footRight = pinBtn(n) + pubToggle(n);
+    } else if (n.transcript) {
+      footLeft = '<span class="prov">Captured ' + esc(n.capture_label) + ' · received ' + esc(n.receipt_label) + '</span>';
+      footRight = saveCorrectBtn(n) + pubToggle(n);
+    } else {
+      footLeft = '<button class="mini-btn" data-edit="' + n.id + '">Edit</button>' + pinBtn(n)
+        + '<button class="mini-btn">Add skill tag</button>';
+      footRight = pubToggle(n);
+    }
+
+    return '<div class="note reorderable" data-id="' + n.id + '" draggable="false">'
+      + '<div class="note-head">' + head + '<span class="note-meta">' + metaBits.filter(Boolean).join(' · ') + '</span></div>'
+      + body
+      + '<div class="note-foot"><div class="foot-left">' + footLeft + '</div>'
+      + '<div class="foot-right">' + footRight + '</div></div></div>';
+  }
+
+  function pinBtn(n) {
+    return '<button class="mini-btn' + (n.pinned ? ' active' : '') + '" data-pin="' + n.id + '">'
+      + (n.pinned ? 'Pinned' : 'Pin') + '</button>';
+  }
+  function pubToggle(n) {
+    var on = n.visibility === "public";
+    return '<span class="pub-lbl">Public</span>'
+      + '<button class="toggle ' + (on ? "on" : "") + '" data-pub="' + n.id + '" aria-label="Public"></button>';
+  }
+  function saveCorrectBtn(n) {
+    return '<button class="mini-btn" data-savecorrect="' + n.id + '">Save transcript</button>';
+  }
+
+  function noteById(id) { return state.notes.filter(function (n) { return n.id === id; })[0]; }
+
+  function wire() {
+    // section toggles
+    root.querySelectorAll("[data-section]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.dataset.section, now = !btn.classList.contains("on");
+        btn.classList.toggle("on", now);
+        var body = { sections: {} }; body.sections[key] = now;
+        patchPortfolio(body).then(function (d) { state = d;
+          toast(now ? "Section shown on public view" : "Section hidden from public view"); });
+      });
+    });
+    // public link master toggle (visual)
+    var lt = document.getElementById("linkToggle");
+    if (lt) lt.addEventListener("click", function () { lt.classList.toggle("on"); });
+
+    // intro
+    var introEdit = document.getElementById("introEdit");
+    var introCount = document.getElementById("introCount");
+    if (introEdit) {
+      introEdit.addEventListener("input", function () {
+        introCount.textContent = "EDITING · " + introEdit.value.length + " / 400"; });
+      document.getElementById("introSave").addEventListener("click", function () {
+        patchPortfolio({ intro: introEdit.value }).then(function (d) { state = d; toast("Intro saved"); }); });
+      document.getElementById("introCancel").addEventListener("click", function () {
+        introEdit.value = state.technician.intro;
+        introCount.textContent = "EDITING · " + introEdit.value.length + " / 400"; });
+    }
+
+    // capture bar
+    var capSend = document.getElementById("capSend"), capInput = document.getElementById("capInput");
+    function submitCap() {
+      var v = (capInput.value || "").trim(); if (!v) return;
+      fetch(API + "/notes", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: v, source_channel: "app" }) })
+        .then(function (r) { return r.json(); })
+        .then(function () { capInput.value = ""; toast("Note added to your notebook");
+          load(); });
+    }
+    if (capSend) { capSend.addEventListener("click", submitCap);
+      capInput.addEventListener("keydown", function (e) { if (e.key === "Enter") submitCap(); }); }
+
+    // per-note controls
+    root.querySelectorAll("[data-pub]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var n = noteById(btn.dataset.pub); if (!n) return;
+        var goingPublic = !btn.classList.contains("on");
+        function apply() {
+          btn.classList.toggle("on", goingPublic);
+          patchNote(n.id, { visibility: goingPublic ? "public" : "shared" }).then(function (u) {
+            n.visibility = u.visibility;
+            toast(goingPublic ? "Now visible on your public link" : "Withdrawn from public view"); });
+        }
+        if (goingPublic) confirmPublic("anyone with your portfolio link", apply);
+        else apply();
+      });
+    });
+    root.querySelectorAll("[data-pin]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var n = noteById(btn.dataset.pin); if (!n) return;
+        var pin = !n.pinned;
+        patchNote(n.id, { pinned: pin }).then(function (u) { n.pinned = u.pinned;
+          btn.classList.toggle("active", pin); btn.textContent = pin ? "Pinned" : "Pin";
+          toast(pin ? "Pinned to top of public view" : "Unpinned"); });
+      });
+    });
+    // edit tech field-note body inline
+    root.querySelectorAll("[data-edit]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var el = root.querySelector('.note-body[data-note="' + btn.dataset.edit + '"]');
+        if (!el) return;
+        if (el.isContentEditable) {
+          el.contentEditable = "false"; btn.textContent = "Edit";
+          patchNote(btn.dataset.edit, { body: el.textContent }).then(function (u) {
+            var n = noteById(btn.dataset.edit); if (n) n.body = u.body; toast("Note updated"); });
+        } else { el.contentEditable = "true"; el.focus(); btn.textContent = "Save"; }
+      });
+    });
+    // save transcript correction
+    root.querySelectorAll("[data-savecorrect]").forEach(function (btn) {
+      var el = root.querySelector('.ctext[data-note="' + btn.dataset.savecorrect + '"]');
+      if (el) el.contentEditable = "true";
+      btn.addEventListener("click", function () {
+        patchNote(btn.dataset.savecorrect, { transcript_text: el.textContent }).then(function () {
+          toast("Transcript corrected · audio untouched"); });
+      });
+    });
+    // delete media (visual only — demo)
+    root.querySelectorAll(".media .del").forEach(function (b) {
+      b.addEventListener("click", function () { b.closest(".media").remove(); toast("Photo removed"); });
+    });
+
+    // reorder mode
+    var reorderBtn = document.getElementById("reorderBtn");
+    if (reorderBtn) reorderBtn.addEventListener("click", function () { toggleReorder(reorderBtn); });
+  }
+
+  var reordering = false;
+  function toggleReorder(btn) {
+    reordering = !reordering;
+    btn.classList.toggle("sel", reordering); btn.classList.toggle("ghost", !reordering);
+    var tl = document.getElementById("timeline");
+    tl.querySelectorAll(".note").forEach(function (note) {
+      // Only the technician's own items are draggable; manager items keep their slot.
+      var n = noteById(note.dataset.id);
+      var own = n && n.author_role === "technician";
+      note.setAttribute("draggable", reordering && own ? "true" : "false");
+      note.classList.toggle("reorderable", reordering && own);
+    });
+    if (reordering) enableDrag(tl); else toast("Order saved");
+  }
+  function enableDrag(tl) {
+    var dragEl = null;
+    tl.addEventListener("dragstart", function (e) {
+      dragEl = e.target.closest(".note"); if (dragEl) dragEl.classList.add("dragging"); });
+    tl.addEventListener("dragend", function () { if (dragEl) dragEl.classList.remove("dragging"); dragEl = null; });
+    tl.addEventListener("dragover", function (e) {
+      e.preventDefault(); if (!dragEl) return;
+      var after = null, notes = Array.prototype.slice.call(tl.querySelectorAll(".note:not(.dragging)"));
+      for (var i = 0; i < notes.length; i++) {
+        var box = notes[i].getBoundingClientRect();
+        if (e.clientY < box.top + box.height / 2) { after = notes[i]; break; }
+      }
+      if (after) tl.insertBefore(dragEl, after); else tl.appendChild(dragEl);
+    });
+  }
+})();
+</script>
+</body>
+</html>
