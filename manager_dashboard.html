@@ -1145,6 +1145,158 @@
     .settings-segment { width: 100%; }
     .settings-segment button { flex: 1; min-width: 0; }
   }
+
+  /* ================= SEAT MANAGEMENT =================
+     Seats are the billable unit; the roster is everything else. A technician
+     without a seat sits on the BENCH — still on the roster, progress held, not
+     billed. An IDLE seat is an assigned seat nobody has used in 30+ days.
+     Swapping moves a bench tech into an occupied seat in one step, so the seat
+     never leaves the plan and the billing cycle never gaps. */
+
+  .stale { color: var(--amber); }
+  .seat-num { font-family: var(--mono); color: var(--text-dim); }
+  .no-region { color: var(--text-faint); }
+
+  /* Seat status pills (shared across Seats page + People "All" tab) */
+  .seat-pill { font-family: var(--sans); font-weight: 600; font-size: 11px; padding: 2px 9px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+  .sp-assigned { background: #26262b; color: var(--text-dim); }
+  .sp-idle { background: rgba(241,167,58,.15); color: var(--amber); }
+  .sp-open { background: rgba(122,167,255,.14); color: var(--blue); }
+  .sp-bench { background: rgba(43,208,122,.13); color: var(--green); }
+
+  /* ---- Segmented tabs (People: Seated / Bench / All) ---- */
+  .seg-tabs { display: inline-flex; align-items: center; gap: 4px; background: #08080a; border: 1px solid var(--border); border-radius: 11px; padding: 4px; }
+  .seg-tabs button { background: none; border: 1px solid transparent; padding: 7px 14px; border-radius: 8px; color: var(--text-dim); font-family: var(--sans); font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .12s, color .12s, border-color .12s; }
+  .seg-tabs button:hover:not(.active) { color: var(--text); }
+  .seg-tabs button.active { background: #1b1b20; color: #fff; border-color: var(--border); }
+  .seg-tabs button .n { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); margin-left: 6px; }
+  .seg-tabs button.active .n { color: var(--text-dim); }
+
+  .ppl-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ppl-toolbar-right { display: flex; align-items: center; gap: 9px; }
+
+  /* ---- Bench banner ---- */
+  .bench-banner { display: flex; align-items: center; gap: 14px; background: linear-gradient(90deg, rgba(241,167,58,.11), rgba(241,167,58,.02)); border: 1px solid rgba(241,167,58,.28); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; }
+  .bench-banner .bb-text { flex: 1; font-family: var(--mono); font-size: 13px; color: var(--amber); min-width: 0; }
+  .bench-banner .bb-text strong { color: var(--text); font-weight: 700; }
+  .bench-banner .bb-actions { display: flex; gap: 9px; flex: none; }
+
+  /* ---- Selection footer inside the People card ---- */
+  .ppl-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 16px; border-top: 1px solid var(--border-soft); background: #0f0f12; }
+  .ppl-footer .pf-count { font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); }
+  .ppl-footer .pf-count strong { color: var(--text); font-weight: 700; }
+  .ppl-footer .pf-actions { display: flex; gap: 9px; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+  /* ---- Seats page ---- */
+  .seat-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .seat-tile { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px; }
+  .seat-tile .n { font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+  .seat-tile .l { font-size: 11.5px; color: var(--text-faint); margin-top: 3px; font-weight: 500; }
+  .seat-tile.amber .n { color: var(--amber); }
+  .seat-tile.green .n { color: var(--green); }
+  .seat-tile.blue .n { color: var(--blue); }
+
+  .swap-callout { display: flex; align-items: center; gap: 14px; background: linear-gradient(90deg, rgba(229,83,31,.12), rgba(229,83,31,.02)); border: 1px solid rgba(229,83,31,.3); border-radius: 12px; padding: 15px 18px; margin-bottom: 20px; }
+  .swap-callout .sc-ic { width: 38px; height: 38px; border-radius: 10px; flex: none; background: rgba(229,83,31,.16); color: var(--orange-bright); display: grid; place-items: center; }
+  .swap-callout .sc-ic svg { width: 19px; height: 19px; stroke-width: 2; }
+  .swap-callout .sc-body { flex: 1; min-width: 0; }
+  .swap-callout .sc-t { font-weight: 700; font-size: 14px; }
+  .swap-callout .sc-d { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+
+  .pool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+  .pool-card { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px; }
+  .pool-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .pool-name { font-weight: 700; font-size: 13.5px; }
+  .pool-seats { font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+  .pool-bar { height: 7px; border-radius: 20px; background: #1e1e22; overflow: hidden; display: flex; margin-bottom: 11px; }
+  .pool-bar i { display: block; height: 100%; }
+  .pool-bar i.used { background: linear-gradient(90deg, var(--orange), var(--orange-bright)); }
+  .pool-bar i.idle { background: var(--amber); }
+  .pool-legend { display: flex; gap: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); flex-wrap: wrap; }
+  .pool-legend b { font-weight: 700; color: var(--text); }
+  .pool-legend .amber b { color: var(--amber); }
+  .pool-legend .green b { color: var(--green); }
+
+  .seat-filters { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chip { background: #111114; border: 1px solid var(--border); color: var(--text-dim); border-radius: 20px; padding: 6px 13px; font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+  .chip:hover { background: #17171b; color: var(--text); }
+  .chip.active { background: #1b1b20; color: #fff; border-color: #3a3a3f; }
+  .chip .n { font-family: var(--mono); font-size: 11px; color: var(--text-faint); margin-left: 5px; }
+  .seat-filters .spacer { flex: 1; }
+  .region-select { background: #111114; border: 1px solid var(--border); color: var(--text-dim); border-radius: 9px; padding: 7px 11px; font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
+
+  .seats-table td.seat-idx { color: var(--text-faint); width: 80px; }
+  .seats-table tr.is-open td { color: var(--text-faint); }
+  .seats-table .seat-actions-inline { display: flex; gap: 7px; justify-content: flex-end; }
+
+  /* ---- Swap / give-seat modals ---- */
+  .modal.modal-wide { max-width: 700px; }
+  .swap-from { display: flex; align-items: center; gap: 13px; background: #0f0f12; border: 1px solid var(--border-soft); border-radius: 11px; padding: 13px 15px; margin-bottom: 8px; }
+  .swap-from .sf-seat { font-family: var(--mono); font-size: 12px; color: var(--text-faint); flex: none; }
+  .swap-from .sf-name { font-weight: 700; font-size: 14px; }
+  .swap-from .sf-meta { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .swap-arrow { display: flex; align-items: center; gap: 9px; color: var(--text-faint); font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin: 12px 0 10px; }
+  .swap-arrow::after { content: ''; flex: 1; height: 1px; background: var(--border-soft); }
+  .pick-list { max-height: 268px; overflow-y: auto; border: 1px solid var(--border-soft); border-radius: 11px; }
+  .pick-row { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--border-soft); cursor: pointer; transition: background .12s; }
+  .pick-row:last-child { border-bottom: none; }
+  .pick-row:hover { background: #ffffff05; }
+  .pick-row.selected { background: rgba(229,83,31,.09); }
+  .pick-row input { accent-color: var(--orange); flex: none; }
+  .pick-row .pr-main { flex: 1; min-width: 0; }
+  .pick-row .pr-name { font-weight: 700; font-size: 13.5px; }
+  .pick-row .pr-meta { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .pick-row .pr-right { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); text-align: right; flex: none; }
+  .pick-empty { padding: 26px 16px; text-align: center; font-size: 13px; color: var(--text-faint); }
+  #giveSeatModal .pick-list { margin-bottom: 18px; }
+
+  .no-gap-note { display: flex; align-items: flex-start; gap: 11px; background: rgba(43,208,122,.07); border: 1px solid rgba(43,208,122,.22); border-radius: 11px; padding: 12px 14px; margin: 16px 0 4px; }
+  .no-gap-note svg { width: 17px; height: 17px; stroke: var(--green); stroke-width: 2; flex: none; margin-top: 1px; }
+  .no-gap-note .ng-t { font-size: 13px; color: var(--text); font-weight: 600; }
+  .no-gap-note .ng-d { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; line-height: 1.45; }
+
+  .qty-stepper { display: inline-flex; align-items: center; gap: 2px; background: #08080a; border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+  .qty-stepper button { width: 34px; height: 34px; border: none; background: none; color: var(--text-dim); font-size: 19px; line-height: 1; cursor: pointer; border-radius: 7px; }
+  .qty-stepper button:hover { background: #1a1a1f; color: var(--text); }
+  .qty-stepper .qty-val { font-family: var(--mono); font-size: 17px; font-weight: 700; min-width: 46px; text-align: center; }
+  .qty-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 6px 0 16px; }
+  .qty-math { font-family: var(--mono); font-size: 13px; color: var(--text-dim); text-align: right; }
+  .qty-math strong { color: var(--text); font-weight: 700; }
+
+  .import-drop { border: 1px dashed #3a3a3f; border-radius: 12px; padding: 28px 20px; text-align: center; background: #0f0f12; margin-bottom: 16px; }
+  .import-drop svg { width: 26px; height: 26px; stroke: var(--text-faint); stroke-width: 1.7; margin-bottom: 10px; }
+  .import-drop .id-t { font-size: 14px; font-weight: 700; }
+  .import-drop .id-d { font-size: 12.5px; color: var(--text-faint); margin-top: 5px; }
+  .import-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+  /* ---- Toast ---- */
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 16px); z-index: 300; background: #18181c; border: 1px solid var(--border); border-radius: 12px; padding: 13px 18px; display: flex; align-items: center; gap: 11px; box-shadow: 0 20px 50px -10px rgba(0,0,0,.7); opacity: 0; pointer-events: none; transition: opacity .2s, transform .25s cubic-bezier(.2,.7,.3,1); max-width: min(560px, calc(100vw - 32px)); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast svg { width: 17px; height: 17px; stroke: var(--green); stroke-width: 2.2; flex: none; }
+  .toast .t-msg { font-size: 13px; color: var(--text); }
+  .toast .t-msg em { font-style: normal; color: var(--text-dim); }
+
+  @media (max-width: 900px) {
+    .seat-tiles { grid-template-columns: repeat(2, 1fr); }
+    .pool-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .ppl-toolbar { align-items: stretch; }
+    .seg-tabs { width: 100%; }
+    .seg-tabs button { flex: 1; padding: 8px 6px; font-size: 12px; }
+    .ppl-toolbar-right { width: 100%; }
+    .ppl-toolbar-right .btn { flex: 1; justify-content: center; }
+    .bench-banner { flex-direction: column; align-items: stretch; }
+    .bench-banner .bb-actions .btn { flex: 1; justify-content: center; }
+    .ppl-footer { flex-direction: column; align-items: stretch; }
+    .ppl-footer .pf-actions .btn { flex: 1; justify-content: center; }
+    .swap-callout { flex-direction: column; align-items: flex-start; }
+    .swap-callout .btn { width: 100%; justify-content: center; }
+    .qty-row { flex-direction: column; align-items: stretch; gap: 12px; }
+    .qty-math { text-align: left; }
+    .import-summary { grid-template-columns: 1fr; }
+  }
 </style>
 
 <div class="app">
@@ -1196,7 +1348,7 @@
       </div>
       <div class="nav-item" data-page="seats">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5"/><path d="M16 11l2 2 4-4"/></svg>
-        Seats
+        Seats <span class="count" id="navIdleCount" hidden></span>
       </div>
     </nav>
 
@@ -1265,7 +1417,7 @@
         <!-- Team Overview -->
         <section class="section">
           <div class="section-head">
-            <div class="section-title"><h2>Team Overview</h2><span class="hint">12 people · 6 need attention · 5 recent certifications</span></div>
+            <div class="section-title"><h2>Team Overview</h2><span class="hint" id="dashTeamHint">—</span></div>
             <div class="section-ctas">
               <button class="btn btn-ghost" data-page="people">View All Users</button>
               <button class="btn btn-primary" data-page="assign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Assign Trainings</button>
@@ -1325,6 +1477,41 @@
                   <tr class="r-green" data-go-person><td>James Wilson</td><td data-label="Certification">EPA 608 Universal</td><td data-label="Date" class="muted">May 18, 2026</td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
                   <tr class="r-green" data-go-person><td>Robert Taylor</td><td data-label="Certification">Confined Space Entry</td><td data-label="Date" class="muted">May 10, 2026</td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
                 </tbody>
+              </table></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Seats — utilization at a glance: who is holding a seat without
+             using it, and who is waiting on the bench for one. -->
+        <section class="section" id="dash-seats-section">
+          <div class="section-head">
+            <div class="section-title"><h2>Seats</h2><span class="hint" id="dashSeatsHint">—</span></div>
+            <div class="section-ctas">
+              <button class="btn btn-ghost" data-page="seats">View All Seats</button>
+              <button class="btn btn-primary" data-open-add-seats><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add Seats</button>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card" style="animation-delay:.02s">
+              <div class="card-head">
+                <div class="card-head-left"><span class="dot-accent" style="background:var(--amber)"></span><span class="card-title">Idle Seats</span><span class="badge badge-amber" id="dashIdleBadge">0</span></div>
+                <div class="card-head-cta"><button class="btn btn-ghost btn-sm" data-page="seats">Swap</button></div>
+              </div>
+              <div class="table-scroll"><table>
+                <thead><tr><th>Name</th><th>Region</th><th>Last Access</th><th class="num">Seat</th></tr></thead>
+                <tbody id="dashIdleBody"></tbody>
+              </table></div>
+            </div>
+
+            <div class="card" style="animation-delay:.08s">
+              <div class="card-head">
+                <div class="card-head-left"><span class="dot-accent" style="background:var(--green)"></span><span class="card-title">On Bench</span><span class="badge badge-green" id="dashBenchBadge">0 waiting</span></div>
+                <div class="card-head-cta"><button class="btn btn-ghost btn-sm" data-go-bench>Give Seats</button></div>
+              </div>
+              <div class="table-scroll"><table>
+                <thead><tr><th>Name</th><th>Region</th><th>Waiting</th><th class="num">Held</th></tr></thead>
+                <tbody id="dashBenchBody"></tbody>
               </table></div>
             </div>
           </div>
@@ -1486,8 +1673,8 @@
                 </div>
                 <div class="kv">
                   <div class="k">Plan</div><div class="v">Growth</div>
-                  <div class="k">Amount due</div><div class="v" style="color:var(--red)">$1,485.00</div>
-                  <div class="k">Billing cycle</div><div class="v">Monthly · 15 seats</div>
+                  <div class="k">Amount due</div><div class="v" style="color:var(--red)" id="dashAmountDue">—</div>
+                  <div class="k">Billing cycle</div><div class="v"><span id="dashBillingSeats">—</span></div>
                   <div class="k">Grace period</div><div class="v">44 days left</div>
                 </div>
               </div>
@@ -1495,16 +1682,16 @@
 
             <div class="card" style="animation-delay:.1s">
               <div class="card-head">
-                <div class="card-head-left"><span class="dot-accent" style="background:var(--orange)"></span><span class="card-title">Users / Seats</span><span class="badge badge-neutral">73% used</span></div>
-                <div class="card-head-cta"><button class="btn btn-ghost btn-sm" data-page="people">Manage Users</button></div>
+                <div class="card-head-left"><span class="dot-accent" style="background:var(--orange)"></span><span class="card-title">Plan &amp; Seats</span><span class="badge badge-neutral" id="dashSeatPct">—</span></div>
+                <div class="card-head-cta"><button class="btn btn-ghost btn-sm" data-page="seats">Manage Seats</button></div>
               </div>
               <div class="pad">
-                <div class="seat-big">11<span> / 15 seats</span></div>
-                <div class="bar"><i style="--w:73%"></i></div>
+                <div class="seat-big" id="dashSeatBig">—</div>
+                <div class="bar"><i id="dashSeatBar" style="--w:0%"></i></div>
                 <div class="seat-stats">
-                  <div class="seat-stat"><div class="n">12</div><div class="l">Total people</div></div>
-                  <div class="seat-stat"><div class="n">4</div><div class="l">Open seats</div></div>
-                  <div class="seat-stat warn"><div class="n">1</div><div class="l">Unseated</div></div>
+                  <div class="seat-stat"><div class="n" id="dashStatRoster">—</div><div class="l">On roster</div></div>
+                  <div class="seat-stat"><div class="n" id="dashStatOpen">—</div><div class="l">Open seats</div></div>
+                  <div class="seat-stat warn"><div class="n" id="dashStatBench">—</div><div class="l">On bench</div></div>
                 </div>
               </div>
             </div>
@@ -1517,10 +1704,13 @@
     <!-- ============ PEOPLE LIST ============ -->
     <div class="page" id="page-people">
       <header class="topbar">
-        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add People</button>
+        <div>
+          <h1>People</h1>
+          <div class="sub" id="peopleSub">—</div>
+        </div>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input placeholder="Search people" />
+          <input placeholder="Search people" id="peopleSearch" />
         </div>
         <div class="topbar-right">
           <button class="icon-btn" title="Download">
@@ -1534,6 +1724,32 @@
       </header>
 
       <div class="scroll">
+        <!-- Roster scope: seats are the billable slice, the bench is everyone
+             else on the roster. Default view is Seated — seats are what costs
+             money — but the bench is one click away and never hidden. -->
+        <div class="ppl-toolbar">
+          <div class="seg-tabs" id="peopleTabs">
+            <button data-ppl-tab="seated" class="active">Seated <span class="n" data-count="seated">0</span></button>
+            <button data-ppl-tab="bench">Bench <span class="n" data-count="bench">0</span></button>
+            <button data-ppl-tab="all">All <span class="n" data-count="all">0</span></button>
+          </div>
+          <div class="ppl-toolbar-right">
+            <button class="btn btn-ghost" data-open-import>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Import Roster
+            </button>
+            <button class="btn btn-primary" data-open-add-person><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add People</button>
+          </div>
+        </div>
+
+        <div class="bench-banner" id="benchBanner" hidden>
+          <div class="bb-text" id="benchBannerText">—</div>
+          <div class="bb-actions">
+            <button class="btn btn-ghost" data-open-add-seats>Add Seats</button>
+            <button class="btn btn-primary" data-open-give-seats>Give Seats</button>
+          </div>
+        </div>
+
         <!-- Settings -->
         <div class="settings-card" id="settingsCard">
           <div class="settings-head" data-action="toggle-settings">
@@ -1559,7 +1775,8 @@
                   <label class="opt"><input type="checkbox"> On track</label>
                   <label class="opt"><input type="checkbox"> At risk</label>
                   <label class="opt"><input type="checkbox"> Overdue</label>
-                  <label class="opt"><input type="checkbox"> No Seat</label>
+                  <label class="opt"><input type="checkbox"> On Bench</label>
+                  <label class="opt"><input type="checkbox"> Idle Seat</label>
                   <label class="opt"><input type="checkbox"> Completed</label>
                   <label class="opt"><input type="checkbox"> No Assignments</label>
                 </div>
@@ -1573,16 +1790,9 @@
               </div>
               <div class="tab-panel" data-tab="region">
                 <div class="opt-grid">
-                  <label class="opt"><input type="checkbox"> Arizona</label>
-                  <label class="opt"><input type="checkbox"> California</label>
-                  <label class="opt"><input type="checkbox"> Colorado</label>
-                  <label class="opt"><input type="checkbox"> Florida</label>
-                  <label class="opt"><input type="checkbox"> Georgia</label>
-                  <label class="opt"><input type="checkbox"> Illinois</label>
-                  <label class="opt"><input type="checkbox"> Massachusetts</label>
-                  <label class="opt"><input type="checkbox"> Oregon</label>
-                  <label class="opt"><input type="checkbox"> Texas</label>
-                  <label class="opt"><input type="checkbox"> Washington</label>
+                  <label class="opt"><input type="checkbox"> North</label>
+                  <label class="opt"><input type="checkbox"> South</label>
+                  <label class="opt"><input type="checkbox"> No Region</label>
                 </div>
               </div>
               <div class="tab-panel" data-tab="title">
@@ -1629,128 +1839,18 @@
           </div>
         </div>
 
-        <!-- People table -->
-        <div class="card" style="animation-delay:.02s">
+        <!-- People table — rendered from the roster model (see SEAT MODEL
+             below) so seated/bench/all stay in sync with every seat action. -->
+        <div class="card" id="peopleCard" style="animation-delay:.02s">
           <table id="peopleTable">
-            <thead>
-              <tr>
-                <th class="cb-cell"><input type="checkbox" class="cb" data-select-all></th>
-                <th class="sortable">Name</th>
-                <th class="sortable">Status</th>
-                <th class="sortable">Region</th>
-                <th class="sortable">Last Access</th>
-                <th class="num sortable">Time Spent</th>
-                <th class="num sortable">Certifications Completed</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="r-danger" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">David Kim</span></td><td><span class="status s-overdue">Overdue</span></td><td>Washington</td><td class="muted">90d</td><td class="num">15m<span class="delta">+3↑</span></td><td class="num"><span class="has-tip tip-right">3/8<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">Equipment Operations</span></span>
-              <span class="ti"><span class="tk">Tool Safety</span></span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-danger" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Amanda Lee</span></td><td><span class="status s-overdue">Overdue</span></td><td>Oregon</td><td class="muted">45d</td><td class="num">30m<span class="delta">+5↑</span></td><td class="num"><span class="has-tip tip-right">3/8<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Hand Tools Fundamentals</span></span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-danger" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Daniel Garcia</span></td><td><span class="status s-overdue">Overdue</span></td><td>Texas</td><td class="muted">60d</td><td class="num">25m<span class="delta">+5↑</span></td><td class="num"><span class="has-tip tip-right">4/12<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-amber" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Nicole Anderson</span></td><td><span class="status s-atrisk">At risk</span></td><td>Florida</td><td class="muted">20d</td><td class="num">60m<span class="delta">+10↑</span></td><td class="num"><span class="has-tip tip-right">6/11<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">Installation Fundamentals</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">Safety Onboarding</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-amber" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Olivia Davis</span></td><td><span class="status s-atrisk">At risk</span></td><td>Georgia</td><td class="muted">Never</td><td class="num">0</td><td class="num"><span class="has-tip tip-right">0/10<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="tip-empty">No certifications earned yet</span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-neutral" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Emily Rodriguez</span></td><td><span class="status s-noseat">No Seat</span></td><td>Arizona</td><td class="muted">Never</td><td class="num">0</td><td class="num"><span class="has-tip tip-right">0/9<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="tip-empty">No certifications earned yet</span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Sarah Johnson</span></td><td><span class="status s-ontrack">On track</span></td><td>California</td><td class="muted">2d</td><td class="num">120m<span class="delta">+60↑</span></td><td class="num"><span class="has-tip tip-right">6/14<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">Safety Onboarding</span></span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">Fall Protection</span></span>
-            </span></span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Michael Chen</span></td><td><span class="status s-ontrack">On track</span></td><td>California</td><td class="muted">1d</td><td class="num">45m<span class="delta">+20↑</span></td><td class="num"><span class="has-tip tip-right">9/12<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">Refrigerant Handling</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Fall Protection</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Lockout/Tagout</span></span>
-            </span></span><span class="delta">+2↑</span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Jessica Martinez</span></td><td><span class="status s-ontrack">On track</span></td><td>Texas</td><td class="muted">5d</td><td class="num">180m<span class="delta">+60↑</span></td><td class="num"><span class="has-tip tip-right">10/13<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Lockout/Tagout</span></span>
-              <span class="ti"><span class="tk">Fall Protection</span></span>
-              <span class="ti"><span class="tk">Hazard Communication</span></span>
-              <span class="ti"><span class="tk">Equipment Operations</span></span>
-            </span></span><span class="delta">+2↑</span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Robert Taylor</span></td><td><span class="status s-ontrack">On track</span></td><td>Colorado</td><td class="muted">3d</td><td class="num">95m<span class="delta">+35↑</span></td><td class="num"><span class="has-tip tip-right">7/9<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">Plumbing Fundamentals</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Fall Protection</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-            </span></span><span class="delta">+1↑</span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">Christopher Brown</span></td><td><span class="status s-ontrack">On track</span></td><td>Massachusetts</td><td class="muted">1d</td><td class="num">240m<span class="delta">+80↑</span></td><td class="num"><span class="has-tip tip-right">11/13<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">Plumbing Fundamentals</span></span>
-              <span class="ti"><span class="tk">Electrical Code</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Fall Protection</span></span>
-              <span class="ti"><span class="tk">Hazard Communication</span></span>
-              <span class="ti"><span class="tk">Equipment Operations</span></span>
-            </span></span><span class="delta">+2↑</span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-              <tr class="r-green" data-go-person><td class="cb-cell"><input type="checkbox" class="cb"></td><td><span class="ppl-name">James Wilson</span></td><td><span class="status s-ontrack">On track</span></td><td>Illinois</td><td class="muted">7d</td><td class="num">135m<span class="delta">+45↑</span></td><td class="num"><span class="has-tip tip-right">7/9<span class="tip">
-              <span class="tip-head">Earned</span>
-              <span class="ti"><span class="tk">OSHA 10</span></span>
-              <span class="ti"><span class="tk">HVAC Basics</span></span>
-              <span class="ti"><span class="tk">EPA 608 Universal</span></span>
-              <span class="ti"><span class="tk">Customer Service Basics</span></span>
-              <span class="ti"><span class="tk">Hand Tools</span></span>
-              <span class="ti"><span class="tk">Confined Space Entry</span></span>
-              <span class="ti"><span class="tk">Quality Assurance Standards</span></span>
-            </span></span><span class="delta">+2↑</span></td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>
-            </tbody>
+            <thead id="peopleHead"></thead>
+            <tbody id="peopleBody"></tbody>
           </table>
+          <div class="ppl-empty" id="peopleEmpty" hidden style="padding:40px 16px;text-align:center;color:var(--text-faint);font-size:13px;">No technicians match this view.</div>
+          <div class="ppl-footer" id="peopleFooter" hidden>
+            <div class="pf-count" id="peopleFooterCount">—</div>
+            <div class="pf-actions" id="peopleFooterActions"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -4311,81 +4411,77 @@
     <div class="page" id="page-seats">
       <header class="topbar">
         <div class="topbar-left">
-          <h1>Seats <span class="topbar-count">12</span></h1>
+          <h1>Seats <span class="topbar-count" id="seatsTopCount">—</span></h1>
         </div>
         <div class="topbar-right">
-          <button class="btn btn-ghost" id="addPeopleBtn">
+          <button class="btn btn-ghost" data-go-bench>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-            Add People
+            View Bench
           </button>
-          <button class="btn btn-primary" id="addSeatBtn">
+          <button class="btn btn-primary" data-open-add-seats>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
-            Add Seat
+            Add Seats
           </button>
         </div>
       </header>
 
       <div class="scroll">
+        <!-- Plan-level counts. "Idle" is an assigned seat with no access in
+             30+ days — the swap candidates. Bench techs cost nothing. -->
+        <div class="seat-tiles">
+          <div class="seat-tile"><div class="n" id="tilePlan">—</div><div class="l">Seats on plan</div></div>
+          <div class="seat-tile"><div class="n" id="tileAssigned">—</div><div class="l">Assigned</div></div>
+          <div class="seat-tile blue"><div class="n" id="tileOpen">—</div><div class="l">Open</div></div>
+          <div class="seat-tile amber"><div class="n" id="tileIdle">—</div><div class="l">Idle 30+ days</div></div>
+          <div class="seat-tile green"><div class="n" id="tileBench">—</div><div class="l">On bench</div></div>
+        </div>
+
+        <div class="swap-callout" id="swapCallout" hidden>
+          <div class="sc-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 4L3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 0 8h-2"/><path d="M17 20l4-4-4-4"/></svg>
+          </div>
+          <div class="sc-body">
+            <div class="sc-t" id="swapCalloutTitle">—</div>
+            <div class="sc-d">Swap a bench technician into an idle seat in one step — the seat never leaves your plan, so billing is unchanged and there is no gap in the cycle.</div>
+          </div>
+          <button class="btn btn-primary" data-open-swap-picker>Review Swaps</button>
+        </div>
+
+        <!-- Seats by region: each region is its own pool, so an admin can
+             rebalance within a region without touching the others. -->
+        <div class="section-head">
+          <div class="section-title"><h2>Seats by region</h2><span class="hint">Rebalance within a region without touching the rest of the plan</span></div>
+        </div>
+        <div class="pool-grid" id="poolGrid"></div>
+
+        <div class="seat-filters" id="seatFilters">
+          <button class="chip active" data-seat-filter="all">All <span class="n" data-count="all">0</span></button>
+          <button class="chip" data-seat-filter="assigned">Assigned <span class="n" data-count="assigned">0</span></button>
+          <button class="chip" data-seat-filter="idle">Idle <span class="n" data-count="idle">0</span></button>
+          <button class="chip" data-seat-filter="open">Open <span class="n" data-count="open">0</span></button>
+          <span class="spacer"></span>
+          <select class="region-select" id="seatRegionFilter"><option value="">All regions</option></select>
+        </div>
+
         <div class="seats-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input type="text" placeholder="Search...">
+          <input type="text" placeholder="Search seats or technicians..." id="seatsSearch">
         </div>
 
         <table class="seats-table">
           <thead>
             <tr>
-              <th>Name <span class="sort-arrow">▲▼</span></th>
-              <th>Status <span class="sort-arrow">▲▼</span></th>
-              <th>Region <span class="sort-arrow">▲▼</span></th>
-              <th>Role <span class="sort-arrow">▲▼</span></th>
+              <th>Seat</th>
+              <th>Technician</th>
+              <th>Region</th>
+              <th>Status</th>
+              <th>Last Access</th>
               <th></th>
             </tr>
           </thead>
-          <tbody>
-            <tr class="empty-seat">
-              <td>Empty seat</td>
-              <td class="status-available">Available</td>
-              <td></td>
-              <td></td>
-              <td class="actions-cell">
-                <div class="seat-actions">
-                  <button class="seat-action-btn assign-empty-seat" title="Assign seat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-                  </button>
-                  <button class="seat-action-btn danger" title="Remove seat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="empty-seat">
-              <td>Empty seat</td>
-              <td class="status-available">Available</td>
-              <td></td>
-              <td></td>
-              <td class="actions-cell">
-                <div class="seat-actions">
-                  <button class="seat-action-btn assign-empty-seat" title="Assign seat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-                  </button>
-                  <button class="seat-action-btn danger" title="Remove seat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr><td>David Kim</td><td>Assigned</td><td>California</td><td>Admin</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Amanda Lee</td><td>Assigned</td><td>California</td><td>Supervisor</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Sarah Johnson</td><td>Assigned</td><td>California</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Michael Chen</td><td>Assigned</td><td>California</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Emily Rodriguez</td><td>Assigned</td><td>Texas</td><td>Manager</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>James Wilson</td><td>Assigned</td><td>Texas</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Jessica Martinez</td><td>Assigned</td><td>Texas</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Robert Taylor</td><td>Assigned</td><td>Texas</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Christopher Brown</td><td>Assigned</td><td>Texas</td><td>Trainee</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-            <tr><td>Daniel Garcia</td><td>Assigned</td><td>New York</td><td>Manager</td><td class="actions-cell"><div class="seat-actions"><button class="seat-action-btn" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4l4 4-11 11H5v-4L16 4z"/></svg></button><button class="seat-action-btn danger" title="Remove person"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></button></div></td></tr>
-          </tbody>
+          <tbody id="seatsBody"></tbody>
         </table>
+        <div id="seatsEmpty" hidden style="padding:36px 16px;text-align:center;color:var(--text-faint);font-size:13px;">No seats match this filter.</div>
       </div>
     </div>
 
@@ -4427,7 +4523,7 @@
         <!-- Next Payment card -->
         <div class="np-card">
           <div class="np-label">NEXT PAYMENT</div>
-          <div class="np-amount">$495</div>
+          <div class="np-amount" id="npAmount">—</div>
           <div class="np-due" data-due-iso="2026-06-12">
             Due June 12, 2026
             <svg class="np-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -4439,7 +4535,7 @@
           <div class="np-breakdown">
             <div class="np-col">
               <div class="np-col-label">Seat Charges</div>
-              <div class="np-col-value">12 × $35</div>
+              <div class="np-col-value" id="npSeatCharges">—</div>
             </div>
             <div class="np-col">
               <div class="np-col-label">Paid Training</div>
@@ -4455,7 +4551,7 @@
             </div>
             <div class="np-col">
               <div class="np-col-label">Subtotal</div>
-              <div class="np-col-value emph">$495</div>
+              <div class="np-col-value emph" id="npSubtotal">—</div>
             </div>
           </div>
         </div>
@@ -4464,7 +4560,7 @@
         <div class="seats-used-card">
           <div class="su-left">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span><strong>10</strong> of <strong>12</strong> seats used</span>
+            <span id="billingSeatsUsed">—</span>
           </div>
           <button class="btn btn-ghost" onclick="showPage('seats')">Manage Seats</button>
         </div>
@@ -4475,7 +4571,7 @@
             <div class="sm-row">
               <svg class="sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Regional Breakdown
-              <span class="sec-count">(3)</span>
+              <span class="sec-count" id="billingRegionCount">(3)</span>
               <svg class="sec-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </summary>
@@ -4488,12 +4584,7 @@
                 <th class="num-col sortable">Total <span class="sort-arrow">▲▼</span></th>
               </tr>
             </thead>
-            <tbody>
-              <tr><td>California</td><td>4</td><td>$35</td><td class="num-col">$140</td></tr>
-              <tr><td>Texas</td><td>5</td><td>$35</td><td class="num-col">$175</td></tr>
-              <tr><td>New York</td><td>3</td><td>$35</td><td class="num-col">$105</td></tr>
-              <tr class="total-row"><td>Total</td><td>12</td><td>—</td><td class="num-col">$420</td></tr>
-            </tbody>
+            <tbody id="billingRegionBody"></tbody>
           </table>
         </details>
 
@@ -4521,7 +4612,7 @@
               <tr>
                 <td>INV-2026-005</td>
                 <td>May 15, 2026</td>
-                <td class="num-col">$435</td>
+                <td class="num-col">$1,720</td>
                 <td class="status-unpaid">Unpaid</td>
                 <td class="actions-col">
                   <button class="bill-download-btn" title="Download invoice">
@@ -4532,7 +4623,7 @@
               <tr>
                 <td>INV-2026-004</td>
                 <td>April 15, 2026</td>
-                <td class="num-col">$435</td>
+                <td class="num-col">$1,720</td>
                 <td>Paid</td>
                 <td class="actions-col">
                   <button class="bill-download-btn" title="Download invoice">
@@ -4543,7 +4634,7 @@
               <tr>
                 <td>INV-2026-003</td>
                 <td>March 15, 2026</td>
-                <td class="num-col">$420</td>
+                <td class="num-col">$1,685</td>
                 <td>Paid</td>
                 <td class="actions-col">
                   <button class="bill-download-btn" title="Download invoice">
@@ -4554,7 +4645,7 @@
               <tr>
                 <td>INV-2026-002</td>
                 <td>February 15, 2026</td>
-                <td class="num-col">$385</td>
+                <td class="num-col">$1,650</td>
                 <td>Paid</td>
                 <td class="actions-col">
                   <button class="bill-download-btn" title="Download invoice">
@@ -4565,7 +4656,7 @@
               <tr>
                 <td>INV-2026-001</td>
                 <td>January 15, 2026</td>
-                <td class="num-col">$350</td>
+                <td class="num-col">$1,615</td>
                 <td>Paid</td>
                 <td class="actions-col">
                   <button class="bill-download-btn" title="Download invoice">
@@ -4935,61 +5026,110 @@
       </div>
     </div>
 
-    <!-- ============ MODAL: ADD SEAT ============ -->
+    <!-- ============ MODAL: ADD SEATS ============ -->
     <div class="modal-overlay" id="addSeatModal">
       <div class="modal">
         <div class="modal-head">
-          <h2>Add Seat</h2>
+          <h2>Add Seats</h2>
+          <button class="modal-close" data-modal-cancel>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body" id="addSeatContext">—</div>
+        <div class="qty-row">
+          <div class="qty-stepper">
+            <button type="button" data-qty-step="-1">−</button>
+            <span class="qty-val" id="addSeatQty">1</span>
+            <button type="button" data-qty-step="1">+</button>
+          </div>
+          <div class="qty-math" id="addSeatMath">—</div>
+        </div>
+        <div class="no-gap-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
+          <div>
+            <div class="ng-t">Only add seats you actually need</div>
+            <div class="ng-d">If someone is holding a seat they have not used, swapping costs nothing. Check <strong>Idle 30+ days</strong> on the Seats page before you grow the plan.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-primary" id="addSeatConfirm">Add Seats</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: SWAP SEAT ============ -->
+    <!-- The fix for the remove-then-add gap: one action moves the occupant to
+         the bench and the picked technician into the same seat number. -->
+    <div class="modal-overlay" id="swapSeatModal">
+      <div class="modal modal-wide">
+        <div class="modal-head">
+          <h2 id="swapSeatTitle">Swap Seat</h2>
+          <button class="modal-close" data-modal-cancel>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div id="swapFromWrap"></div>
+        <div class="swap-arrow">Give the seat to</div>
+        <div class="pick-list" id="swapPickList"></div>
+        <div class="no-gap-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
+          <div>
+            <div class="ng-t">No billing gap, no lost progress</div>
+            <div class="ng-d" id="swapNote">The seat stays on your plan for the whole cycle — your bill does not change. The technician you move keeps every completed task and returns to the bench.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-primary" id="swapConfirm" disabled>Complete Swap</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: GIVE SEATS ============ -->
+    <div class="modal-overlay" id="giveSeatModal">
+      <div class="modal modal-wide">
+        <div class="modal-head">
+          <h2 id="giveSeatTitle">Give Seats</h2>
+          <button class="modal-close" data-modal-cancel>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body" id="giveSeatBody">—</div>
+        <div class="pick-list" id="givePickList"></div>
+        <div id="giveShortfall"></div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-primary" id="giveConfirm" disabled>Give Seats</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: IMPORT ROSTER ============ -->
+    <div class="modal-overlay" id="importRosterModal">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Import Roster</h2>
           <button class="modal-close" data-modal-cancel>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
         <div class="modal-body">
-          Adding 1 seat will increase billing by <strong>+$35/mo</strong>. New total: <strong>$455/mo</strong>.
+          Upload your whole technician staff — not just the people you have seats for. Everyone lands on the roster; nobody is billed until they hold a seat.
+        </div>
+        <div class="import-drop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div class="id-t">Drop a CSV here, or browse</div>
+          <div class="id-d">Name · Email · Region · Title — extra columns are ignored</div>
+        </div>
+        <div class="import-summary">
+          <div class="seat-tile"><div class="n" id="importTotal">—</div><div class="l">Rows in last import</div></div>
+          <div class="seat-tile"><div class="n" id="importSeated">—</div><div class="l">Matched to a seat</div></div>
+          <div class="seat-tile green"><div class="n" id="importBench">—</div><div class="l">Placed on bench</div></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
-          <button class="btn btn-primary" data-modal-cancel>Confirm</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ MODAL: ASSIGN SEAT ============ -->
-    <div class="modal-overlay" id="assignSeatModal">
-      <div class="modal">
-        <div class="modal-head">
-          <h2>Assign Seat <span style="font-weight:700;color:var(--text-dim);">11</span></h2>
-          <button class="modal-close" data-modal-cancel>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <div class="modal-form">
-          <div class="form-group">
-            <label>User</label>
-            <div class="form-select">
-              <span>Ashley Davis</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Region</label>
-            <div class="form-select">
-              <span>New York</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="form-help">Saving keeps the assigned user and seat aligned to this region.</div>
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <div class="form-select">
-              <span>Trainee</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
-          <button class="btn btn-primary" data-modal-cancel>Assign</button>
+          <button class="btn btn-primary" data-modal-cancel>Import</button>
         </div>
       </div>
     </div>
@@ -5038,6 +5178,10 @@
 
   </div>
   <div class="fab" id="fab"></div>
+  <div class="toast" id="seatToast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
+    <span class="t-msg" id="seatToastMsg"></span>
+  </div>
 </div>
 
 <script>
@@ -7120,4 +7264,865 @@
 
   // initial state
   updateFAB();
+</script>
+
+<script>
+/* ============================================================================
+   SEAT MANAGEMENT
+   ----------------------------------------------------------------------------
+   One model, four surfaces (Dashboard, People, Seats, Billing). The concepts:
+
+     seat    a billable slot on the plan, numbered. Costs money whether or not
+             anyone uses it.
+     roster  every technician the company has uploaded. Not billable.
+     bench   a roster technician with no seat. Keeps their progress, costs $0.
+     idle    an assigned seat with no access in 30+ days — the swap candidates.
+     swap    move a bench technician into an occupied seat in ONE action. The
+             seat never leaves the plan, so there is no underutilized window
+             and no gap in the billing cycle. This is the whole point.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var PRICE = 35;          // $/seat/month
+  var IDLE_DAYS = 30;      // no access in this many days => idle seat
+  var REGIONS = ['North', 'South', 'No Region'];
+
+  // --- roster ---------------------------------------------------------------
+  // The named technicians carry the prototype's existing data so the rest of
+  // the app (Person Detail, Paths, Users In Danger) still lines up.
+  var roster = [
+    tech('Michael Chen',      'North',     1,  1,  'ontrack',  45, 12, ['OSHA 10','HVAC Basics','EPA 608 Universal','Refrigerant Handling','Confined Space Entry','Customer Service Basics','Fall Protection','Hand Tools','Lockout/Tagout']),
+    tech('Christopher Brown', 'North',     2,  1,  'ontrack', 240, 13, ['OSHA 10','EPA 608 Universal','HVAC Basics','Plumbing Fundamentals','Electrical Code','Customer Service Basics','Confined Space Entry','Hand Tools','Fall Protection','Hazard Communication','Equipment Operations']),
+    tech('David Kim',         'North',     3, 90,  'overdue',  15,  8, ['OSHA 10','Equipment Operations','Tool Safety'], 'tech_david'),
+    tech('Sarah Johnson',     'North',     5,  2,  'ontrack', 120, 14, ['Safety Onboarding','OSHA 10','Customer Service Basics','Hand Tools','Confined Space Entry','Fall Protection'], 'tech_sarah'),
+    tech('Daniel Garcia',     'South',     8, 60,  'overdue',  25, 12, ['OSHA 10','EPA 608 Universal','HVAC Basics','Customer Service Basics']),
+    tech('Jessica Martinez',  'South',     9,  5,  'ontrack', 180, 13, ['OSHA 10','HVAC Basics','EPA 608 Universal','Customer Service Basics','Confined Space Entry','Hand Tools','Lockout/Tagout','Fall Protection','Hazard Communication','Equipment Operations']),
+    tech('Nicole Anderson',   'South',    12, 20,  'atrisk',   60, 11, ['OSHA 10','Installation Fundamentals','Customer Service Basics','HVAC Basics','Safety Onboarding','EPA 608 Universal']),
+    tech('Marcus Webb',       'South',    14,  8,  'ontrack',  70, 10, ['OSHA 10','HVAC Basics','Hand Tools','Fall Protection','Customer Service Basics']),
+    tech('Robert Taylor',     'South',    15,  3,  'ontrack',  95,  9, ['OSHA 10','Confined Space Entry','EPA 608 Universal','Plumbing Fundamentals','Hand Tools','Fall Protection','Customer Service Basics']),
+    tech('James Wilson',      'South',    19,  7,  'ontrack', 135,  9, ['OSHA 10','HVAC Basics','EPA 608 Universal','Customer Service Basics','Hand Tools','Confined Space Entry','Quality Assurance Standards']),
+    tech('Amanda Lee',        'North',    22, 45,  'overdue',  30,  8, ['OSHA 10','Customer Service Basics','Hand Tools Fundamentals'], 'tech_amanda'),
+    tech('Emily Rodriguez',   'South',    27, 11,  'atrisk',   20,  9, []),
+    tech('Olivia Davis',      'No Region',31, null,'atrisk',    0, 10, [])
+  ];
+
+  // Filler roster so the counts read like a real mid-size contractor: the
+  // point of the feature is that the roster is much bigger than the plan.
+  var CERT_POOL = ['OSHA 10','HVAC Basics','EPA 608 Universal','Customer Service Basics',
+                   'Hand Tools','Confined Space Entry','Fall Protection','Lockout/Tagout',
+                   'Safety Onboarding','Hazard Communication','Equipment Operations','Tool Safety'];
+  var FILLER = ['Ava Brooks','Luis Ortega','Hannah Pierce','Devon Ross','Maya Sullivan',
+    'Andre Fowler','Kayla Nguyen','Trevor Hale','Bianca Soto','Omar Haddad','Renee Coleman',
+    'Isaac Whitfield','Nina Castillo','Gabriel Moss','Dana Fitzgerald','Elias Warner',
+    'Simone Bright','Carter Ellis','Lupe Ibarra','Vaughn Decker','Tessa Lindqvist',
+    'Malik Freeman','Joelle Ramsey','Hector Villanueva','Paige Donnelly','Reuben Oyelaran',
+    'Camille Boucher','Nolan Kirby','Ingrid Sandoval','Arjun Mehta','Sloane Barrett',
+    'Dominic Pace','Yara Nassif','Wesley Lund'];
+  var FILLER_LAST = [1,2,3,4,6,7,9,11,13,16,18,21,24,27,2,5,8,12,14,17,19,23,26,28,1,3,6,10,15,20,22,25,4,9];
+
+  var PLAN_SEATS = 49;
+  var OPEN_ON_LOAD = [37, 44];   // bought but nobody in them yet
+
+  (function seedFiller() {
+    var taken = {};
+    roster.forEach(function (p) { taken[p.seat] = true; });
+    OPEN_ON_LOAD.forEach(function (n) { taken[n] = true; });
+    var free = [];
+    for (var n = 1; n <= PLAN_SEATS; n++) if (!taken[n]) free.push(n);
+    FILLER.forEach(function (name, i) {
+      var last = FILLER_LAST[i % FILLER_LAST.length];
+      var total = 8 + (i % 6);
+      var done = Math.min(total, 1 + ((i * 3) % total));
+      roster.push(tech(name, REGIONS[i % 3 === 2 && i % 7 === 0 ? 2 : i % 2],
+        free[i], last, last < 14 ? 'ontrack' : 'atrisk',
+        30 + (i * 17) % 200, total, CERT_POOL.slice(0, done)));
+    });
+  })();
+
+  // The bench: on the roster, holding progress, waiting for a seat.
+  [
+    ['Priya Raman',   'South',      6, 6,   [3, 5]],
+    ['Dante Alvarez', 'North',      3, 4,   null],
+    ['Sam Okafor',    'South',     21, 21,  [4, 5]],
+    ['Rosa Mendez',   'No Region',  9, 9,   [1, 3]],
+    ['Tyrell Banks',  'North',      4, 4,   [2, 8]],
+    ['Grace Liu',     'South',      2, null, null]
+  ].forEach(function (b) {
+    var p = tech(b[0], b[1], null, b[3], 'bench', 0, 6, []);
+    p.benchDays = b[2];
+    p.held = b[4] ? { done: b[4][0], total: b[4][1] } : null;
+    roster.push(p);
+  });
+
+  function tech(name, region, seat, last, status, minutes, certsTotal, certs, platformId) {
+    return {
+      id: name.toLowerCase().replace(/[^a-z]+/g, '_'),
+      name: name, region: region, seat: seat, last: last, status: status,
+      minutes: minutes, certsTotal: certsTotal, certs: certs || [],
+      certsDone: (certs || []).length, benchDays: 0, held: null,
+      platformId: platformId || null
+    };
+  }
+
+  var S = { planSeats: PLAN_SEATS, price: PRICE, roster: roster };
+  window.SEATS = S; // exposed for console pokes during demos
+
+  // --- derived --------------------------------------------------------------
+  function seated()  { return S.roster.filter(function (p) { return p.seat != null; }); }
+  function bench()   { return S.roster.filter(function (p) { return p.seat == null; }); }
+  function isIdle(p) { return p.seat != null && (p.last === null || p.last >= IDLE_DAYS); }
+  function idle()    { return seated().filter(isIdle).sort(byStaleness); }
+  function benchSorted() { return bench().slice().sort(function (a, b) { return b.benchDays - a.benchDays; }); }
+  function byStaleness(a, b) { return (b.last === null ? 9999 : b.last) - (a.last === null ? 9999 : a.last); }
+  function openSeats() {
+    var taken = {};
+    seated().forEach(function (p) { taken[p.seat] = true; });
+    var out = [];
+    for (var n = 1; n <= S.planSeats; n++) if (!taken[n]) out.push(n);
+    return out;
+  }
+  function byId(id) { return S.roster.filter(function (p) { return p.id === id; })[0]; }
+  function bySeat(n) { return seated().filter(function (p) { return p.seat === n; })[0]; }
+
+  // --- formatting -----------------------------------------------------------
+  function fmtLast(p) { return p.last === null ? 'Never' : p.last + 'd'; }
+  function lastCell(p) {
+    var stale = p.last === null || p.last >= IDLE_DAYS;
+    return '<span class="' + (stale ? 'stale' : 'muted') + '">' + fmtLast(p) + '</span>';
+  }
+  function fmtWait(p) { return p.benchDays + 'd'; }
+  function fmtHeld(p) { return p.held ? p.held.done + '/' + p.held.total : '—'; }
+  function fmtHeldLong(p) { return p.held ? p.held.done + '/' + p.held.total + ' tasks' : 'Not started'; }
+  function regionCell(p) {
+    return p.region === 'No Region' ? '<span class="no-region">No Region</span>' : esc(p.region);
+  }
+  function money(n) { return '$' + n.toLocaleString('en-US'); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+
+  function statusCell(p) {
+    if (p.seat == null) return '<span class="status s-noseat">On bench</span>';
+    if (isIdle(p)) return '<span class="status s-atrisk">Idle seat</span>';
+    var map = { ontrack: ['s-ontrack', 'On track'], atrisk: ['s-atrisk', 'At risk'], overdue: ['s-overdue', 'Overdue'] };
+    var m = map[p.status] || map.ontrack;
+    return '<span class="status ' + m[0] + '">' + m[1] + '</span>';
+  }
+  function rowClass(p) {
+    if (p.seat == null) return 'r-neutral';
+    if (isIdle(p)) return 'r-amber';
+    if (p.status === 'overdue') return 'r-danger';
+    if (p.status === 'atrisk') return 'r-amber';
+    return 'r-green';
+  }
+  function certsCell(p) {
+    var inner = p.certs.length
+      ? p.certs.map(function (c) { return '<span class="ti"><span class="tk">' + esc(c) + '</span></span>'; }).join('')
+      : '<span class="tip-empty">No certifications earned yet</span>';
+    return '<span class="has-tip tip-right">' + p.certsDone + '/' + p.certsTotal +
+           '<span class="tip"><span class="tip-head">Earned</span>' + inner + '</span></span>';
+  }
+  var VIEW_CELL = '<td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td>';
+
+  /* ======================= ACTIONS ======================= */
+
+  function giveSeat(personId, seatNo) {
+    var p = byId(personId);
+    if (!p || p.seat != null) return false;
+    p.seat = seatNo;
+    p.benchDays = 0;
+    p.held = null;
+    p.status = p.last === null ? 'atrisk' : (p.last < 14 ? 'ontrack' : 'atrisk');
+    return true;
+  }
+
+  function moveToBench(personId) {
+    var p = byId(personId);
+    if (!p || p.seat == null) return false;
+    // Progress is held, not deleted — that is what makes a swap reversible.
+    p.held = p.certsDone ? { done: p.certsDone, total: p.certsTotal } : null;
+    p.seat = null;
+    p.benchDays = 0;
+    p.status = 'bench';
+    return true;
+  }
+
+  // The headline action: one step, seat number preserved, plan size unchanged.
+  function swapSeat(seatNo, incomingId) {
+    var outgoing = bySeat(seatNo);
+    var incoming = byId(incomingId);
+    if (!incoming || incoming.seat != null) return null;
+    if (outgoing) moveToBench(outgoing.id);
+    giveSeat(incomingId, seatNo);
+    return { outgoing: outgoing, incoming: incoming, seat: seatNo };
+  }
+
+  function addSeats(n) { S.planSeats += n; }
+  function removeSeat(seatNo) {
+    if (bySeat(seatNo)) return false;      // never drop an occupied seat
+    S.planSeats -= 1;
+    // Renumber so seat numbers stay contiguous with the plan size.
+    seated().forEach(function (p) { if (p.seat > seatNo) p.seat -= 1; });
+    return true;
+  }
+
+  /* ======================= RENDER ======================= */
+
+  function stats() {
+    var st = seated(), bn = bench(), id = idle(), op = openSeats();
+    return {
+      plan: S.planSeats, assigned: st.length, open: op.length, openSeats: op,
+      idle: id.length, bench: bn.length, roster: S.roster.length,
+      pct: Math.round((st.length / S.planSeats) * 100)
+    };
+  }
+
+  function renderDashboard() {
+    var s = stats();
+    set('dashSeatsHint', s.assigned + ' of ' + s.plan + ' used · ' + s.open + ' open · ' +
+        s.idle + ' idle · ' + s.bench + ' on bench');
+    set('dashTeamHint', s.roster + ' technicians · ' + s.assigned + ' seated · ' + s.bench + ' on bench');
+    set('dashIdleBadge', String(s.idle));
+    set('dashBenchBadge', s.bench + ' waiting');
+
+    var ib = document.getElementById('dashIdleBody');
+    if (ib) {
+      var rows = idle().slice(0, 4);
+      ib.innerHTML = rows.length ? rows.map(function (p) {
+        return '<tr class="r-amber"><td>' + esc(p.name) + '</td><td>' + regionCell(p) + '</td><td>' +
+          lastCell(p) + '</td><td class="num seat-num">' + p.seat + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" class="muted">Every seat has been used in the last ' + IDLE_DAYS + ' days.</td></tr>';
+    }
+    var bb = document.getElementById('dashBenchBody');
+    if (bb) {
+      var brows = benchSorted().slice(0, 4);
+      bb.innerHTML = brows.length ? brows.map(function (p) {
+        var stale = p.benchDays >= 14;
+        return '<tr class="r-neutral"><td>' + esc(p.name) + '</td><td>' + regionCell(p) + '</td><td><span class="' +
+          (stale ? 'stale' : 'muted') + '">' + fmtWait(p) + '</span></td><td class="num seat-num">' +
+          fmtHeld(p) + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" class="muted">Nobody is waiting for a seat.</td></tr>';
+    }
+
+    // Account card
+    set('dashSeatPct', s.pct + '% used');
+    var big = document.getElementById('dashSeatBig');
+    if (big) big.innerHTML = s.assigned + '<span> / ' + s.plan + ' seats</span>';
+    var bar = document.getElementById('dashSeatBar');
+    if (bar) bar.style.setProperty('--w', s.pct + '%');
+    set('dashStatRoster', String(s.roster));
+    set('dashStatOpen', String(s.open));
+    set('dashStatBench', String(s.bench));
+    set('dashBillingSeats', 'Monthly · ' + s.plan + ' seats');
+    set('dashAmountDue', money(s.plan * S.price + 75) + '.00');
+
+    var nav = document.getElementById('navIdleCount');
+    if (nav) { nav.textContent = String(s.idle); nav.hidden = s.idle === 0; }
+  }
+
+  // ---- People --------------------------------------------------------------
+  var pplTab = 'seated';
+  var pplQuery = '';
+  var selected = {};   // id -> true, survives re-render
+
+  function peopleRows() {
+    var list = pplTab === 'seated' ? seated() : pplTab === 'bench' ? benchSorted() : S.roster;
+    if (pplTab === 'seated') list = list.slice().sort(function (a, b) { return a.seat - b.seat; });
+    if (pplTab === 'all') list = list.slice().sort(function (a, b) {
+      if ((a.seat == null) !== (b.seat == null)) return a.seat == null ? 1 : -1;
+      return a.seat == null ? b.benchDays - a.benchDays : a.seat - b.seat;
+    });
+    if (pplQuery) {
+      var q = pplQuery.toLowerCase();
+      list = list.filter(function (p) {
+        return p.name.toLowerCase().indexOf(q) > -1 || p.region.toLowerCase().indexOf(q) > -1;
+      });
+    }
+    return list;
+  }
+
+  var PPL_HEAD = {
+    seated: ['Name', 'Status', 'Region', 'Seat', 'Last Access', 'Time Spent', 'Certifications Completed'],
+    bench:  ['Name', 'Region', 'On Bench', 'Progress Held', 'Last Access'],
+    all:    ['Name', 'Seat', 'Status', 'Region', 'Last Access', 'Certifications Completed']
+  };
+  var PPL_NUM = { seated: { 3: 1, 4: 1, 5: 1, 6: 1 }, bench: {}, all: { 5: 1 } };
+
+  function peopleRowHtml(p) {
+    var tds;
+    if (pplTab === 'seated') {
+      tds = '<td><span class="ppl-name">' + esc(p.name) + '</span></td>' +
+            '<td>' + statusCell(p) + '</td><td>' + regionCell(p) + '</td>' +
+            '<td class="num seat-num">' + p.seat + '</td>' +
+            '<td class="num">' + lastCell(p) + '</td>' +
+            '<td class="num">' + (p.minutes ? p.minutes + 'm' : '0') + '</td>' +
+            '<td class="num">' + certsCell(p) + '</td>';
+    } else if (pplTab === 'bench') {
+      var stale = p.benchDays >= 14;
+      tds = '<td><span class="ppl-name">' + esc(p.name) + '</span></td>' +
+            '<td>' + regionCell(p) + '</td>' +
+            '<td><span class="' + (stale ? 'stale' : '') + '">' + fmtWait(p) + '</span></td>' +
+            '<td>' + fmtHeldLong(p) + '</td>' +
+            '<td>' + lastCell(p) + '</td>';
+    } else {
+      tds = '<td><span class="ppl-name">' + esc(p.name) + '</span></td>' +
+            '<td>' + (p.seat == null
+              ? '<span class="seat-pill sp-bench">Bench</span>'
+              : '<span class="seat-pill ' + (isIdle(p) ? 'sp-idle' : 'sp-assigned') + '">Seat ' + p.seat + '</span>') + '</td>' +
+            '<td>' + statusCell(p) + '</td><td>' + regionCell(p) + '</td>' +
+            '<td>' + lastCell(p) + '</td>' +
+            '<td class="num">' + certsCell(p) + '</td>';
+    }
+    return '<tr class="' + rowClass(p) + '" data-person="' + p.id + '">' +
+           '<td class="cb-cell"><input type="checkbox" class="cb"' + (selected[p.id] ? ' checked' : '') + '></td>' +
+           tds + VIEW_CELL + '</tr>';
+  }
+
+  function renderPeople() {
+    var s = stats();
+    set('peopleSub', s.roster + ' technicians on your roster. ' + s.assigned + ' hold a seat.');
+    countEl('seated', s.assigned, '#peopleTabs');
+    countEl('bench', s.bench, '#peopleTabs');
+    countEl('all', s.roster, '#peopleTabs');
+
+    var banner = document.getElementById('benchBanner');
+    if (banner) {
+      banner.hidden = s.bench === 0;
+      set('benchBannerText', '<strong>' + plural(s.bench, 'technician') + '</strong> on the bench · <strong>' +
+          plural(s.open, 'seat') + '</strong> available on your plan', true);
+    }
+
+    var head = document.getElementById('peopleHead');
+    var body = document.getElementById('peopleBody');
+    if (!head || !body) return;
+    var cols = PPL_HEAD[pplTab], nums = PPL_NUM[pplTab];
+    head.innerHTML = '<tr><th class="cb-cell"><input type="checkbox" class="cb" id="pplSelectAll"></th>' +
+      cols.map(function (c, i) { return '<th class="sortable' + (nums[i] ? ' num' : '') + '">' + c + '</th>'; }).join('') +
+      '<th></th></tr>';
+
+    var rows = peopleRows();
+    body.innerHTML = rows.map(peopleRowHtml).join('');
+    var empty = document.getElementById('peopleEmpty');
+    if (empty) empty.hidden = rows.length > 0;
+
+    // Rows are re-created on every render, so their handlers are bound here.
+    body.querySelectorAll('tr').forEach(function (tr) {
+      var p = byId(tr.getAttribute('data-person'));
+      var cb = tr.querySelector('input.cb');
+      cb.addEventListener('click', function (e) { e.stopPropagation(); });
+      cb.addEventListener('change', function () {
+        if (cb.checked) selected[p.id] = true; else delete selected[p.id];
+        tr.classList.toggle('selected', cb.checked);
+        renderPeopleFooter();
+      });
+      if (cb.checked) tr.classList.add('selected');
+      tr.addEventListener('click', function (e) {
+        if (e.target.closest('.cb-cell')) return;
+        if (typeof window.__loadPersonDetail === 'function') {
+          window.__loadPersonDetail(p.platformId || ('unknown_' + p.id), p.name);
+        }
+      });
+    });
+    var all = document.getElementById('pplSelectAll');
+    if (all) all.addEventListener('change', function () {
+      rows.forEach(function (p) { if (all.checked) selected[p.id] = true; else delete selected[p.id]; });
+      renderPeople();
+    });
+    renderPeopleFooter();
+  }
+
+  function selectedPeople() {
+    return S.roster.filter(function (p) { return selected[p.id]; });
+  }
+
+  function renderPeopleFooter() {
+    var footer = document.getElementById('peopleFooter');
+    if (!footer) return;
+    var sel = selectedPeople();
+    if (!sel.length) { footer.hidden = true; return; }
+    footer.hidden = false;
+    var s = stats();
+    var onBench = sel.filter(function (p) { return p.seat == null; });
+    var onSeat = sel.filter(function (p) { return p.seat != null; });
+    set('peopleFooterCount', '<strong>' + sel.length + ' selected</strong> · ' +
+        plural(s.open, 'seat') + ' available', true);
+
+    var actions = '<button class="btn btn-ghost" data-ppl-action="assign">Assign Training</button>' +
+                  '<button class="btn btn-ghost" data-ppl-action="message">Message</button>';
+    if (onBench.length) {
+      actions += '<button class="btn btn-primary" data-ppl-action="give">Give Seats</button>';
+    } else if (onSeat.length) {
+      actions += '<button class="btn btn-ghost" data-ppl-action="tobench">Move to Bench</button>';
+    }
+    var el = document.getElementById('peopleFooterActions');
+    if (el) el.innerHTML = actions;
+  }
+
+  // ---- Seats ---------------------------------------------------------------
+  var seatFilter = 'all';
+  var seatRegion = '';
+  var seatQuery = '';
+
+  function seatRows() {
+    var out = [];
+    for (var n = 1; n <= S.planSeats; n++) {
+      var p = bySeat(n);
+      out.push({ seat: n, person: p || null, state: !p ? 'open' : (isIdle(p) ? 'idle' : 'assigned') });
+    }
+    return out.filter(function (r) {
+      if (seatFilter === 'assigned' && r.state === 'open') return false;
+      if (seatFilter === 'idle' && r.state !== 'idle') return false;
+      if (seatFilter === 'open' && r.state !== 'open') return false;
+      if (seatRegion && (!r.person || r.person.region !== seatRegion)) return false;
+      if (seatQuery) {
+        var q = seatQuery.toLowerCase();
+        var hay = ('seat ' + r.seat + ' ' + (r.person ? r.person.name + ' ' + r.person.region : 'empty seat')).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderSeats() {
+    var s = stats();
+    set('seatsTopCount', s.assigned + ' of ' + s.plan + ' used');
+    set('tilePlan', String(s.plan)); set('tileAssigned', String(s.assigned));
+    set('tileOpen', String(s.open)); set('tileIdle', String(s.idle)); set('tileBench', String(s.bench));
+
+    var callout = document.getElementById('swapCallout');
+    if (callout) {
+      var show = s.idle > 0 && s.bench > 0;
+      callout.hidden = !show;
+      if (show) set('swapCalloutTitle', plural(s.idle, 'seat') + ' sitting idle while ' +
+        plural(s.bench, 'technician') + ' wait' + (s.bench === 1 ? 's' : '') + ' on the bench');
+    }
+
+    // Region pools — the multi-tier view.
+    var pg = document.getElementById('poolGrid');
+    if (pg) {
+      pg.innerHTML = REGIONS.map(function (r) {
+        var inRegion = seated().filter(function (p) { return p.region === r; });
+        var idleN = inRegion.filter(isIdle).length;
+        var benchN = bench().filter(function (p) { return p.region === r; }).length;
+        var usedPct = s.plan ? Math.round(((inRegion.length - idleN) / s.plan) * 100) : 0;
+        var idlePct = s.plan ? Math.round((idleN / s.plan) * 100) : 0;
+        return '<div class="pool-card">' +
+          '<div class="pool-head"><span class="pool-name">' + esc(r) + '</span>' +
+          '<span class="pool-seats">' + plural(inRegion.length, 'seat') + '</span></div>' +
+          '<div class="pool-bar"><i class="used" style="width:' + usedPct + '%"></i><i class="idle" style="width:' + idlePct + '%"></i></div>' +
+          '<div class="pool-legend"><span>Active <b>' + (inRegion.length - idleN) + '</b></span>' +
+          '<span class="amber">Idle <b>' + idleN + '</b></span>' +
+          '<span class="green">Bench <b>' + benchN + '</b></span></div></div>';
+      }).join('');
+    }
+
+    var sel = document.getElementById('seatRegionFilter');
+    if (sel && sel.options.length <= 1) {
+      REGIONS.forEach(function (r) {
+        var o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o);
+      });
+    }
+    countEl('all', s.plan, '#seatFilters'); countEl('assigned', s.assigned, '#seatFilters');
+    countEl('idle', s.idle, '#seatFilters'); countEl('open', s.open, '#seatFilters');
+
+    var body = document.getElementById('seatsBody');
+    if (!body) return;
+    var rows = seatRows();
+    body.innerHTML = rows.map(function (r) {
+      if (!r.person) {
+        return '<tr class="is-open empty-seat"><td class="seat-idx">Seat ' + r.seat + '</td>' +
+          '<td>Empty seat</td><td></td><td><span class="seat-pill sp-open">Open</span></td><td></td>' +
+          '<td class="actions-cell"><div class="seat-actions-inline">' +
+          '<button class="btn btn-ghost btn-sm" data-assign-seat="' + r.seat + '">Assign</button>' +
+          '<button class="btn btn-ghost btn-sm" data-remove-seat="' + r.seat + '">Remove seat</button>' +
+          '</div></td></tr>';
+      }
+      var p = r.person;
+      return '<tr' + (r.state === 'idle' ? ' class="r-amber"' : '') + '><td class="seat-idx">Seat ' + r.seat + '</td>' +
+        '<td>' + esc(p.name) + '</td><td>' + regionCell(p) + '</td>' +
+        '<td><span class="seat-pill ' + (r.state === 'idle' ? 'sp-idle' : 'sp-assigned') + '">' +
+        (r.state === 'idle' ? 'Idle ' + fmtLast(p) : 'Assigned') + '</span></td>' +
+        '<td>' + lastCell(p) + '</td>' +
+        '<td class="actions-cell"><div class="seat-actions-inline">' +
+        '<button class="btn btn-ghost btn-sm" data-swap-seat="' + r.seat + '">Swap</button>' +
+        '<button class="btn btn-ghost btn-sm" data-bench-seat="' + r.seat + '">Move to bench</button>' +
+        '</div></td></tr>';
+    }).join('');
+    var empty = document.getElementById('seatsEmpty');
+    if (empty) empty.hidden = rows.length > 0;
+  }
+
+  // ---- Billing -------------------------------------------------------------
+  function renderBilling() {
+    var s = stats();
+    set('billingSeatsUsed', '<strong>' + s.assigned + '</strong> of <strong>' + s.plan +
+        '</strong> seats used · <strong>' + s.bench + '</strong> on the bench (not billed)', true);
+    set('npSeatCharges', s.plan + ' × ' + money(S.price));
+    var total = s.plan * S.price + 75;   // + paid training 60 - credits 20 + tax 35
+    set('npAmount', money(total));
+    set('npSubtotal', money(total));
+    set('billingRegionCount', '(' + REGIONS.length + ')');
+
+    var body = document.getElementById('billingRegionBody');
+    if (!body) return;
+    var rows = REGIONS.map(function (r) {
+      var n = seated().filter(function (p) { return p.region === r; }).length;
+      return '<tr><td>' + esc(r) + '</td><td>' + n + '</td><td>' + money(S.price) +
+             '</td><td class="num-col">' + money(n * S.price) + '</td></tr>';
+    });
+    rows.push('<tr><td>Open seats</td><td>' + s.open + '</td><td>' + money(S.price) +
+              '</td><td class="num-col">' + money(s.open * S.price) + '</td></tr>');
+    rows.push('<tr class="total-row"><td>Total</td><td>' + s.plan + '</td><td>—</td><td class="num-col">' +
+              money(s.plan * S.price) + '</td></tr>');
+    body.innerHTML = rows.join('');
+
+    set('importTotal', String(s.roster));
+    set('importSeated', String(s.assigned));
+    set('importBench', String(s.bench));
+  }
+
+  function renderAll() { renderDashboard(); renderPeople(); renderSeats(); renderBilling(); }
+
+  /* ======================= MODALS ======================= */
+
+  function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('open'); }
+  function closeModals() {
+    document.querySelectorAll('.modal-overlay.open').forEach(function (m) { m.classList.remove('open'); });
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById('seatToast');
+    if (!t) return;
+    set('seatToastMsg', msg, true);
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 4200);
+  }
+
+  // ---- Add seats -----------------------------------------------------------
+  var addQty = 1;
+  function openAddSeats() {
+    var s = stats();
+    addQty = Math.max(1, s.bench - s.open) || 1;
+    set('addSeatContext', 'You are on <strong>' + plural(s.plan, 'seat') + '</strong> at ' + money(S.price) +
+        '/seat/month. <strong>' + plural(s.bench, 'technician') + '</strong> ' + (s.bench === 1 ? 'is' : 'are') +
+        ' on the bench and <strong>' + plural(s.idle, 'seat') + '</strong> ' + (s.idle === 1 ? 'is' : 'are') +
+        ' idle.', true);
+    renderAddSeats();
+    openModal('addSeatModal');
+  }
+  function renderAddSeats() {
+    var s = stats();
+    set('addSeatQty', String(addQty));
+    set('addSeatMath', '+' + money(addQty * S.price) + '/mo · new total <strong>' +
+        money((s.plan + addQty) * S.price) + '/mo in seat charges</strong> for ' + plural(s.plan + addQty, 'seat'), true);
+    var btn = document.getElementById('addSeatConfirm');
+    if (btn) btn.textContent = 'Add ' + plural(addQty, 'Seat');
+  }
+
+  // ---- Swap ----------------------------------------------------------------
+  var swapSeatNo = null, swapPick = null;
+  function openSwap(seatNo) {
+    var p = bySeat(seatNo);
+    swapSeatNo = seatNo; swapPick = null;
+    set('swapSeatTitle', p ? 'Swap Seat ' + seatNo : 'Assign Seat ' + seatNo);
+    var wrap = document.getElementById('swapFromWrap');
+    if (wrap) {
+      wrap.innerHTML = '<div class="swap-arrow" style="margin-top:4px">Currently in this seat</div>' +
+        '<div class="swap-from"><span class="sf-seat">SEAT ' + seatNo + '</span>' +
+        (p
+          ? '<div style="flex:1;min-width:0"><div class="sf-name">' + esc(p.name) + '</div>' +
+            '<div class="sf-meta">' + esc(p.region) + ' · last access ' + fmtLast(p) +
+            ' · ' + p.certsDone + '/' + p.certsTotal + ' certifications</div></div>' +
+            '<span class="seat-pill ' + (isIdle(p) ? 'sp-idle' : 'sp-assigned') + '">' +
+            (isIdle(p) ? 'Idle' : 'Active') + '</span>'
+          : '<div style="flex:1;min-width:0"><div class="sf-name">Empty seat</div>' +
+            '<div class="sf-meta">Open, and already billed at ' + money(S.price) + '/month</div></div>' +
+            '<span class="seat-pill sp-open">Open</span>') +
+        '</div>';
+    }
+    renderSwapPicks();
+    openModal('swapSeatModal');
+  }
+  function renderSwapPicks() {
+    var list = document.getElementById('swapPickList');
+    if (!list) return;
+    var here = bySeat(swapSeatNo);
+    var cands = benchSorted().sort(function (a, b) {
+      var ar = here && a.region === here.region ? 0 : 1;
+      var br = here && b.region === here.region ? 0 : 1;
+      return ar - br || b.benchDays - a.benchDays;
+    });
+    if (!cands.length) {
+      list.innerHTML = '<div class="pick-empty">Nobody is on the bench. Add technicians to your roster first.</div>';
+    } else {
+      list.innerHTML = cands.map(function (p) {
+        return '<label class="pick-row' + (swapPick === p.id ? ' selected' : '') + '" data-pick="' + p.id + '">' +
+          '<input type="radio" name="swapPick"' + (swapPick === p.id ? ' checked' : '') + '>' +
+          '<div class="pr-main"><div class="pr-name">' + esc(p.name) + '</div>' +
+          '<div class="pr-meta">' + esc(p.region) + ' · waiting ' + fmtWait(p) + ' · ' + fmtHeldLong(p) + '</div></div>' +
+          '<div class="pr-right">' + (here && p.region === here.region ? 'Same region' : '') + '</div></label>';
+      }).join('');
+      list.querySelectorAll('[data-pick]').forEach(function (row) {
+        row.addEventListener('click', function () { swapPick = row.getAttribute('data-pick'); renderSwapPicks(); });
+      });
+    }
+    var outgoing = bySeat(swapSeatNo);
+    set('swapNote', 'Seat ' + swapSeatNo + ' stays on your plan for the whole cycle — your bill does not change. ' +
+      (outgoing ? esc(outgoing.name) + ' keeps every completed task and returns to the bench.'
+                : 'You are already paying for this seat, so filling it costs nothing extra.'), true);
+    var btn = document.getElementById('swapConfirm');
+    if (btn) btn.disabled = !swapPick;
+  }
+
+  // ---- Give seats ----------------------------------------------------------
+  var givePicks = {};
+  function openGiveSeats(preselect) {
+    givePicks = {};
+    (preselect || []).forEach(function (id) { givePicks[id] = true; });
+    if (!preselect || !preselect.length) {
+      benchSorted().slice(0, stats().open).forEach(function (p) { givePicks[p.id] = true; });
+    }
+    renderGive();
+    openModal('giveSeatModal');
+  }
+  function renderGive() {
+    var s = stats();
+    var picked = Object.keys(givePicks).filter(function (id) {
+      var p = byId(id); return p && p.seat == null;
+    });
+    set('giveSeatTitle', 'Give Seats');
+    set('giveSeatBody', 'You have <strong>' + plural(s.open, 'open seat') + '</strong>. Pick who comes off the bench — ' +
+        'they keep the progress they already have.', true);
+
+    var list = document.getElementById('givePickList');
+    if (list) {
+      var bn = benchSorted();
+      list.innerHTML = bn.length ? bn.map(function (p) {
+        return '<label class="pick-row' + (givePicks[p.id] ? ' selected' : '') + '" data-give="' + p.id + '">' +
+          '<input type="checkbox"' + (givePicks[p.id] ? ' checked' : '') + '>' +
+          '<div class="pr-main"><div class="pr-name">' + esc(p.name) + '</div>' +
+          '<div class="pr-meta">' + esc(p.region) + ' · waiting ' + fmtWait(p) + ' · ' + fmtHeldLong(p) + '</div></div>' +
+          '<div class="pr-right">last access ' + fmtLast(p) + '</div></label>';
+      }).join('') : '<div class="pick-empty">Nobody is on the bench.</div>';
+      list.querySelectorAll('[data-give]').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          e.preventDefault();
+          var id = row.getAttribute('data-give');
+          if (givePicks[id]) delete givePicks[id]; else givePicks[id] = true;
+          renderGive();
+        });
+      });
+    }
+
+    // Short on seats? Offer the two honest ways out — buy, or swap an idle one.
+    var short = picked.length - s.open;
+    var sf = document.getElementById('giveShortfall');
+    if (sf) {
+      if (short > 0) {
+        sf.innerHTML = '<div class="bench-banner" style="margin:16px 0 0">' +
+          '<div class="bb-text">' + plural(picked.length, 'technician') + ' selected but only ' +
+          plural(s.open, 'open seat') + '. You are <strong>' + plural(short, 'seat') + '</strong> short.</div>' +
+          '<div class="bb-actions">' +
+          '<button class="btn btn-ghost" data-give-swap>Swap an idle seat</button>' +
+          '<button class="btn btn-primary" data-give-add="' + short + '">Add ' + plural(short, 'seat') +
+          ' · +' + money(short * S.price) + '/mo</button></div></div>';
+        sf.querySelector('[data-give-add]').addEventListener('click', function () {
+          addSeats(short); renderAll(); renderGive();
+          toast('Added ' + plural(short, 'seat') + ' to your plan. <em>Seat charges now ' + money(stats().plan * S.price) + '/mo.</em>');
+        });
+        sf.querySelector('[data-give-swap]').addEventListener('click', function () {
+          closeModals();
+          var stalest = idle()[0];
+          if (stalest) { showPage('seats'); openSwap(stalest.seat); }
+          else toast('No idle seats to swap right now.');
+        });
+      } else if (s.open > 0 && picked.length === 0) {
+        sf.innerHTML = '<div class="no-gap-note" style="margin-top:16px">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '<div><div class="ng-t">Open seats are already billed</div>' +
+          '<div class="ng-d">You are paying for ' + plural(s.open, 'seat') +
+          ' nobody is using. Filling them costs nothing extra.</div></div></div>';
+      } else { sf.innerHTML = ''; }
+    }
+
+    var btn = document.getElementById('giveConfirm');
+    if (btn) {
+      var n = Math.min(picked.length, s.open);
+      btn.disabled = n === 0;
+      btn.textContent = n ? 'Give ' + plural(n, 'Seat') : 'Give Seats';
+    }
+  }
+
+  /* ======================= WIRING ======================= */
+
+  function set(id, html, isHtml) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (isHtml) el.innerHTML = html; else el.textContent = html;
+  }
+  function countEl(key, n, scope) {
+    document.querySelectorAll((scope ? scope + ' ' : '') + '[data-count="' + key + '"]').forEach(function (el) {
+      el.textContent = String(n);
+    });
+  }
+
+  function goBench() {
+    pplTab = 'bench';
+    document.querySelectorAll('#peopleTabs button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-ppl-tab') === 'bench');
+    });
+    renderPeople();
+    if (typeof showPage === 'function') showPage('people');
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || typeof t.closest !== 'function') return;
+    var el;
+
+    if ((el = t.closest('[data-ppl-tab]'))) {
+      pplTab = el.getAttribute('data-ppl-tab');
+      document.querySelectorAll('#peopleTabs button').forEach(function (b) { b.classList.remove('active'); });
+      el.classList.add('active');
+      renderPeople();
+      return;
+    }
+    if ((el = t.closest('[data-seat-filter]'))) {
+      seatFilter = el.getAttribute('data-seat-filter');
+      document.querySelectorAll('#seatFilters .chip').forEach(function (b) { b.classList.remove('active'); });
+      el.classList.add('active');
+      renderSeats();
+      return;
+    }
+    if (t.closest('[data-go-bench]')) { goBench(); return; }
+    if (t.closest('[data-open-add-seats]')) { openAddSeats(); return; }
+    if (t.closest('[data-open-import]')) { openModal('importRosterModal'); return; }
+    if (t.closest('[data-open-add-person]')) {
+      var panel = document.getElementById('addPersonPanel');
+      if (panel) panel.classList.add('open');
+      return;
+    }
+    if (t.closest('[data-open-give-seats]')) { openGiveSeats(null); return; }
+    if (t.closest('[data-open-swap-picker]')) {
+      var stalest = idle()[0];
+      if (stalest) openSwap(stalest.seat); else toast('No idle seats right now.');
+      return;
+    }
+    if ((el = t.closest('[data-swap-seat]'))) { openSwap(parseInt(el.getAttribute('data-swap-seat'), 10)); return; }
+    if ((el = t.closest('[data-assign-seat]'))) {
+      var seatNo = parseInt(el.getAttribute('data-assign-seat'), 10);
+      var next = benchSorted()[0];
+      if (!next) { toast('Nobody is on the bench to assign.'); return; }
+      openSwap(seatNo);
+      return;
+    }
+    if ((el = t.closest('[data-bench-seat]'))) {
+      var sn = parseInt(el.getAttribute('data-bench-seat'), 10);
+      var occ = bySeat(sn);
+      if (occ) {
+        moveToBench(occ.id);
+        renderAll();
+        toast(esc(occ.name) + ' moved to the bench. <em>Seat ' + sn +
+              ' stays on your plan — progress is held, seat charges unchanged.</em>');
+      }
+      return;
+    }
+    if ((el = t.closest('[data-remove-seat]'))) {
+      var rn = parseInt(el.getAttribute('data-remove-seat'), 10);
+      if (removeSeat(rn)) {
+        renderAll();
+        toast('Seat removed. <em>Seat charges drop to ' + money(stats().plan * S.price) + '/mo next cycle.</em>');
+      }
+      return;
+    }
+    if ((el = t.closest('[data-qty-step]'))) {
+      addQty = Math.min(50, Math.max(1, addQty + parseInt(el.getAttribute('data-qty-step'), 10)));
+      renderAddSeats();
+      return;
+    }
+    if ((el = t.closest('[data-ppl-action]'))) {
+      var action = el.getAttribute('data-ppl-action');
+      var sel = selectedPeople();
+      if (action === 'give') {
+        openGiveSeats(sel.filter(function (p) { return p.seat == null; }).map(function (p) { return p.id; }));
+      } else if (action === 'tobench') {
+        var moved = 0;
+        sel.forEach(function (p) { if (moveToBench(p.id)) moved++; });
+        selected = {};
+        renderAll();
+        toast(plural(moved, 'technician') + ' moved to the bench. <em>The seats stay on your plan — no billing change, progress held.</em>');
+      } else if (action === 'assign') {
+        if (typeof window.setAssignMode === 'function') window.setAssignMode('people-first');
+        showPage('assign');
+      } else {
+        toast('Message queued for ' + plural(sel.length, 'technician') + '.');
+      }
+      return;
+    }
+  });
+
+  var confirmAdd = document.getElementById('addSeatConfirm');
+  if (confirmAdd) confirmAdd.addEventListener('click', function () {
+    addSeats(addQty);
+    closeModals();
+    renderAll();
+    toast('Added ' + plural(addQty, 'seat') + '. <em>Seat charges now ' + money(stats().plan * S.price) +
+          '/mo · ' + plural(stats().open, 'open seat') + ' ready to fill.</em>');
+  });
+
+  var confirmSwap = document.getElementById('swapConfirm');
+  if (confirmSwap) confirmSwap.addEventListener('click', function () {
+    if (!swapPick) return;
+    var r = swapSeat(swapSeatNo, swapPick);
+    closeModals();
+    renderAll();
+    if (r) {
+      toast(esc(r.incoming.name) + ' now holds seat ' + r.seat +
+            (r.outgoing ? '; ' + esc(r.outgoing.name) + ' is on the bench with progress held' : '') +
+            '. <em>Plan still ' + plural(stats().plan, 'seat') + ' at ' + money(stats().plan * S.price) +
+            '/mo — no billing change, no gap in the cycle.</em>');
+    }
+  });
+
+  var confirmGive = document.getElementById('giveConfirm');
+  if (confirmGive) confirmGive.addEventListener('click', function () {
+    var open = openSeats();
+    var picked = Object.keys(givePicks).filter(function (id) {
+      var p = byId(id); return p && p.seat == null;
+    });
+    var n = Math.min(picked.length, open.length);
+    for (var i = 0; i < n; i++) giveSeat(picked[i], open[i]);
+    picked.slice(0, n).forEach(function (id) { delete selected[id]; });
+    closeModals();
+    renderAll();
+    toast(plural(n, 'technician') + ' seated. <em>' + plural(stats().open, 'seat') +
+          ' still open · ' + plural(stats().bench, 'technician') + ' on the bench.</em>');
+  });
+
+  var pSearch = document.getElementById('peopleSearch');
+  if (pSearch) pSearch.addEventListener('input', function () { pplQuery = pSearch.value.trim(); renderPeople(); });
+  var sSearch = document.getElementById('seatsSearch');
+  if (sSearch) sSearch.addEventListener('input', function () { seatQuery = sSearch.value.trim(); renderSeats(); });
+  var rSel = document.getElementById('seatRegionFilter');
+  if (rSel) rSel.addEventListener('change', function () { seatRegion = rSel.value; renderSeats(); });
+
+  // The People page runs its own selection bar (it can give seats), so the
+  // shared FAB stands down there.
+  var origUpdateFAB = window.updateFAB;
+  window.updateFAB = function () {
+    var page = document.querySelector('.page.active');
+    if (page && page.id === 'page-people') {
+      var fab = document.getElementById('fab');
+      if (fab) fab.classList.remove('show');
+      renderPeopleFooter();
+      return;
+    }
+    if (typeof origUpdateFAB === 'function') origUpdateFAB();
+  };
+
+  renderAll();
+  window.updateFAB();
+})();
 </script>

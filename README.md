@@ -83,9 +83,50 @@ this mock.
 - **Debug panel** (`⚙ mock`, bottom-right). Raw reviews + todos, a **simulate
   in-app complete** button per pending review (the cross-channel test), and a
   **reset DB** button.
+- **Seat management** (below). Client-side only — no API, no persistence.
 
-Only the ride-along slice is wired. Seats, Billing, Pricing, Settings stay as
-static prototype.
+Pricing and Settings stay as static prototype.
+
+---
+
+## Seat management
+
+Lives entirely in `manager_dashboard.html` (one model, no backend). It exists to
+demo the pitch: managers swap technicians in and out of a fixed number of seats
+to hold a budget, and today that means *remove then re-add* — a window of
+underutilized seats and a gap in the billing cycle.
+
+**The concepts**
+
+| Term | Meaning |
+|---|---|
+| **Seat** | A numbered, billable slot. Costs money whether or not anyone uses it. |
+| **Roster** | Every technician uploaded, seated or not. Not billable. |
+| **Bench** | A roster technician with no seat. Keeps their progress, costs $0. |
+| **Idle** | An assigned seat with no access in 30+ days — the swap candidates. |
+| **Swap** | Move a bench technician into an occupied seat in **one** action. The seat never leaves the plan, so there is no gap and no billing change. |
+
+**Seed state:** 53 on the roster · 49 seats on the plan · 47 assigned · 2 open ·
+4 idle · 6 on the bench. Regions are seat pools: North, South, No Region.
+
+**Where it shows up**
+
+- **Dashboard → Seats.** Idle Seats and On Bench side by side, so the waste and
+  the waiting list are visible without opening anything.
+- **People.** Seated / Bench / All tabs over the full roster, a bench banner, and
+  a selection bar that can hand out seats or move someone to the bench.
+- **Seats.** Plan tiles, a swap callout, per-region pools (multi-tier), filters,
+  and per-seat **Swap** / **Move to bench** / **Assign** / **Remove seat**.
+- **Billing.** Seat charges, regional breakdown and bench count all read from the
+  same model, so a swap visibly does *not* move the invoice.
+
+**Demo path:** Dashboard → 4 idle seats while 6 wait → Seats → *Review Swaps* →
+pick a bench tech → the toast confirms the plan is unchanged. Then People →
+Bench → select two → *Give Seats* → select everyone to trigger the shortfall
+branch (add seats, or swap into an idle one).
+
+State is in-memory: reload resets it. `window.SEATS` is exposed for poking at the
+model from the console mid-demo.
 
 ## Endpoints (mirror the contract)
 
