@@ -426,16 +426,50 @@ def resolve_prototype():
     return None
 
 
+# PRD-484: dashboard versions to present side by side, oldest first. Each is a
+# whole copy of the prototype, so a later version can move or add anything.
+# Only files that exist are offered; the first is the default for a bare "/".
+VERSIONS = [
+    ("1.1", "manager_dashboard.html"),
+    ("1.2", "manager_dashboard_v1.2.html"),
+    ("1.3", "manager_dashboard_v1.3.html"),
+]
+
+
+def available_versions():
+    out = []
+    for label, filename in VERSIONS:
+        # v1.1 keeps honouring PROTOTYPE_PATH, as "/" always has.
+        path = resolve_prototype() if label == VERSIONS[0][0] else HERE / filename
+        if path and os.path.exists(path):
+            out.append((label, str(path)))
+    return out
+
+
 @APP.get("/")
 def serve_prototype():
-    path = resolve_prototype()
-    if not path:
+    versions = available_versions()
+    if not versions:
         return ("<h1>Prototype not found</h1><p>Set PROTOTYPE_PATH or place "
                 "manager_dashboard.html next to mock_platform.py.</p>"), 404
+    # ?v=1.2 or ?v=v1.2; anything unknown falls back to the first version.
+    wanted = (request.args.get("v") or "").strip().lstrip("vV")
+    label, path = next(((l, p) for l, p in versions if l == wanted), versions[0])
     html = pathlib.Path(path).read_text(encoding="utf-8")
-    inject = '\n<script src="/ridealong-live.js"></script>\n'
+    config = json.dumps({"current": label, "versions": [l for l, _ in versions]})
+    inject = (
+        f'\n<script>window.__DEMO_VERSIONS = {config};</script>'
+        '\n<script src="/version-switcher.js"></script>'
+        '\n<script src="/ridealong-live.js"></script>\n'
+    )
     html = html + inject  # prototype ends with </script>, no </body>; append is safe
     return Response(html, mimetype="text/html")
+
+
+@APP.get("/version-switcher.js")
+def serve_version_switcher():
+    return Response((HERE / "version-switcher.js").read_text(encoding="utf-8"),
+                    mimetype="application/javascript")
 
 
 @APP.get("/ridealong-live.js")

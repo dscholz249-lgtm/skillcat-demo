@@ -30,6 +30,27 @@ python mock_platform.py
 The DB is recreated on every boot (and via the debug **reset** button). Nothing
 persists; this is throwaway.
 
+## Dashboard versions (v1.1 → v1.3)
+
+A blue **Design review** bar across the top of the page switches between whole
+copies of the dashboard, for showing how it progresses. The bar is a review
+tool only, not part of the product:
+
+| Version | File |
+|---|---|
+| v1.1 | `manager_dashboard.html` |
+| v1.2 | `manager_dashboard_v1.2.html` |
+| v1.3 | `manager_dashboard_v1.3.html` |
+
+- Edit each file freely; they share the mock API and data. The bar is added
+  by the server (`version-switcher.js`), so don't add it to the files.
+- Only files that exist are offered. Delete one to drop it from the menu, or
+  add a row to `VERSIONS` in `mock_platform.py` for a new one.
+- Links carry the version and screen, e.g. `/?v=1.2#seats`; the bar's **Copy
+  link** copies the current one. A bare `/` opens
+  the version you last picked in that browser, or v1.1 for anyone new.
+- A fix that every version needs has to be made in each file.
+
 ## Deploy to Railway
 
 The repo includes `requirements.txt` and a `Procfile` — Railway/Nixpacks
