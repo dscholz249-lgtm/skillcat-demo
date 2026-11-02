@@ -144,13 +144,21 @@
   function buildDebugPanel() {
     var btn = document.createElement("button");
     btn.id = "ra-dbg-btn";
-    btn.textContent = "⚙ mock";
+    btn.type = "button";
+    btn.textContent = "⚙ Mock";
+    btn.setAttribute("aria-expanded", "false");
     btn.onclick = function () {
       var p = document.getElementById("ra-dbg");
-      p.style.display = p.style.display === "none" ? "block" : "none";
+      var open = p.style.display === "none";
+      p.style.display = open ? "block" : "none";
+      btn.setAttribute("aria-expanded", String(open));
       refreshDebug();
     };
-    document.body.appendChild(btn);
+    // Dock in the design-review bar (version-switcher.js) next to the version
+    // picker and Copy link; float in the corner only when there is no bar.
+    var bar = document.querySelector(".review-bar");
+    if (bar) { bar.appendChild(btn); document.body.classList.add("ra-docked"); }
+    else document.body.appendChild(btn);
 
     var panel = document.createElement("div");
     panel.id = "ra-dbg";
@@ -161,7 +169,7 @@
       + '<button id="ra-dbg-close">×</button></div>'
       + '<div class="ra-dbg-body"><div id="ra-dbg-content">…</div></div>';
     document.body.appendChild(panel);
-    panel.querySelector("#ra-dbg-close").onclick = function () { panel.style.display = "none"; };
+    panel.querySelector("#ra-dbg-close").onclick = function () { panel.style.display = "none"; btn.setAttribute("aria-expanded", "false"); };
     panel.querySelector("#ra-dbg-reset").onclick = function () {
       post(DBG + "/reset").then(function () { refreshDebug(); refreshInbox(); });
     };
@@ -230,6 +238,12 @@
       #ra-dbg-btn { position:fixed; right:12px; bottom:12px; z-index:9999;
         font:700 12px var(--mono,monospace); color:#ddd; background:#16161a;
         border:1px solid #333; padding:8px 12px; border-radius:8px; cursor:pointer; }
+      .review-bar #ra-dbg-btn { position:static; right:auto; bottom:auto; z-index:auto; box-shadow:none;
+        background:transparent; border:1px solid #3b5aa8; color:#c9d7fb; border-radius:8px;
+        padding:6px 11px; font:600 12.5px/1 system-ui,-apple-system,'Segoe UI',sans-serif; cursor:pointer; white-space:nowrap; }
+      .review-bar #ra-dbg-btn:hover, .review-bar #ra-dbg-btn[aria-expanded="true"] { background:rgba(122,167,255,.12); }
+      .review-bar #ra-dbg-btn:focus-visible { outline:2px solid #fff; outline-offset:-2px; }
+      body.ra-docked #ra-dbg { top:calc(var(--review-h, 40px) + 8px); bottom:auto; max-height:calc(100vh - var(--review-h, 40px) - 24px); overflow:auto; }
       #ra-dbg { position:fixed; right:12px; bottom:54px; z-index:9999; width:360px;
         max-height:62vh; overflow:auto; background:#0e0e11; color:#ddd;
         border:1px solid #333; border-radius:12px; font:12px var(--mono,monospace);
