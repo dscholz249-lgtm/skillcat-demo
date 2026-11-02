@@ -8545,7 +8545,8 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     $('unCollapse').onclick = function () { R.collapsed = !R.collapsed; LS.set('un-rs1-collapsed', R.collapsed ? '1' : '0'); renderSummary(); };
   }
   function drawChart(host, bs, msg) {
-    var w = Math.max(280, host.clientWidth - 32 || 640), h = isMobile() ? 160 : 200;
+    var cw = host.clientWidth; host.dataset.w = cw;
+    var w = Math.max(280, cw ? cw - 32 : 640), h = isMobile() ? 160 : 200;
     var pl = 30, pr = 6, pt = 8, pb = 24, iw = w - pl - pr, ih = h - pt - pb;
     var max = 0; bs.forEach(function (b) { if (b.count > max) max = b.count; });
     var step = Math.max(1, Math.ceil(max / 4)), top = Math.max(4, Math.ceil(max / step) * step);
@@ -8596,6 +8597,11 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     });
   });
   var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderSummary, 150); });
+  // The People page is hidden when the chart first draws (width 0), so redraw
+  // whenever the card's width changes — including when the page is opened.
+  if (window.ResizeObserver && $('unSummary')) new ResizeObserver(function () {
+    var c = $('unChart'); if (c && String(c.clientWidth) !== c.dataset.w) renderSummary();
+  }).observe($('unSummary'));
 
   /* ---------------- CSV ---------------- */
   var HEAD_MAP = {
