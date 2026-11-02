@@ -1406,14 +1406,50 @@
           <div class="sub">Run your team, your training, your hiring, and your account from one place.</div>
         </div>
         <div class="topbar-right">
-          <button class="range-pill">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
-            Last 30 days
-          </button>
+          <button class="btn btn-ghost" data-page="assign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15v6M14 18h6"/></svg>Assign Trainings</button>
+          <button class="btn btn-primary" data-open-add-person><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add Users</button>
         </div>
       </header>
 
       <div class="scroll">
+        <!-- Up Next (PRD-483 / PRD-485): the AI briefing, a ranked to-do list,
+             the People report card and recent Assessment results. Rendered by
+             the "UP NEXT + REPORTS" script at the end of this file. -->
+        <section class="section" id="upNext">
+          <div class="section-head">
+            <div class="section-title"><h2>Up Next</h2><span class="hint" id="unTaskHint">—</span></div>
+          </div>
+          <div class="un-brief">
+            <span class="un-ai-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/></svg>Your week, in order</span>
+            <p class="un-ai-text">Michael's field assessment is the only thing blocking someone else; review it first. The three overdue people have been out 45–90 days. Olivia's seat is a quick win: she's never logged in and someone is waiting on the bench.</p>
+          </div>
+          <div class="un-grid">
+            <div class="un-card">
+              <div class="un-task-list" id="unTaskList" aria-live="polite"></div>
+              <div class="un-empty" id="unTaskEmpty" hidden>
+                <div class="un-empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg></div>
+                <div class="un-empty-t">You're all caught up. Enjoy the day!</div>
+                <div class="un-empty-s">New reminders and assessment results will show up here.</div>
+              </div>
+              <div class="un-more" id="unTaskMore" hidden></div>
+            </div>
+            <div class="un-card" id="unReportCard">
+              <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--orange)"></span><span class="un-card-title">People Report</span></div></div>
+              <div class="un-pr-stat"><span class="n" id="unRepN">—</span><span class="l" id="unRepL">certifications, last 30 days</span></div>
+              <div class="un-spark" id="unRepSpark" aria-hidden="true"></div>
+              <div class="un-pr-row"><span id="unRepSched">—</span><button class="un-link" data-un-manage-exports>Manage</button></div>
+              <div class="un-pr-acts"><button class="btn btn-primary btn-sm" data-page="people">Open People report</button><button class="btn btn-ghost btn-sm" id="unRepCsv">Download CSV</button></div>
+            </div>
+          </div>
+          <div class="un-card un-ares">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--violet)"></span><span class="un-card-title">Assessment Results</span></div></div>
+            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Andre Lewis<span class="un-tag">Candidate</span></span><span class="un-ar-what">HVAC Pre-Hire</span><span class="un-ar-date">Jun 1</span><span class="un-score un-sc-hi">82%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
+            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Tyler Brooks<span class="un-tag">Candidate</span></span><span class="un-ar-what">Maintenance Pre-Hire</span><span class="un-ar-date">May 30</span><span class="un-score un-sc-lo">54%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
+            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Nicole Anderson</span><span class="un-ar-what">TechBuilder Placement · Recommendation - Level 1</span><span class="un-ar-date">May 29</span><span class="un-score un-sc-mid">61%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
+            <a class="un-view-more" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener">View More<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+          </div>
+        </section>
+
         <!-- Team Overview -->
         <section class="section">
           <div class="section-head">
@@ -1713,13 +1749,12 @@
           <input placeholder="Search people" id="peopleSearch" />
         </div>
         <div class="topbar-right">
-          <button class="icon-btn" title="Download">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13M7 12l5 5 5-5M5 21h14"/></svg>
-          </button>
-          <button class="range-pill">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
-            30d
-          </button>
+          <!-- Reports Slice 1: time range + Export menu (rendered by the UP NEXT + REPORTS script) -->
+          <div class="un-pop-wrap" id="unRange"></div>
+          <div class="un-pop-wrap">
+            <button class="btn btn-ghost" id="unExportBtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="un-pop" id="unExportPop" hidden></div>
+          </div>
         </div>
       </header>
 
@@ -1841,6 +1876,8 @@
 
         <!-- People table — rendered from the roster model (see SEAT MODEL
              below) so seated/bench/all stay in sync with every seat action. -->
+        <!-- Reports Slice 1: completions summary for the rows below -->
+        <div id="unSummary"></div>
         <div class="card" id="peopleCard" style="animation-delay:.02s">
           <table id="peopleTable">
             <thead id="peopleHead"></thead>
@@ -4993,7 +5030,7 @@
                     <th></th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="unExportsBody">
                   <tr>
                     <td class="report-name">People Report</td>
                     <td class="recipients">ops@acmetraining.com,<br>manager@acmetraining.com</td>
@@ -7538,15 +7575,18 @@
         return p.name.toLowerCase().indexOf(q) > -1 || p.region.toLowerCase().indexOf(q) > -1;
       });
     }
+    if (window.__unSort) list = window.__unSort(list);
     return list;
   }
 
   var PPL_HEAD = {
-    seated: ['Name', 'Status', 'Region', 'Seat', 'Last Access', 'Time Spent', 'Certifications Completed'],
+    seated: ['Name', 'Status', 'Region', 'Seat', 'Last Access', 'Time Spent', 'Certifications Completed', 'Last Completed'],
     bench:  ['Name', 'Region', 'On Bench', 'Progress Held', 'Last Access'],
-    all:    ['Name', 'Seat', 'Status', 'Region', 'Last Access', 'Certifications Completed']
+    all:    ['Name', 'Seat', 'Status', 'Region', 'Last Access', 'Certifications Completed', 'Last Completed']
   };
-  var PPL_NUM = { seated: { 3: 1, 4: 1, 5: 1, 6: 1 }, bench: {}, all: { 5: 1 } };
+  var PPL_NUM = { seated: { 3: 1, 4: 1, 5: 1, 6: 1, 7: 1 }, bench: {}, all: { 5: 1, 6: 1 } };
+  // Reports Slice 1 hooks, filled in by the UP NEXT + REPORTS script.
+  function lastCompletedCell(p) { return window.__unLastCompleted ? window.__unLastCompleted(p) : '—'; }
 
   function peopleRowHtml(p) {
     var tds;
@@ -7555,8 +7595,9 @@
             '<td>' + statusCell(p) + '</td><td>' + regionCell(p) + '</td>' +
             '<td class="num seat-num">' + p.seat + '</td>' +
             '<td class="num">' + lastCell(p) + '</td>' +
-            '<td class="num">' + (p.minutes ? p.minutes + 'm' : '0') + '</td>' +
-            '<td class="num">' + certsCell(p) + '</td>';
+            '<td class="num">' + (window.__unTime ? window.__unTime(p) : (p.minutes ? p.minutes + 'm' : '0')) + '</td>' +
+            '<td class="num">' + certsCell(p) + '</td>' +
+            '<td class="num">' + lastCompletedCell(p) + '</td>';
     } else if (pplTab === 'bench') {
       var stale = p.benchDays >= 14;
       tds = '<td><span class="ppl-name">' + esc(p.name) + '</span></td>' +
@@ -7571,7 +7612,8 @@
               : '<span class="seat-pill ' + (isIdle(p) ? 'sp-idle' : 'sp-assigned') + '">Seat ' + p.seat + '</span>') + '</td>' +
             '<td>' + statusCell(p) + '</td><td>' + regionCell(p) + '</td>' +
             '<td>' + lastCell(p) + '</td>' +
-            '<td class="num">' + certsCell(p) + '</td>';
+            '<td class="num">' + certsCell(p) + '</td>' +
+            '<td class="num">' + lastCompletedCell(p) + '</td>';
     }
     return '<tr class="' + rowClass(p) + '" data-person="' + p.id + '">' +
            '<td class="cb-cell"><input type="checkbox" class="cb"' + (selected[p.id] ? ' checked' : '') + '></td>' +
@@ -7629,6 +7671,7 @@
       renderPeople();
     });
     renderPeopleFooter();
+    document.dispatchEvent(new CustomEvent('ppl:rendered'));
   }
 
   function selectedPeople() {
@@ -8124,5 +8167,634 @@
 
   renderAll();
   window.updateFAB();
+  // Reports Slice 1 reads the table's rows and re-renders it on range changes.
+  window.__ppl = { rows: peopleRows, render: renderPeople, toast: toast };
+})();
+</script>
+
+<style>
+/* =====================================================================
+   PRD-483 / PRD-485 / Reports Slice 1 — Up Next + People completions.
+   Every class is prefixed "un-" so nothing collides with the prototype.
+   ===================================================================== */
+:root { --violet: #b49cff; }
+
+/* ---- shared bits ---- */
+.un-card { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.un-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 16px; border-bottom: 1px solid var(--border-soft); }
+.un-card-head-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.un-card-title { font-size: 13.5px; font-weight: 700; }
+.un-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.un-link { background: none; border: 0; color: var(--orange-bright); padding: 0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.un-mono { font-family: var(--mono); }
+.un-faint { color: var(--text-faint); }
+.un-score { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 2px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.un-sc-hi { background: rgba(43,208,122,.14); color: var(--green); }
+.un-sc-mid { background: rgba(241,167,58,.15); color: var(--amber); }
+.un-sc-lo { background: rgba(240,88,75,.14); color: var(--red); }
+.un-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-faint); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
+.un-ico { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.un-ico svg { width: 14px; height: 14px; stroke-width: 2; }
+.un-ico.red { background: rgba(240,88,75,.12); color: var(--red); }
+.un-ico.amber { background: rgba(241,167,58,.12); color: var(--amber); }
+.un-ico.green { background: rgba(43,208,122,.12); color: var(--green); }
+.un-ico.blue { background: rgba(122,167,255,.12); color: var(--blue); }
+.un-ico.violet { background: rgba(180,156,255,.12); color: var(--violet); }
+.un-ext svg { width: 12px; height: 12px; stroke-width: 2.2; }
+
+/* ---- Up Next ---- */
+.un-brief { display: grid; gap: 6px; padding: 16px 18px; background: linear-gradient(180deg, #16131f, #121214); border: 1px solid #2c2640; border-radius: 14px; margin-bottom: 16px; }
+.un-ai-mark { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--violet); }
+.un-ai-mark svg { width: 13px; height: 13px; }
+.un-ai-text { font-size: 14px; line-height: 1.5; margin: 0; }
+.un-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .un-grid { grid-template-columns: 1fr; } }
+.un-task-list { min-height: calc(5 * 62px); display: grid; align-content: start; }
+.un-task { display: grid; grid-template-columns: 22px auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 11px 16px; min-height: 62px; border-bottom: 1px solid var(--border-soft); transition: opacity .25s, transform .25s; }
+.un-task:last-child { border-bottom: 0; }
+.un-task.leaving { opacity: 0; transform: translateX(12px); }
+.un-task > div:nth-child(3) { min-width: 0; }
+.un-task .un-who { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.un-task .un-what { font-size: 12px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.un-task-acts { display: flex; gap: 6px; }
+.un-cbx { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--text-faint); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 0; color: transparent; }
+.un-cbx:hover { border-color: var(--text-dim); }
+.un-cbx[aria-checked="true"] { background: var(--orange); border-color: var(--orange); color: #fff; }
+.un-cbx svg { width: 12px; height: 12px; stroke-width: 3; }
+.un-confirm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; margin-top: 4px; background: #1a1a1f; border: 1px solid var(--border); border-radius: 9px; font-size: 12.5px; color: var(--text-dim); }
+.un-confirm span { flex: 1 1 160px; }
+.un-more { padding: 9px 16px; border-top: 1px solid var(--border-soft); background: #101013; font-size: 12px; color: var(--text-dim); text-align: center; }
+.un-more b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+.un-empty { min-height: calc(5 * 62px); display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; padding: 24px; }
+.un-empty-ic { width: 44px; height: 44px; border-radius: 50%; background: rgba(43,208,122,.14); color: var(--green); display: grid; place-items: center; }
+.un-empty-ic svg { width: 22px; height: 22px; stroke-width: 2.4; }
+.un-empty-t { font-size: 16px; font-weight: 700; }
+.un-empty-s { font-size: 12.5px; color: var(--text-faint); }
+.un-pr-stat { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 12px 16px 4px; }
+.un-pr-stat .n { font-family: var(--mono); font-size: 26px; font-variant-numeric: tabular-nums; }
+.un-pr-stat .l { font-size: 12px; color: var(--text-dim); }
+.un-spark { padding: 0 16px 10px; }
+.un-spark svg { display: block; width: 100%; height: 34px; }
+.un-pr-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border-soft); font-size: 11.5px; color: var(--text-faint); }
+.un-pr-acts { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border-soft); }
+.un-ares { margin-top: 16px; }
+.un-ares-row { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1.5fr) auto auto auto; gap: 12px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border-soft); color: var(--text); text-decoration: none; }
+.un-ares-row:hover { background: #17171b; }
+.un-ares-row:hover .un-ar-view { color: var(--text); border-color: var(--text-faint); }
+.un-ar-who { font-weight: 600; font-size: 13px; min-width: 0; }
+.un-ar-what { font-size: 12px; color: var(--text-dim); min-width: 0; }
+.un-ar-date { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+.un-ar-view { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-dim); border: 1px solid var(--border); background: #121214; border-radius: 8px; padding: 4px 8px 4px 10px; white-space: nowrap; }
+.un-ar-view svg { width: 12px; height: 12px; stroke-width: 2.2; }
+.un-view-more { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 16px; color: var(--orange-bright); font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.un-view-more:hover { background: #17171b; }
+.un-view-more svg { width: 12px; height: 12px; stroke-width: 2.2; }
+@media (max-width: 640px) {
+  .un-ares-row { grid-template-columns: minmax(0,1fr) auto; row-gap: 4px; }
+  .un-ar-who { grid-area: 1 / 1; } .un-ar-what { grid-area: 2 / 1; } .un-ar-date { display: none; }
+  .un-ares-row .un-score { grid-area: 1 / 2; justify-self: end; } .un-ar-view { grid-area: 2 / 2; justify-self: end; }
+}
+
+/* ---- People: range control, export menu ---- */
+.un-seg { display: inline-flex; background: #111114; border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+.un-seg button { background: none; border: 0; color: var(--text-dim); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.un-seg button[aria-pressed="true"] { background: #232328; color: var(--text); }
+.un-seg button:hover { color: var(--text); }
+.un-seg svg { width: 13px; height: 13px; vertical-align: -2px; }
+.un-pop-wrap { position: relative; }
+.un-pop { position: absolute; z-index: 60; top: calc(100% + 6px); right: 0; min-width: 250px; background: #161619; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px rgba(0,0,0,.55); padding: 8px; display: grid; gap: 4px; }
+.un-pop h4 { margin: 6px 6px 2px; font-size: 11px; font-family: var(--mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.un-mi { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; background: none; border: 0; color: var(--text); font: inherit; font-size: 13px; text-align: left; padding: 7px 8px; border-radius: 8px; cursor: pointer; width: 100%; }
+.un-mi:hover { background: #1f1f24; }
+.un-mi .sub { font-size: 11.5px; color: var(--text-faint); }
+.un-field { display: grid; gap: 4px; min-width: 0; }
+.un-field label { font-size: 11.5px; color: var(--text-faint); }
+.un-field input, .un-field select { background: #0d0d10; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; width: 100%; min-width: 0; color-scheme: dark; }
+.un-help { font-size: 12px; color: var(--text-faint); }
+
+/* ---- People: completions summary card ---- */
+#unSummary { margin-bottom: 16px; }
+.un-sum-head { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border-soft); }
+.un-sum-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+.un-sum-head .r { display: flex; gap: 8px; align-items: center; }
+.un-collapse { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: #121214; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; padding: 0; }
+.un-collapse svg { width: 14px; height: 14px; stroke-width: 2.2; transition: transform .2s; }
+.un-collapse[aria-expanded="false"] svg { transform: rotate(180deg); }
+.un-collapsed-val { font-size: 13px; color: var(--text-dim); }
+.un-collapsed-val b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+.un-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; padding: 14px 16px 6px; }
+.un-metric { background: #0e0e11; border: 1px solid var(--border-soft); border-radius: 10px; padding: 11px 12px; display: grid; gap: 4px; min-width: 0; }
+.un-metric .l { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.un-metric .v { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.un-metric .n { font-family: var(--mono); font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.un-delta { font-family: var(--mono); font-size: 11.5px; padding: 1px 6px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+.un-d-up { color: var(--green); background: rgba(43,208,122,.12); }
+.un-d-down { color: var(--red); background: rgba(240,88,75,.12); }
+.un-d-flat { color: var(--text-faint); background: #1d1d22; }
+.un-chart { position: relative; padding: 4px 16px 0; }
+.un-chart svg { display: block; width: 100%; overflow: visible; }
+.un-chart .axis { fill: var(--text-faint); font-family: var(--mono); font-size: 10.5px; }
+.un-chart-msg { position: absolute; inset: 0 16px 22px 44px; display: grid; place-items: center; color: var(--text-faint); font-size: 13px; pointer-events: none; }
+.un-tipbox { position: absolute; z-index: 20; pointer-events: none; background: #1c1c21; border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; font-size: 12px; color: var(--text); box-shadow: 0 10px 24px rgba(0,0,0,.5); white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); }
+.un-tipbox .tl { color: var(--text-dim); font-size: 11.5px; }
+.un-tipbox b { font-family: var(--mono); font-weight: 500; }
+.un-foot { padding: 8px 16px 14px; font-size: 12px; color: var(--text-faint); }
+.un-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.un-lastc { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+th.un-sortable { cursor: pointer; }
+th.un-sortable:hover { color: var(--text); }
+th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
+@media (max-width: 600px) {
+  .un-metrics { grid-template-columns: 1fr; }
+  .un-group-toggle, .un-only-wide { display: none !important; }
+}
+
+/* ---- schedule drawer + CSV ---- */
+.un-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 90; }
+.un-drawer { position: fixed; z-index: 91; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: #111114; border-left: 1px solid var(--border); display: flex; flex-direction: column; color: var(--text); font-family: var(--sans); }
+.un-drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border-soft); }
+.un-drawer-head h3 { margin: 0; font-size: 16px; }
+.un-drawer-body { padding: 16px 18px; overflow-y: auto; display: grid; gap: 14px; align-content: start; }
+.un-drawer-foot { padding: 14px 18px; border-top: 1px solid var(--border-soft); display: flex; gap: 8px; justify-content: flex-end; }
+.un-x { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: #121214; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; padding: 0; }
+.un-x svg { width: 13px; height: 13px; stroke-width: 2.4; }
+.un-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+.un-check input { accent-color: var(--orange); width: 15px; height: 15px; }
+.un-preview { border: 1px solid var(--border-soft); border-radius: 10px; overflow-x: auto; }
+.un-preview table { font-size: 11.5px; min-width: 0; }
+.un-preview th, .un-preview td { white-space: nowrap; padding: 7px 10px; }
+@media (prefers-reduced-motion: reduce) { .un-task { transition: none; } }
+</style>
+
+<script>
+/* ============================================================================
+   UP NEXT + REPORTS (PRD-483, PRD-485, Reports Slice 1)
+   ----------------------------------------------------------------------------
+   Dashboard: Up Next task list, People Report card. People: completions
+   summary card, time range, Export menu (CSV / schedule / manage), Last
+   Completed column. Settings › Scheduled Exports renders from the same list.
+
+   Completions are derived deterministically from the seat-model roster
+   (window.SEATS) so the numbers agree with every other surface. "Today" is
+   the prototype's date, Jun 1 2026.
+   ========================================================================== */
+(function () {
+  'use strict';
+  var SEATS = window.SEATS, PPL = window.__ppl;
+  if (!SEATS || !PPL) return;
+
+  var TODAY = '2026-06-01', DAY = 864e5, SPAN = 365;
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var ASSESS = 'https://skillcat-assessments-production.up.railway.app/admin/assessments';
+  var X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var EXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var LS = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  function toast(msg) { PPL.toast(esc(msg)); }
+  function todayMs() { return Date.parse(TODAY + 'T00:00:00Z'); }
+  function dOf(off) { return new Date(todayMs() - off * DAY); }
+  function offOf(iso) { return Math.round((todayMs() - Date.parse(iso + 'T00:00:00Z')) / DAY); }
+  function isoOf(d) { return d.toISOString().slice(0, 10); }
+  function fmtD(d) { return MON[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
+  function fmtDY(d) { return fmtD(d) + ', ' + d.getUTCFullYear(); }
+  function isMobile() { return window.matchMedia('(max-width: 600px)').matches; }
+
+  /* ---------------- completions model ---------------- */
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h; }
+  // Pinned so the Dashboard's "Certifications Completed" card lines up.
+  var PIN = {
+    christopher_brown: { 'OSHA 10': 4 }, jessica_martinez: { 'HVAC Basics': 6 },
+    sarah_johnson: { 'Safety Onboarding': 10 }, james_wilson: { 'EPA 608 Universal': 14 },
+    robert_taylor: { 'Confined Space Entry': 22 }
+  };
+  var COMPS = [], TS = {};
+  (function build() {
+    SEATS.roster.forEach(function (p) {
+      var r = rng(hash(p.id)), floor = p.last == null ? 0 : p.last, pins = PIN[p.id] || {};
+      p.certs.forEach(function (c) {
+        var off = pins[c] != null ? pins[c] : floor + Math.floor(Math.pow(r(), 1.7) * 300);
+        COMPS.push({ id: p.id, cert: c, off: off });
+      });
+      var arr = [], sum30 = 0;
+      for (var o = 0; o < SPAN; o++) {
+        var active = p.last != null && o >= p.last;
+        var v = active ? (r() < (o < 30 ? 0.4 : 0.62) ? 0 : 1 + Math.floor(r() * 60)) : 0;
+        arr.push(v); if (o < 30) sum30 += v;
+      }
+      // Scale the last 30 days to the minutes the People table already shows.
+      var k = sum30 ? p.minutes / sum30 : 0;
+      for (var j = 0; j < SPAN; j++) arr[j] = Math.round(arr[j] * k);
+      TS[p.id] = arr;
+    });
+  })();
+  function recentComps(n) {
+    var byName = {}, seen = {}; SEATS.roster.forEach(function (p) { byName[p.id] = p; });
+    return COMPS.slice().sort(function (a, b) { return a.off - b.off || byName[a.id].name.localeCompare(byName[b.id].name); })
+      .filter(function (c) { if (seen[c.id]) return false; seen[c.id] = 1; return true; })
+      .slice(0, n).map(function (c) { return { p: byName[c.id], cert: c.cert, off: c.off }; });
+  }
+  function lastCompletedOff(id) { var m = null; COMPS.forEach(function (c) { if (c.id === id && (m === null || c.off < m)) m = c.off; }); return m; }
+
+  /* ---------------- range ---------------- */
+  var R = { range: '30d', custom: null, grouping: null, collapsed: LS.get('un-rs1-collapsed') === '1', sort: null };
+  function curRange() {
+    if (R.range === '7d') return { o: 6, n: 0, len: 7, kind: '7d' };
+    if (R.range === '30d') return { o: 29, n: 0, len: 30, kind: '30d' };
+    if (R.range === '90d') return { o: 89, n: 0, len: 90, kind: '90d' };
+    if (R.range === 'all') return { o: SPAN - 1, n: 0, len: SPAN, kind: 'all' };
+    var o = offOf(R.custom.from), n = offOf(R.custom.to); return { o: o, n: n, len: o - n + 1, kind: 'custom' };
+  }
+  function prevRange(r) { return { o: r.o + r.len, n: r.o + 1, len: r.len }; }
+  function inR(off, r) { return off <= r.o && off >= r.n; }
+  function rangeTitle(r) {
+    if (r.kind === 'custom') return 'Completions, ' + fmtD(dOf(r.o)) + ' – ' + fmtD(dOf(r.n));
+    if (r.kind === 'all') return 'Completions, all time';
+    return 'Completions, last ' + r.len + ' days';
+  }
+  function rangeLabel(r) {
+    if (r.kind === 'all') return 'all time';
+    var a = dOf(r.o), b = dOf(r.n);
+    if (a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear()) return MON[a.getUTCMonth()] + ' ' + a.getUTCDate() + '–' + b.getUTCDate() + ' ' + b.getUTCFullYear();
+    return fmtD(a) + '–' + fmtD(b) + ' ' + b.getUTCFullYear();
+  }
+  function groupings(r) {
+    if (r.kind === '7d') return { def: 'daily', allowed: ['daily'] };
+    if (r.kind === '30d') return { def: 'daily', allowed: ['daily', 'weekly'] };
+    if (r.kind === '90d') return { def: 'weekly', allowed: ['daily', 'weekly', 'monthly'] };
+    if (r.kind === 'all') return { def: 'monthly', allowed: ['weekly', 'monthly'] };
+    return r.len <= 31 ? { def: 'daily', allowed: ['daily', 'weekly'] } : { def: 'weekly', allowed: ['daily', 'weekly', 'monthly'] };
+  }
+  function certsIn(id, r) { var n = 0; COMPS.forEach(function (c) { if (c.id === id && inR(c.off, r)) n++; }); return n; }
+  function minutesIn(id, r) { var a = TS[id] || [], s = 0; for (var o = r.n; o <= Math.min(r.o, SPAN - 1); o++) s += a[o] || 0; return s; }
+  function metrics(list, r) {
+    var ids = {}, people = {}, certs = 0, mins = 0;
+    list.forEach(function (p) { ids[p.id] = 1; mins += minutesIn(p.id, r); });
+    COMPS.forEach(function (c) { if (ids[c.id] && inR(c.off, r)) { certs++; people[c.id] = 1; } });
+    return { certs: certs, people: Object.keys(people).length, hrs: Math.round(mins / 60) };
+  }
+  function buckets(list, r, g) {
+    var ids = {}, out = [], map = {};
+    list.forEach(function (p) { ids[p.id] = 1; });
+    function key(off) {
+      var d = dOf(off);
+      if (g === 'daily') return isoOf(d);
+      if (g === 'weekly') return isoOf(new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * DAY));
+      return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+    }
+    for (var off = r.o; off >= r.n; off--) { var k = key(off); if (!map[k]) { map[k] = { k: k, count: 0, people: {} }; out.push(map[k]); } }
+    COMPS.forEach(function (c) { if (ids[c.id] && inR(c.off, r)) { var b = map[key(c.off)]; if (b) { b.count++; b.people[c.id] = 1; } } });
+    out.forEach(function (b) {
+      b.np = Object.keys(b.people).length;
+      if (g === 'monthly') { var p = b.k.split('-'); b.label = MON[+p[1] - 1] + ' ' + p[0]; b.short = MON[+p[1] - 1] + (p[1] === '01' ? ' ' + p[0] : ''); }
+      else { var d = new Date(b.k + 'T00:00:00Z'); b.label = (g === 'weekly' ? 'Week of ' : '') + fmtD(d); b.short = fmtD(d); }
+    });
+    return out;
+  }
+
+  /* ---------------- People table hooks (used by the seat model) ---------------- */
+  window.__unTime = function (p) { var m = minutesIn(p.id, curRange()); return m ? m + 'm' : '0'; };
+  window.__unLastCompleted = function (p) { var o = lastCompletedOff(p.id); return o == null ? '<span class="un-faint">—</span>' : '<span class="un-lastc">' + fmtDY(dOf(o)) + '</span>'; };
+  window.__unSort = function (list) {
+    if (!R.sort) return list;
+    var dir = R.sort === 'desc' ? 1 : -1;
+    return list.slice().sort(function (a, b) {
+      var va = lastCompletedOff(a.id), vb = lastCompletedOff(b.id);
+      if (va == null && vb == null) return 0; if (va == null) return 1; if (vb == null) return -1;
+      return (va - vb) * dir; // nulls last both ways; smaller offset = more recent
+    });
+  };
+
+  /* ---------------- range + export controls in the People topbar ---------------- */
+  function renderRange() {
+    var host = $('unRange'); if (!host) return;
+    host.innerHTML = '<div class="un-seg" role="group" aria-label="Time range">' +
+      [['7d', '7d'], ['30d', '30d'], ['90d', '90d'], ['all', 'All time']].map(function (x) { return '<button data-un-range="' + x[0] + '" aria-pressed="' + (R.range === x[0]) + '">' + x[1] + '</button>'; }).join('') +
+      '<button data-un-range="custom" aria-pressed="' + (R.range === 'custom') + '" aria-label="Custom range"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></button></div>' +
+      '<div class="un-pop" id="unCustomPop" hidden></div>';
+  }
+  function renderCustomPop() {
+    var c = R.custom || { from: isoOf(dOf(44)), to: TODAY };
+    $('unCustomPop').innerHTML = '<h4>Custom range</h4><div style="display:grid;gap:8px;padding:4px 6px"><div class="un-field"><label for="unFrom">From</label><input type="date" id="unFrom" value="' + c.from + '" max="' + TODAY + '"></div><div class="un-field"><label for="unTo">To</label><input type="date" id="unTo" value="' + c.to + '" max="' + TODAY + '"></div><button class="btn btn-primary btn-sm" id="unApply">Apply</button></div>';
+    $('unApply').onclick = function () {
+      var a = $('unFrom').value, b = $('unTo').value; if (!a || !b) return;
+      if (a > b) { var t = a; a = b; b = t; }
+      R.custom = { from: a, to: b }; R.range = 'custom'; R.grouping = null; closePops(); refreshPeople();
+    };
+  }
+  function renderExportPop() {
+    var html = '<button class="un-mi" id="unExCsv">Download CSV<span class="sub">The rows and columns you\'re looking at</span></button>';
+    if (!isMobile()) html += '<button class="un-mi" id="unExSched">Schedule emails<span class="sub">Daily, weekly or monthly</span></button>';
+    html += '<button class="un-mi" id="unExManage">Manage scheduled exports<span class="sub">Settings › Scheduled Exports</span></button>';
+    $('unExportPop').innerHTML = html;
+    $('unExCsv').onclick = function () { closePops(); downloadCsv(PPL.rows(), curRange()); };
+    if ($('unExSched')) $('unExSched').onclick = function () { closePops(); openDrawer(null); };
+    $('unExManage').onclick = function () { closePops(); openExports(); };
+  }
+  function closePops() { ['unCustomPop', 'unExportPop'].forEach(function (id) { var el = $(id); if (el) el.hidden = true; }); var b = $('unExportBtn'); if (b) b.setAttribute('aria-expanded', 'false'); }
+  document.addEventListener('click', function (e) {
+    var rb = e.target.closest('[data-un-range]');
+    if (rb) {
+      e.stopPropagation();
+      if (rb.dataset.unRange === 'custom') { var pop = $('unCustomPop'), open = pop.hidden; closePops(); if (open) { renderCustomPop(); pop.hidden = false; } return; }
+      R.range = rb.dataset.unRange; R.grouping = null; closePops(); refreshPeople(); return;
+    }
+    if (e.target.closest('#unExportBtn')) { var ep = $('unExportPop'), o2 = ep.hidden; closePops(); if (o2) { renderExportPop(); ep.hidden = false; $('unExportBtn').setAttribute('aria-expanded', 'true'); } return; }
+    if (e.target.closest('#unCustomPop') || e.target.closest('#unExportPop')) return;
+    if (e.target.closest('[data-un-manage-exports]')) { openExports(); return; }
+    closePops();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closePops(); closeDrawer(); } });
+  function refreshPeople() { renderRange(); PPL.render(); }
+
+  /* ---------------- summary card ---------------- */
+  function deltaHtml(cur, prev, all) {
+    if (all) return '';
+    var d = cur - prev;
+    if (d > 0) return '<span class="un-delta un-d-up">↑' + d + '</span>';
+    if (d < 0) return '<span class="un-delta un-d-down">↓' + Math.abs(d) + '</span>';
+    return '<span class="un-delta un-d-flat">—</span>';
+  }
+  function renderSummary() {
+    var host = $('unSummary'); if (!host) return;
+    if (!SEATS.roster.length) { host.innerHTML = ''; return; }
+    var r = curRange(), gs = groupings(r);
+    if (!R.grouping || gs.allowed.indexOf(R.grouping) < 0 || isMobile()) R.grouping = gs.def;
+    var list = PPL.rows(), m = metrics(list, r), all = r.kind === 'all', p = all ? null : metrics(list, prevRange(r));
+    var title = rangeTitle(r);
+    var collapseBtn = '<button class="un-collapse" id="unCollapse" aria-expanded="' + !R.collapsed + '" aria-label="' + (R.collapsed ? 'Expand' : 'Collapse') + ' completions summary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 15l6-6 6 6"/></svg></button>';
+    if (R.collapsed) {
+      host.innerHTML = '<div class="un-card"><div class="un-sum-head"><h3>' + esc(title) + '</h3><div class="r"><span class="un-collapsed-val">Certs completed <b>' + m.certs + '</b> ' + deltaHtml(m.certs, p && p.certs, all) + '</span>' + collapseBtn + '</div></div></div>';
+    } else {
+      var toggle = gs.allowed.length > 1 ? '<div class="un-seg un-group-toggle" role="group" aria-label="Group by">' + gs.allowed.map(function (g) { return '<button data-un-group="' + g + '" aria-pressed="' + (g === R.grouping) + '">' + g.charAt(0).toUpperCase() + g.slice(1) + '</button>'; }).join('') + '</div>' : '';
+      var msg = !list.length ? 'No completions for these filters' : m.certs === 0 ? 'No completions in this period' : '';
+      host.innerHTML = '<div class="un-card"><div class="un-sum-head"><h3>' + esc(title) + '</h3><div class="r">' + toggle + collapseBtn + '</div></div>' +
+        '<div class="un-metrics">' +
+        '<div class="un-metric"><div class="l">Certs completed</div><div class="v"><span class="n">' + m.certs + '</span>' + deltaHtml(m.certs, p && p.certs, all) + '</div></div>' +
+        '<div class="un-metric"><div class="l">People completing</div><div class="v"><span class="n">' + m.people + '</span>' + deltaHtml(m.people, p && p.people, all) + '</div></div>' +
+        '<div class="un-metric"><div class="l">Time spent (hrs)</div><div class="v"><span class="n">' + m.hrs + '</span>' + deltaHtml(m.hrs, p && p.hrs, all) + '</div></div>' +
+        '</div><div class="un-chart" id="unChart"></div><div class="un-foot">Based on current filters.' + (all ? '' : ' Compared with the previous ' + r.len + ' days.') + '</div></div>';
+      drawChart($('unChart'), buckets(list, r, R.grouping), msg);
+      host.querySelectorAll('[data-un-group]').forEach(function (b) { b.onclick = function () { R.grouping = b.dataset.unGroup; renderSummary(); }; });
+    }
+    $('unCollapse').onclick = function () { R.collapsed = !R.collapsed; LS.set('un-rs1-collapsed', R.collapsed ? '1' : '0'); renderSummary(); };
+  }
+  function drawChart(host, bs, msg) {
+    var w = Math.max(280, host.clientWidth - 32 || 640), h = isMobile() ? 160 : 200;
+    var pl = 30, pr = 6, pt = 8, pb = 24, iw = w - pl - pr, ih = h - pt - pb;
+    var max = 0; bs.forEach(function (b) { if (b.count > max) max = b.count; });
+    var step = Math.max(1, Math.ceil(max / 4)), top = Math.max(4, Math.ceil(max / step) * step);
+    var y = function (v) { return pt + ih - (v / top) * ih; };
+    var band = iw / Math.max(1, bs.length), bw = Math.max(2, Math.min(24, band - 2, band * 0.72));
+    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" height="' + h + '" role="img" aria-label="Certifications completed per ' + R.grouping.replace('ly', '').replace('dai', 'day') + '">';
+    for (var v = 0; v <= top; v += step) svg += '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="' + (v === 0 ? '#3a3a42' : '#202026') + '"/><text class="axis" x="' + (pl - 8) + '" y="' + (y(v) + 3.5) + '" text-anchor="end">' + v + '</text>';
+    var every = Math.max(1, Math.ceil(bs.length / 7));
+    bs.forEach(function (b, i) {
+      var cx = pl + i * band + band / 2;
+      if (b.count > 0) {
+        var x = cx - bw / 2, y0 = y(0), yt = y(b.count), rr = Math.min(4, bw / 2, y0 - yt);
+        svg += '<path class="un-bar" data-i="' + i + '" fill="#e5531f" d="M' + x + ',' + y0 + 'V' + (yt + rr) + 'Q' + x + ',' + yt + ' ' + (x + rr) + ',' + yt + 'H' + (x + bw - rr) + 'Q' + (x + bw) + ',' + yt + ' ' + (x + bw) + ',' + (yt + rr) + 'V' + y0 + 'Z"/>';
+      }
+      if (i % every === 0) svg += '<text class="axis" x="' + cx + '" y="' + (h - 6) + '" text-anchor="middle">' + esc(b.short) + '</text>';
+      svg += '<rect class="un-hit" data-i="' + i + '" x="' + (pl + i * band) + '" y="' + pt + '" width="' + band + '" height="' + ih + '" fill="transparent"/>';
+    });
+    svg += '</svg>';
+    host.innerHTML = svg + (msg ? '<div class="un-chart-msg">' + esc(msg) + '</div>' : '') + '<div class="un-tipbox" hidden></div>' +
+      '<table class="un-sr"><caption>Certifications completed</caption><thead><tr><th>Period</th><th>Completions</th><th>People</th></tr></thead><tbody>' + bs.map(function (b) { return '<tr><td>' + esc(b.label) + '</td><td>' + b.count + '</td><td>' + b.np + '</td></tr>'; }).join('') + '</tbody></table>';
+    var tip = host.querySelector('.un-tipbox'), svgEl = host.querySelector('svg');
+    function show(i) {
+      var b = bs[i];
+      host.querySelectorAll('.un-bar').forEach(function (pth) { pth.setAttribute('fill', +pth.dataset.i === i ? '#f4702f' : '#e5531f'); });
+      tip.innerHTML = '<div class="tl">' + esc(b.label) + '</div><b>' + b.count + '</b> completion' + (b.count === 1 ? '' : 's') + ' · <b>' + b.np + '</b> ' + (b.np === 1 ? 'person' : 'people');
+      var scale = svgEl.getBoundingClientRect().width / w || 1;
+      tip.style.left = (16 + (pl + i * band + band / 2) * scale) + 'px';
+      tip.style.top = (4 + y(b.count) * scale) + 'px';
+      tip.hidden = false;
+    }
+    host.querySelectorAll('.un-hit').forEach(function (rect) {
+      rect.addEventListener('mouseenter', function () { show(+rect.dataset.i); });
+      rect.addEventListener('click', function () { show(+rect.dataset.i); });
+    });
+    svgEl.addEventListener('mouseleave', function () { tip.hidden = true; host.querySelectorAll('.un-bar').forEach(function (pth) { pth.setAttribute('fill', '#e5531f'); }); });
+  }
+
+  // After every People render: refresh the card and make Last Completed sortable.
+  document.addEventListener('ppl:rendered', function () {
+    renderSummary();
+    var head = $('peopleHead'); if (!head) return;
+    head.querySelectorAll('th').forEach(function (th) {
+      if (th.textContent.replace(/[▲▼]/g, '').trim() !== 'Last Completed') return;
+      th.classList.add('un-sortable');
+      th.setAttribute('aria-sort', R.sort === 'desc' ? 'descending' : R.sort === 'asc' ? 'ascending' : 'none');
+      if (R.sort) th.insertAdjacentHTML('beforeend', '<span class="un-arr">' + (R.sort === 'desc' ? '▼' : '▲') + '</span>');
+      th.onclick = function () { R.sort = R.sort === 'desc' ? 'asc' : R.sort === 'asc' ? null : 'desc'; PPL.render(); };
+    });
+  });
+  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderSummary, 150); });
+
+  /* ---------------- CSV ---------------- */
+  var HEAD_MAP = {
+    'Name': function (p) { return p.name; },
+    'Status': function (p) { return p.seat == null ? 'On bench' : ({ ontrack: 'On track', atrisk: 'At risk', overdue: 'Overdue' })[p.status] || 'On track'; },
+    'Region': function (p) { return p.region; },
+    'Seat': function (p) { return p.seat == null ? 'Bench' : p.seat; },
+    'Last Access': function (p) { return p.last == null ? 'Never' : p.last; },
+    'On Bench': function (p) { return p.benchDays; },
+    'Progress Held': function (p) { return p.held ? p.held.done + '/' + p.held.total : ''; },
+    'Time Spent': function (p, r) { return minutesIn(p.id, r); },
+    'Certifications Completed': function (p, r) { return certsIn(p.id, r); },
+    'Last Completed': function (p) { var o = lastCompletedOff(p.id); return o == null ? '' : isoOf(dOf(o)); }
+  };
+  function csvHeaders(r) {
+    var head = $('peopleHead'), names = [];
+    if (head) head.querySelectorAll('th').forEach(function (th) { var t = th.textContent.replace(/[▲▼]/g, '').trim(); if (HEAD_MAP[t]) names.push(t); });
+    if (!names.length) names = ['Name', 'Status', 'Region', 'Last Access', 'Time Spent', 'Certifications Completed', 'Last Completed'];
+    var lab = rangeLabel(r);
+    return names.map(function (n) { return { key: n, label: n === 'Time Spent' ? 'Time Spent (min, ' + lab + ')' : n === 'Certifications Completed' ? 'Certs Completed (' + lab + ')' : n }; });
+  }
+  function csvText(list, r) {
+    var cols = csvHeaders(r);
+    var q = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    return [cols.map(function (c) { return q(c.label); }).join(',')].concat(list.map(function (p) { return cols.map(function (c) { return q(HEAD_MAP[c.key](p, r)); }).join(','); })).join('\n');
+  }
+  function downloadCsv(list, r) {
+    var blob = new Blob([csvText(list, r)], { type: 'text/csv' }), url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'people-report_acme-hvac_' + TODAY + '.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast('CSV downloaded');
+  }
+
+  /* ---------------- schedules ---------------- */
+  var CAD = {
+    daily: { label: 'Daily', sched: 'Daily', help: 'Every day, 8am UTC. Covers the previous calendar day (UTC). Sends even when there are no completions, saying "No completions yesterday."' },
+    weekly: { label: 'Weekly', sched: 'Weekly – Monday', help: 'Mondays, 8am UTC. Covers the previous 7 days, rolling.' },
+    monthly: { label: 'Monthly', sched: 'Monthly – 1st', help: '1st of the month, 8am UTC. Covers the previous 30 days, rolling.' }
+  };
+  var SCHED = [
+    { id: 's1', report: 'People Report', name: 'People Report', cadence: 'weekly', chart: true, recipients: ['ops@acmetraining.com', 'manager@acmetraining.com'], lastSent: 'May 25, 2026', status: 'Active', filters: 'Seated technicians' },
+    { id: 's2', report: 'Library Report', name: 'Library Report', cadence: 'monthly', chart: false, recipients: ['learning@acmetraining.com'], lastSent: 'May 1, 2026', status: 'Active', fixed: true },
+    { id: 's3', report: 'Companies Report', name: 'Companies Report', cadence: 'monthly', chart: false, recipients: ['revops@platform.com', 'finance@platform.com'], lastSent: 'Jan 15, 2026', status: 'Paused', fixed: true }
+  ];
+  var scrim, drawer, editing = null, lastFocus = null;
+  function ensureDrawer() {
+    if (drawer) return;
+    scrim = document.createElement('div'); scrim.className = 'un-scrim'; scrim.hidden = true; scrim.onclick = closeDrawer;
+    drawer = document.createElement('aside'); drawer.className = 'un-drawer'; drawer.hidden = true;
+    drawer.setAttribute('role', 'dialog'); drawer.setAttribute('aria-modal', 'true'); drawer.setAttribute('aria-labelledby', 'unDrawerTitle');
+    document.body.appendChild(scrim); document.body.appendChild(drawer);
+  }
+  function closeDrawer() { if (!drawer || drawer.hidden) return; drawer.hidden = true; scrim.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+  function filterSummary() {
+    var tab = document.querySelector('#peopleTabs .active'), q = ($('peopleSearch') || {}).value;
+    var t = tab ? tab.getAttribute('data-ppl-tab') : 'seated';
+    return ({ seated: 'Seated technicians', bench: 'Technicians on the bench', all: 'Everyone on the roster' })[t] + (q ? ' · search "' + q + '"' : '');
+  }
+  function openDrawer(s) {
+    ensureDrawer(); editing = s; lastFocus = document.activeElement;
+    var d = s || { name: 'People Report', cadence: 'weekly', chart: true, recipients: ['ops@acmetraining.com'], filters: filterSummary() };
+    var r = curRange(), cols = csvHeaders(r), sample = PPL.rows().slice(0, 2);
+    var preview = '<table><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      sample.map(function (p) { return '<tr>' + cols.map(function (c) { return '<td>' + esc(HEAD_MAP[c.key](p, r)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+    drawer.innerHTML =
+      '<div class="un-drawer-head"><h3 id="unDrawerTitle">' + (s ? 'Edit scheduled report' : 'Schedule People Report') + '</h3><button class="un-x" id="unDClose" aria-label="Close">' + X + '</button></div>' +
+      '<form class="un-drawer-body" id="unDForm">' +
+      '<div class="un-field"><label for="unDName">Report name</label><input id="unDName" value="' + esc(d.name) + '"></div>' +
+      '<div class="un-field"><label for="unDTo">Recipients</label><input id="unDTo" value="' + esc(d.recipients.join(', ')) + '"><span class="un-help">Separate emails with commas. Each recipient gets their own email.</span></div>' +
+      '<div class="un-field"><label for="unDCad">Cadence</label><select id="unDCad"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select><span class="un-help" id="unDCadHelp"></span></div>' +
+      '<label class="un-check"><input type="checkbox" id="unDChart"' + (d.chart ? ' checked' : '') + '> Include chart summary in email</label><span class="un-help" id="unDChartHelp" style="margin-top:-8px"></span>' +
+      '<div class="un-field"><label>Filters</label><div class="un-help" style="color:var(--text-dim)">' + esc(d.filters || filterSummary()) + '</div></div>' +
+      '<div class="un-field"><label>Column preview</label><div class="un-preview">' + preview + '</div><span class="un-help">Mirrors the People table\'s visible columns.</span></div>' +
+      '</form>' +
+      '<div class="un-drawer-foot"><button class="btn btn-ghost" id="unDCancel" type="button">Cancel</button><button class="btn btn-primary" id="unDSave" type="button">' + (s ? 'Save changes' : 'Save schedule') + '</button></div>';
+    var cad = $('unDCad'); cad.value = d.cadence;
+    function sync() {
+      $('unDCadHelp').textContent = CAD[cad.value].help;
+      $('unDChartHelp').textContent = $('unDChart').checked ? (cad.value === 'daily' ? 'Daily emails show the three metrics only, above the CSV link.' : 'Adds the three metric cards and a chart image above the CSV link.') : 'The email contains only the CSV.';
+    }
+    cad.onchange = sync; $('unDChart').onchange = sync; sync();
+    $('unDForm').onsubmit = function (e) { e.preventDefault(); };
+    $('unDClose').onclick = $('unDCancel').onclick = closeDrawer;
+    $('unDSave').onclick = function () {
+      var to = $('unDTo').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      if (!$('unDName').value.trim() || !to.length) { toast('Add a report name and at least one recipient'); return; }
+      var rec = { id: s ? s.id : 's' + Date.now(), report: 'People Report', name: $('unDName').value.trim(), cadence: cad.value, chart: $('unDChart').checked, recipients: to, lastSent: s ? s.lastSent : '—', status: 'Active', filters: d.filters || filterSummary() };
+      if (s) SCHED = SCHED.map(function (x) { return x.id === s.id ? rec : x; }); else SCHED.unshift(rec);
+      closeDrawer(); renderExports(); renderReportCard(); toast(s ? 'Schedule updated' : 'Schedule saved');
+    };
+    scrim.hidden = false; drawer.hidden = false; $('unDName').focus();
+  }
+  function renderExports() {
+    var body = $('unExportsBody'); if (!body) return;
+    body.innerHTML = SCHED.map(function (s) {
+      return '<tr><td class="report-name">' + esc(s.name) + '</td><td class="recipients">' + s.recipients.map(esc).join(',<br>') + '</td>' +
+        '<td class="schedule">' + esc(CAD[s.cadence].sched) + (s.chart ? '<br><span class="un-faint" style="font-size:11.5px">With chart summary</span>' : '') + '</td>' +
+        '<td class="last-sent">' + esc(s.lastSent) + '</td><td class="' + (s.status === 'Active' ? 'status-active' : 'status-paused') + '">' + s.status + '</td>' +
+        '<td class="actions-cell">' + (s.fixed ? '<button class="export-action-btn" title="Actions">⋯</button>' : '<button class="btn btn-ghost btn-sm" data-un-edit="' + s.id + '">Edit</button> <button class="btn btn-ghost btn-sm" data-un-del="' + s.id + '">Delete</button>') + '</td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-un-edit]').forEach(function (b) { b.onclick = function () { openDrawer(SCHED.filter(function (x) { return x.id === b.dataset.unEdit; })[0]); }; });
+    body.querySelectorAll('[data-un-del]').forEach(function (b) { b.onclick = function () { SCHED = SCHED.filter(function (x) { return x.id !== b.dataset.unDel; }); renderExports(); renderReportCard(); toast('Schedule deleted'); }; });
+  }
+  function openExports() {
+    if (typeof showPage === 'function') showPage('settings');
+    var nav = document.querySelector('[data-settings-tab="scheduled-exports"]'); if (nav) nav.click();
+  }
+
+  /* ---------------- Dashboard: People Report card ---------------- */
+  function nextSend() {
+    var cad = SCHED.filter(function (s) { return s.report === 'People Report' && s.status === 'Active'; }).map(function (s) { return s.cadence; });
+    if (cad.indexOf('daily') >= 0) return 'tomorrow, 8am UTC';
+    if (cad.indexOf('weekly') >= 0) { var d = new Date(todayMs()), add = (8 - d.getUTCDay()) % 7 || 7; return fmtD(new Date(todayMs() + add * DAY)) + ', 8am UTC'; }
+    if (cad.indexOf('monthly') >= 0) { var t = new Date(todayMs()); return fmtD(new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 1))) + ', 8am UTC'; }
+    return null;
+  }
+  function renderReportCard() {
+    if (!$('unRepN')) return;
+    var list = SEATS.roster, r = { o: 29, n: 0, len: 30, kind: '30d' }, m = metrics(list, r), p = metrics(list, prevRange(r));
+    $('unRepN').textContent = m.certs;
+    $('unRepL').innerHTML = 'certifications, last 30 days ' + deltaHtml(m.certs, p.certs);
+    var bs = buckets(list, r, 'daily'), max = Math.max.apply(null, bs.map(function (b) { return b.count; }).concat([1])), w = 240, h = 34, bw = w / bs.length;
+    $('unRepSpark').innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' + bs.map(function (b, i) { var bh = b.count ? Math.max(3, (b.count / max) * (h - 2)) : 0; return bh ? '<rect x="' + (i * bw + 1) + '" y="' + (h - bh) + '" width="' + Math.max(1, bw - 2) + '" height="' + bh + '" rx="1.5" fill="#e5531f"/>' : ''; }).join('') + '<line x1="0" x2="' + w + '" y1="' + (h - .5) + '" y2="' + (h - .5) + '" stroke="#3a3a42"/></svg>';
+    var n = SCHED.filter(function (s) { return s.report === 'People Report'; }).length, nx = nextSend();
+    $('unRepSched').textContent = n ? n + ' scheduled email' + (n === 1 ? '' : 's') + (nx ? ' · next ' + nx : '') : 'No scheduled emails';
+  }
+  $('unRepCsv') && ($('unRepCsv').onclick = function () { downloadCsv(SEATS.roster, { o: 29, n: 0, len: 30, kind: '30d' }); });
+
+  /* ---------------- Dashboard: Certifications Completed card ---------------- */
+  function openPerson(p) {
+    if (typeof window.__loadPersonDetail === 'function') window.__loadPersonDetail(p.platformId || ('unknown_' + p.id), p.name);
+    else if (typeof showPage === 'function') showPage('person');
+  }
+  function renderRecentCard() {
+    var title = [].filter.call(document.querySelectorAll('#page-dashboard .card-title'), function (t) { return t.textContent.trim() === 'Certifications Completed'; })[0];
+    var card = title && title.closest('.card'), body = card && card.querySelector('tbody');
+    if (!body) return;
+    var rows = recentComps(5);
+    body.innerHTML = rows.map(function (r, i) {
+      return '<tr class="r-green" data-un-recent="' + i + '"><td>' + esc(r.p.name) + '</td><td data-label="Certification">' + esc(r.cert) + '</td><td data-label="Date" class="muted">' + fmtDY(dOf(r.off)) + '</td><td class="view-cell"><span class="row-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></td></tr>';
+    }).join('');
+    body.querySelectorAll('tr').forEach(function (tr) { tr.style.cursor = 'pointer'; tr.onclick = function () { openPerson(rows[+tr.dataset.unRecent].p); }; });
+  }
+
+  /* ---------------- Dashboard: Up Next tasks ---------------- */
+  var ICONS = {
+    violet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/></svg>',
+    red: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    amber: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 12h8"/></svg>',
+    green: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>',
+    blue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>'
+  };
+  var TASKS = [
+    { id: 't1', ic: 'violet', who: "Review Michael Chen's field assessment", what: 'Capacitor Testing · 4 photos submitted May 31', act: { label: 'Review', kind: 'external', primary: true } },
+    { id: 't2', ic: 'red', who: 'Nudge David Kim', what: 'Overdue on Safety Onboarding · 90 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to David Kim' } },
+    { id: 't3', ic: 'red', who: 'Nudge Daniel Garcia', what: 'New Hire Bundle at 12%, due May 18 · 60 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Daniel Garcia' } },
+    { id: 't4', ic: 'red', who: 'Nudge Amanda Lee', what: 'HVAC Basics at 21%, due May 5 · 45 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Amanda Lee' } },
+    { id: 't5', ic: 'violet', who: 'Andre Lewis finished the HVAC Pre-Hire <span class="un-tag">Candidate</span>', what: 'Scored <span class="un-score un-sc-hi">82%</span> · today', act: { label: 'Results', kind: 'external' } },
+    { id: 't6', ic: 'amber', who: "Move Olivia Davis's seat", what: 'Never logged in · someone is waiting on the bench', act: { label: 'Reassign', kind: 'page', page: 'seats' } },
+    (function () { var r = recentComps(1)[0]; return { id: 't7', ic: 'green', who: 'Congratulate ' + esc(r.p.name), what: 'Earned ' + esc(r.cert) + ' on ' + fmtD(dOf(r.off)), act: { label: 'Send', kind: 'inplace', done: 'Congrats sent to ' + r.p.name } }; })(),
+    { id: 't8', ic: 'blue', who: 'Look at May completions', what: 'Completions are up on April · open the People report', act: { label: 'Open', kind: 'page', page: 'people' } }
+  ];
+  var LIMIT = 5, tasks = TASKS.slice(), confirming = null;
+  function strip(s) { return String(s).replace(/<[^>]+>/g, ''); }
+  function actionHtml(t) {
+    var cls = 'btn btn-sm ' + (t.act.primary ? 'btn-primary' : 'btn-ghost');
+    if (t.act.kind === 'external') return '<a class="' + cls + ' un-ext" href="' + ASSESS + '" target="_blank" rel="noopener">' + t.act.label + EXT + '</a>';
+    return '<button class="' + cls + '" data-un-act="' + t.id + '">' + t.act.label + '</button>';
+  }
+  function renderTasks() {
+    var list = $('unTaskList'); if (!list) return;
+    var shown = tasks.slice(0, LIMIT);
+    list.innerHTML = shown.map(function (t) {
+      var c = confirming === t.id;
+      return '<div class="un-task" data-id="' + t.id + '"><button class="un-cbx" role="checkbox" aria-checked="' + c + '" aria-label="Dismiss task: ' + esc(strip(t.who)) + '" data-un-check="' + t.id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg></button>' +
+        '<span class="un-ico ' + t.ic + '">' + ICONS[t.ic] + '</span>' +
+        '<div><div class="un-who" title="' + esc(strip(t.who)) + '">' + t.who + '</div><div class="un-what" title="' + esc(strip(t.what)) + '">' + t.what + '</div></div>' +
+        '<div class="un-task-acts">' + actionHtml(t) + '</div>' +
+        (c ? '<div class="un-confirm"><span>Dismiss this task? It won\'t come back unless something changes.</span><button class="btn btn-primary btn-sm" data-un-dismiss="' + t.id + '">Dismiss</button><button class="btn btn-ghost btn-sm" data-un-cancel="1">Keep</button></div>' : '') + '</div>';
+    }).join('');
+    var rest = tasks.length - shown.length;
+    $('unTaskMore').hidden = rest <= 0;
+    if (rest > 0) $('unTaskMore').innerHTML = '<b>+ ' + rest + ' more</b> task' + (rest === 1 ? '' : 's') + ' after these';
+    $('unTaskEmpty').hidden = tasks.length > 0; list.hidden = tasks.length === 0;
+    $('unTaskHint').textContent = tasks.length ? tasks.length + ' thing' + (tasks.length === 1 ? '' : 's') + ' this week' : 'Nothing waiting';
+  }
+  function removeTask(id, msg) {
+    var row = document.querySelector('.un-task[data-id="' + id + '"]');
+    var fin = function () { tasks = tasks.filter(function (t) { return t.id !== id; }); confirming = null; renderTasks(); if (msg) toast(msg); };
+    if (row && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) { row.classList.add('leaving'); setTimeout(fin, 220); } else fin();
+  }
+  var tl = $('unTaskList');
+  if (tl) tl.addEventListener('click', function (e) {
+    var c = e.target.closest('[data-un-check]'); if (c) { confirming = confirming === c.dataset.unCheck ? null : c.dataset.unCheck; renderTasks(); return; }
+    var d = e.target.closest('[data-un-dismiss]'); if (d) { removeTask(d.dataset.unDismiss, 'Task dismissed'); return; }
+    if (e.target.closest('[data-un-cancel]')) { confirming = null; renderTasks(); return; }
+    var a = e.target.closest('[data-un-act]'); if (!a) return;
+    var t = tasks.filter(function (x) { return x.id === a.dataset.unAct; })[0]; if (!t) return;
+    if (t.act.kind === 'inplace') removeTask(t.id, t.act.done);
+    else if (t.act.kind === 'page' && typeof showPage === 'function') showPage(t.act.page);
+  });
+
+  /* ---------------- boot ---------------- */
+  renderTasks(); renderReportCard(); renderRecentCard(); renderExports(); refreshPeople();
 })();
 </script>
