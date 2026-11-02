@@ -8790,8 +8790,8 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     nudge: function (g, lead) {
       var ds = g.map(function (t) { return t.b.days; }), lo = Math.min.apply(null, ds), hi = Math.max.apply(null, ds);
       var span = lo === hi ? lo + ' days' : lo + '–' + hi + ' days', who = names(g.map(function (t) { return t.b.name; })), one = g.length === 1;
-      return lead ? 'Start by nudging ' + who + ', who ' + (one ? 'hasn’t' : 'haven’t') + ' opened SkillCat in ' + span + '.'
-                  : who + ' ' + (one ? 'is' : 'are') + ' overdue and ' + (one ? 'hasn’t' : 'haven’t') + ' opened SkillCat in ' + span + '.';
+      return lead ? 'Start by nudging ' + who + ', who ' + (one ? 'hasn\'t' : 'haven\'t') + ' opened SkillCat in ' + span + '.'
+                  : who + ' ' + (one ? 'is' : 'are') + ' overdue and ' + (one ? 'hasn\'t' : 'haven\'t') + ' opened SkillCat in ' + span + '.';
     },
     result: function (g, lead) {
       var parts = g.map(function (t) { return t.b.name + ' scored ' + t.b.score + ' on the ' + t.b.item; });
