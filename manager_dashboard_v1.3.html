@@ -1425,6 +1425,7 @@
           </div>
           <div class="un-grid">
             <div class="un-card">
+              <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--orange)"></span><span class="un-card-title">To Do</span><span class="un-badge" id="unTaskCount">0</span></div></div>
               <div class="un-task-list" id="unTaskList" aria-live="polite"></div>
               <div class="un-empty" id="unTaskEmpty" hidden>
                 <div class="un-empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg></div>
@@ -8178,6 +8179,9 @@
    Every class is prefixed "un-" so nothing collides with the prototype.
    ===================================================================== */
 :root { --violet: #b49cff; }
+#upNext [hidden], #unSummary [hidden], #unRange [hidden], .un-pop[hidden], .un-scrim[hidden], .un-drawer[hidden], .un-tipbox[hidden] { display: none !important; }
+a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
+.un-badge { font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 1px 8px; border-radius: 20px; background: #26262b; color: var(--text-dim); }
 
 /* ---- shared bits ---- */
 .un-card { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
@@ -8777,6 +8781,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     if (rest > 0) $('unTaskMore').innerHTML = '<b>+ ' + rest + ' more</b> task' + (rest === 1 ? '' : 's') + ' after these';
     $('unTaskEmpty').hidden = tasks.length > 0; list.hidden = tasks.length === 0;
     $('unTaskHint').textContent = tasks.length ? tasks.length + ' thing' + (tasks.length === 1 ? '' : 's') + ' this week' : 'Nothing waiting';
+    $('unTaskCount').textContent = tasks.length;
   }
   function removeTask(id, msg) {
     var row = document.querySelector('.un-task[data-id="' + id + '"]');
