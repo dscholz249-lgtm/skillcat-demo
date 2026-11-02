@@ -1421,7 +1421,7 @@
           </div>
           <div class="un-brief">
             <span class="un-ai-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/></svg>Your week, in order</span>
-            <p class="un-ai-text">Michael's field assessment is the only thing blocking someone else; review it first. The three overdue people have been out 45–90 days. Olivia's seat is a quick win: she's never logged in and someone is waiting on the bench.</p>
+            <p class="un-ai-text" id="unBriefText"></p>
           </div>
           <div class="un-grid">
             <div class="un-card">
@@ -8754,16 +8754,69 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     green: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>',
     blue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>'
   };
+  var BENCH = SEATS.roster.filter(function (p) { return p.seat == null; }).length;
+  var REPORT = (function () { var r = { o: 29, n: 0, len: 30, kind: '30d' }; return { cur: metrics(SEATS.roster, r).certs, prev: metrics(SEATS.roster, prevRange(r)).certs }; })();
+  // Each task carries "b": the facts the briefing sentence is built from.
   var TASKS = [
-    { id: 't1', ic: 'violet', who: "Review Michael Chen's field assessment", what: 'Capacitor Testing · 4 photos submitted May 31', act: { label: 'Review', kind: 'external', primary: true } },
-    { id: 't2', ic: 'red', who: 'Nudge David Kim', what: 'Overdue on Safety Onboarding · 90 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to David Kim' } },
-    { id: 't3', ic: 'red', who: 'Nudge Daniel Garcia', what: 'New Hire Bundle at 12%, due May 18 · 60 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Daniel Garcia' } },
-    { id: 't4', ic: 'red', who: 'Nudge Amanda Lee', what: 'HVAC Basics at 21%, due May 5 · 45 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Amanda Lee' } },
-    { id: 't5', ic: 'violet', who: 'Andre Lewis finished the HVAC Pre-Hire <span class="un-tag">Candidate</span>', what: 'Scored <span class="un-score un-sc-hi">82%</span> · today', act: { label: 'Results', kind: 'external' } },
-    { id: 't6', ic: 'amber', who: "Move Olivia Davis's seat", what: 'Never logged in · someone is waiting on the bench', act: { label: 'Reassign', kind: 'page', page: 'seats' } },
-    (function () { var r = recentComps(1)[0]; return { id: 't7', ic: 'green', who: 'Congratulate ' + esc(r.p.name), what: 'Earned ' + esc(r.cert) + ' on ' + fmtD(dOf(r.off)), act: { label: 'Send', kind: 'inplace', done: 'Congrats sent to ' + r.p.name } }; })(),
-    { id: 't8', ic: 'blue', who: 'Look at May completions', what: 'Completions are up on April · open the People report', act: { label: 'Open', kind: 'page', page: 'people' } }
+    { id: 't1', ic: 'violet', who: "Review Michael Chen's field assessment", what: 'Capacitor Testing · 4 photos submitted May 31', act: { label: 'Review', kind: 'external', primary: true },
+      b: { type: 'review', name: 'Michael Chen', item: 'Capacitor Testing', date: 'May 31' } },
+    { id: 't2', ic: 'red', who: 'Nudge David Kim', what: 'Overdue on Safety Onboarding · 90 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to David Kim' },
+      b: { type: 'nudge', name: 'David Kim', days: 90 } },
+    { id: 't3', ic: 'red', who: 'Nudge Daniel Garcia', what: 'New Hire Bundle at 12%, due May 18 · 60 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Daniel Garcia' },
+      b: { type: 'nudge', name: 'Daniel Garcia', days: 60 } },
+    { id: 't4', ic: 'red', who: 'Nudge Amanda Lee', what: 'HVAC Basics at 21%, due May 5 · 45 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Amanda Lee' },
+      b: { type: 'nudge', name: 'Amanda Lee', days: 45 } },
+    { id: 't5', ic: 'violet', who: 'Andre Lewis finished the HVAC Pre-Hire <span class="un-tag">Candidate</span>', what: 'Scored <span class="un-score un-sc-hi">82%</span> · today', act: { label: 'Results', kind: 'external' },
+      b: { type: 'result', name: 'Andre Lewis', item: 'HVAC Pre-Hire', score: '82%' } },
+    { id: 't6', ic: 'amber', who: "Move Olivia Davis's seat", what: 'Never logged in · ' + (BENCH ? BENCH + (BENCH === 1 ? ' person is' : ' people are') + ' waiting on the bench' : 'nobody is waiting on the bench'), act: { label: 'Reassign', kind: 'page', page: 'seats' },
+      b: { type: 'seat', name: 'Olivia Davis', bench: BENCH } },
+    (function () { var r = recentComps(1)[0]; return { id: 't7', ic: 'green', who: 'Congratulate ' + esc(r.p.name), what: 'Earned ' + esc(r.cert) + ' on ' + fmtD(dOf(r.off)), act: { label: 'Send', kind: 'inplace', done: 'Congrats sent to ' + r.p.name },
+      b: { type: 'congrats', name: r.p.name, item: r.cert, date: fmtD(dOf(r.off)) } }; })(),
+    { id: 't8', ic: 'blue', who: 'Look at recent completions', what: REPORT.cur + ' certifications in the last 30 days, ' + (REPORT.cur >= REPORT.prev ? 'up ' : 'down ') + Math.abs(REPORT.cur - REPORT.prev) + ' · open the People report', act: { label: 'Open', kind: 'page', page: 'people' },
+      b: { type: 'report', cur: REPORT.cur, prev: REPORT.prev } }
   ];
+
+  /* The briefing is built from the tasks still in the list, in rank order:
+     the top task leads, then one sentence per remaining kind of task, at most
+     three sentences. No AI involved — it updates as tasks are cleared. */
+  function names(list) { return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]; }
+  var SENTENCE = {
+    review: function (g, lead) {
+      var b = g[0].b;
+      if (g.length > 1) return (lead ? 'Start with the reviews: ' : '') + g.length + ' field assessments are waiting for you, starting with ' + b.name + "'s " + b.item + '.';
+      return lead ? 'Start by reviewing ' + b.name + "'s " + b.item + ' field assessment, submitted ' + b.date + '.'
+                  : b.name + "'s " + b.item + ' field assessment is waiting for your review.';
+    },
+    nudge: function (g, lead) {
+      var ds = g.map(function (t) { return t.b.days; }), lo = Math.min.apply(null, ds), hi = Math.max.apply(null, ds);
+      var span = lo === hi ? lo + ' days' : lo + '–' + hi + ' days', who = names(g.map(function (t) { return t.b.name; })), one = g.length === 1;
+      return lead ? 'Start by nudging ' + who + ', who ' + (one ? 'hasn’t' : 'haven’t') + ' opened SkillCat in ' + span + '.'
+                  : who + ' ' + (one ? 'is' : 'are') + ' overdue and ' + (one ? 'hasn’t' : 'haven’t') + ' opened SkillCat in ' + span + '.';
+    },
+    result: function (g, lead) {
+      var parts = g.map(function (t) { return t.b.name + ' scored ' + t.b.score + ' on the ' + t.b.item; });
+      return (lead ? 'New result: ' : '') + names(parts) + '.';
+    },
+    seat: function (g, lead) {
+      var b = g[0].b, wait = b.bench ? ' and ' + b.bench + (b.bench === 1 ? ' person is' : ' people are') + ' waiting on the bench' : '';
+      return lead ? 'Start by moving ' + b.name + "'s seat: they've never logged in" + wait + '.'
+                  : b.name + ' has never logged in' + wait + ', so that seat is a quick win.';
+    },
+    congrats: function (g, lead) {
+      var b = g[0].b;
+      return lead ? 'Start by congratulating ' + b.name + ' on ' + b.item + '.' : b.name + ' earned ' + b.item + ' on ' + b.date + '.';
+    },
+    report: function (g, lead) {
+      var b = g[0].b, d = b.cur - b.prev;
+      return (lead ? 'Have a look at the People report: ' : '') + b.cur + ' certifications in the last 30 days, ' + (d === 0 ? 'level with' : (d > 0 ? 'up ' : 'down ') + Math.abs(d) + ' on') + ' the 30 days before.';
+    }
+  };
+  function briefing() {
+    if (!tasks.length) return 'Nothing needs you right now. New reminders and assessment results will show up here.';
+    var order = [], groups = {};
+    tasks.forEach(function (t) { var k = t.b.type; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(t); });
+    return order.slice(0, 3).map(function (k, i) { return SENTENCE[k](groups[k], i === 0); }).join(' ');
+  }
   var LIMIT = 5, tasks = TASKS.slice(), confirming = null;
   function strip(s) { return String(s).replace(/<[^>]+>/g, ''); }
   function actionHtml(t) {
@@ -8788,6 +8841,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     $('unTaskEmpty').hidden = tasks.length > 0; list.hidden = tasks.length === 0;
     $('unTaskHint').textContent = tasks.length ? tasks.length + ' thing' + (tasks.length === 1 ? '' : 's') + ' this week' : 'Nothing waiting';
     $('unTaskCount').textContent = tasks.length;
+    $('unBriefText').textContent = briefing();
   }
   function removeTask(id, msg) {
     var row = document.querySelector('.un-task[data-id="' + id + '"]');
