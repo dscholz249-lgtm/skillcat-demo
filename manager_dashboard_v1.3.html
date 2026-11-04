@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SkillCat — Manager Dashboard</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
   :root {
     --sidebar-bg: #000000;
@@ -22,7 +22,7 @@
     --amber: #f1a73a;
     --blue: #7aa7ff;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
-    --sans: 'Hanken Grotesk', system-ui, sans-serif;
+    --sans: 'Fira Sans', system-ui, sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,14 +81,41 @@
   .section-title .hint { color: var(--text-faint); font-size: 12.5px; }
   .section-ctas { display: flex; gap: 9px; }
 
-  .btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 9px; font-family: var(--sans); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 8px 13px; border: 1px solid transparent; transition: transform .08s, filter .14s, background .14s; white-space: nowrap; }
-  .btn:active { transform: translateY(1px); }
-  .btn svg { width: 14px; height: 14px; stroke-width: 2.1; }
-  .btn-primary { background: linear-gradient(180deg, var(--orange-bright), var(--orange)); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 6px 16px -8px rgba(229,83,31,.7); }
-  .btn-primary:hover { filter: brightness(1.07); }
-  .btn-ghost { background: #121214; border-color: var(--border); color: var(--text-dim); }
-  .btn-ghost:hover { background: #1a1a1f; color: var(--text); }
-  .btn-sm { padding: 6px 10px; font-size: 11.5px; }
+  /* Buttons — SkillCat button sheet (Nov 2026). Appearances: .btn-primary,
+     .btn-secondary (.btn-ghost is the same), .btn-destructive, .btn-positive,
+     .btn-link. Heights are the sheet's Compact sizes: .btn 32 (Medium),
+     .btn-sm 28 (Small), .btn-lg 40 (Large); full sizes .btn-full-s/-m/-l are
+     40/48/54. States: hover, pressed (:active), :focus-visible, disabled,
+     loading (.is-loading swaps the label for a spinner). */
+  .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid transparent; font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1; color: #fff; text-decoration: none; white-space: nowrap; cursor: pointer; transition: background .14s, border-color .14s, color .14s; }
+  .btn svg { width: 14px; height: 14px; stroke-width: 2.1; flex: none; }
+  .btn:focus-visible { outline: 1.5px solid #7a7a7a; outline-offset: 3px; }
+  .btn-sm { height: 28px; padding: 0 11px; border-radius: 7px; font-size: 12.5px; }
+  .btn-sm svg { width: 13px; height: 13px; }
+  .btn-lg, .btn-full-s { height: 40px; padding: 0 18px; font-size: 14px; }
+  .btn-full-m { height: 48px; padding: 0 22px; border-radius: 9px; font-size: 15px; }
+  .btn-full-l { height: 54px; padding: 0 24px; border-radius: 10px; font-size: 16px; }
+  .btn-primary { background: linear-gradient(180deg, #b7431e, #792d14); border-color: rgba(255,255,255,.06); }
+  .btn-primary:hover { background: linear-gradient(180deg, #ce4a20, #873116); }
+  .btn-primary:active { background: linear-gradient(180deg, #a13c1c, #6b2913); }
+  .btn-ghost, .btn-secondary { background: #2e2e2e; border-color: #363636; color: #fff; }
+  .btn-ghost:hover, .btn-secondary:hover { background: #393939; border-color: #424242; }
+  .btn-ghost:active, .btn-secondary:active { background: #232323; border-color: #2b2b2b; }
+  .btn-destructive { background: #3d110f; border-color: #5a1310; }
+  .btn-destructive:hover { background: #561210; border-color: #6e1714; }
+  .btn-destructive:active { background: #330e0c; border-color: #4d110e; }
+  .btn-positive { background: #132e21; border-color: #25523c; }
+  .btn-positive:hover { background: #18402c; border-color: #2c6047; }
+  .btn-positive:active { background: #102619; border-color: #1f4532; }
+  .btn-link { height: auto; min-height: 24px; padding: 0 2px; background: none; border-color: transparent; color: #a8a8a8; }
+  .btn-link:hover, .btn-link:active { background: none; color: #fcfcfc; }
+  .btn-link:focus-visible { outline-offset: 6px; }
+  .btn:disabled, .btn[aria-disabled="true"] { background: #1d1d1d; border-color: #1d1d1d; color: #404040; cursor: not-allowed; pointer-events: none; filter: none; }
+  .btn-link:disabled, .btn-link[aria-disabled="true"] { background: none; border-color: transparent; }
+  .btn.is-loading { color: transparent; pointer-events: none; }
+  .btn.is-loading > * { visibility: hidden; }
+  .btn.is-loading::after { content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid #fff; border-left-color: transparent; border-radius: 50%; animation: btn-spin .8s linear infinite; }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   /* Grid children must allow shrinking below intrinsic content min-width
@@ -734,7 +761,7 @@
       flex: 1 1 calc(50% - 4px);
       min-width: 0;
       font-size: 12px;
-      padding: 9px 10px;
+      padding: 0 10px;
       white-space: nowrap;
     }
     .section-ctas > .btn svg { width: 13px; height: 13px; }
@@ -750,7 +777,7 @@
     .card-head-cta .btn {
       flex: 1;
       font-size: 12px;
-      padding: 8px 10px;
+      padding: 0 10px;
     }
 
 
@@ -789,7 +816,6 @@
     font-size: 11.5px;
   }
   .paths-pagination-controls .btn:disabled {
-    opacity: 0.35;
     cursor: not-allowed;
   }
 
@@ -894,7 +920,8 @@
   .modal-body { font-size: 15px; line-height: 1.55; color: var(--text-dim); margin: 8px 0 22px; }
   .modal-body strong { color: var(--text); font-weight: 700; }
   .modal-footer { display: flex; justify-content: center; gap: 12px; }
-  .modal-footer .btn { padding: 14px 28px; font-size: 15px; font-weight: 700; min-width: 140px; justify-content: center; }
+  .modal-footer .btn { height: 48px; padding: 0 22px; border-radius: 9px; font-size: 15px; min-width: 140px; } /* Medium */
+  .modal-footer .btn-link { min-width: 0; }
   .modal-form { margin: 8px 0 18px; }
   .modal-form .form-group { margin-bottom: 18px; }
   .modal-form label { display: block; font-size: 14px; font-weight: 700; color: var(--text-dim); margin-bottom: 9px; }
@@ -922,7 +949,7 @@
   .app-foot { padding: 16px 28px 24px; border-top: 1px solid var(--border-soft); }
   .app-note { font-size: 12.5px; color: var(--text-faint); margin: 0 0 14px; }
   .app-actions { display: flex; gap: 10px; justify-content: flex-end; }
-  .app-actions .btn { font-size: 13.5px; font-weight: 700; padding: 12px 18px; }
+  .app-actions .btn { height: 40px; padding: 0 18px; font-size: 14px; } /* Small */
   .app-csv { display: flex; justify-content: center; align-items: center; gap: 8px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--border-soft); }
   .app-csv-link { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; color: var(--text-dim); font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: color .12s, background .12s; }
   .app-csv-link:hover { color: var(--text); background: #ffffff08; }
@@ -1186,7 +1213,6 @@
   .ppl-footer .pf-count { font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); }
   .ppl-footer .pf-count strong { color: var(--text); font-weight: 700; }
   .ppl-footer .pf-actions { display: flex; gap: 9px; }
-  .btn[disabled] { opacity: .45; cursor: not-allowed; pointer-events: none; }
 
   /* ---- Seats page ---- */
   .seat-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -1890,7 +1916,7 @@
           </div>
 
           <div class="settings-toolbar">
-            <button class="btn btn-ghost btn-sm" data-action="clear-settings">Clear All</button>
+            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
             <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
           </div>
         </div>
@@ -3451,7 +3477,7 @@
           </div>
 
           <div class="settings-toolbar">
-            <button class="btn btn-ghost btn-sm" data-action="clear-settings">Clear All</button>
+            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
             <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
             </div>
           </div>
@@ -3591,7 +3617,7 @@
           </div>
 
           <div class="settings-toolbar">
-            <button class="btn btn-ghost btn-sm" data-action="clear-settings">Clear All</button>
+            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
             <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
             </div>
           </div>
@@ -4025,10 +4051,10 @@
       <!-- Bottom bar (sibling of .scroll, locks to bottom via .page flex layout) -->
       <div class="assign-bottom-bar">
         <div class="left">
-          <button class="btn btn-ghost" data-assign-cancel>Cancel</button>
+          <button class="btn btn-link" data-assign-cancel>Cancel</button>
         </div>
         <div class="right">
-          <button class="btn btn-ghost" data-assign-back style="display:none;">‹ Back</button>
+          <button class="btn btn-link" data-assign-back style="display:none;">‹ Back</button>
           <button class="btn btn-primary" data-assign-next>Next ›</button>
         </div>
       </div>
@@ -5110,7 +5136,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-link" data-modal-cancel>Cancel</button>
           <button class="btn btn-primary" id="addSeatConfirm">Add Seats</button>
         </div>
       </div>
@@ -5138,7 +5164,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-link" data-modal-cancel>Cancel</button>
           <button class="btn btn-primary" id="swapConfirm" disabled>Complete Swap</button>
         </div>
       </div>
@@ -5157,7 +5183,7 @@
         <div class="pick-list" id="givePickList"></div>
         <div id="giveShortfall"></div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-link" data-modal-cancel>Cancel</button>
           <button class="btn btn-primary" id="giveConfirm" disabled>Give Seats</button>
         </div>
       </div>
@@ -5186,7 +5212,7 @@
           <div class="seat-tile green"><div class="n" id="importBench">—</div><div class="l">Placed on bench</div></div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" data-modal-cancel>Cancel</button>
+          <button class="btn btn-link" data-modal-cancel>Cancel</button>
           <button class="btn btn-primary" data-modal-cancel>Import</button>
         </div>
       </div>
@@ -7798,7 +7824,7 @@
           '<td>Empty seat</td><td></td><td><span class="seat-pill sp-open">Open</span></td><td></td>' +
           '<td class="actions-cell"><div class="seat-actions-inline">' +
           '<button class="btn btn-ghost btn-sm" data-assign-seat="' + r.seat + '">Assign</button>' +
-          '<button class="btn btn-ghost btn-sm" data-remove-seat="' + r.seat + '">Remove seat</button>' +
+          '<button class="btn btn-destructive btn-sm" data-remove-seat="' + r.seat + '">Remove seat</button>' +
           '</div></td></tr>';
       }
       var p = r.person;
@@ -8209,7 +8235,8 @@ a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
 .un-card-head-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .un-card-title { font-size: 13.5px; font-weight: 700; }
 .un-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.un-link { background: none; border: 0; color: var(--orange-bright); padding: 0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.un-link { background: none; border: 0; color: #a8a8a8; padding: 0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.un-link:hover { color: #fcfcfc; }
 .un-mono { font-family: var(--mono); }
 .un-faint { color: var(--text-faint); }
 .un-score { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 2px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -8315,7 +8342,7 @@ a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
 .dl-opt[aria-checked="true"] .dl-radio { border-color: var(--orange); background: var(--orange); box-shadow: inset 0 0 0 3.5px #1a120f; }
 .dl-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 18px; }
 .dl-note { flex: 1 1 180px; font-size: 12px; color: var(--text-faint); }
-.dl-modal .btn:disabled { opacity: .45; cursor: default; filter: none; }
+
 .un-ares-row { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1.5fr) auto auto auto; gap: 12px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border-soft); color: var(--text); text-decoration: none; }
 .un-ares-row:hover { background: #17171b; }
 .un-ares-row:hover .un-ar-view { color: var(--text); border-color: var(--text-faint); }
@@ -8324,8 +8351,8 @@ a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
 .un-ar-date { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
 .un-ar-view { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-dim); border: 1px solid var(--border); background: #121214; border-radius: 8px; padding: 4px 8px 4px 10px; white-space: nowrap; }
 .un-ar-view svg { width: 12px; height: 12px; stroke-width: 2.2; }
-.un-view-more { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 16px; color: var(--orange-bright); font-size: 12.5px; font-weight: 600; text-decoration: none; }
-.un-view-more:hover { background: #17171b; }
+.un-view-more { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 16px; color: #a8a8a8; font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.un-view-more:hover { background: #17171b; color: #fcfcfc; }
 .un-view-more svg { width: 12px; height: 12px; stroke-width: 2.2; }
 @media (max-width: 640px) {
   .un-ares-row { grid-template-columns: minmax(0,1fr) auto; row-gap: 4px; }
@@ -8750,7 +8777,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
       '<div class="un-field"><label>Filters</label><div class="un-help" style="color:var(--text-dim)">' + esc(d.filters || filterSummary()) + '</div></div>' +
       '<div class="un-field"><label>Column preview</label><div class="un-preview">' + preview + '</div><span class="un-help">Mirrors the People table\'s visible columns.</span></div>' +
       '</form>' +
-      '<div class="un-drawer-foot"><button class="btn btn-ghost" id="unDCancel" type="button">Cancel</button><button class="btn btn-primary" id="unDSave" type="button">' + (s ? 'Save changes' : 'Save schedule') + '</button></div>';
+      '<div class="un-drawer-foot"><button class="btn btn-link" id="unDCancel" type="button">Cancel</button><button class="btn btn-primary" id="unDSave" type="button">' + (s ? 'Save changes' : 'Save schedule') + '</button></div>';
     var cad = $('unDCad'); cad.value = d.cadence;
     function sync() {
       $('unDCadHelp').textContent = CAD[cad.value].help;
@@ -8774,7 +8801,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
       return '<tr><td class="report-name">' + esc(s.name) + '</td><td class="recipients">' + s.recipients.map(esc).join(',<br>') + '</td>' +
         '<td class="schedule">' + esc(CAD[s.cadence].sched) + (s.chart ? '<br><span class="un-faint" style="font-size:11.5px">With chart summary</span>' : '') + '</td>' +
         '<td class="last-sent">' + esc(s.lastSent) + '</td><td class="' + (s.status === 'Active' ? 'status-active' : 'status-paused') + '">' + s.status + '</td>' +
-        '<td class="actions-cell">' + (s.fixed ? '<button class="export-action-btn" title="Actions">⋯</button>' : '<button class="btn btn-ghost btn-sm" data-un-edit="' + s.id + '">Edit</button> <button class="btn btn-ghost btn-sm" data-un-del="' + s.id + '">Delete</button>') + '</td></tr>';
+        '<td class="actions-cell">' + (s.fixed ? '<button class="export-action-btn" title="Actions">⋯</button>' : '<button class="btn btn-ghost btn-sm" data-un-edit="' + s.id + '">Edit</button> <button class="btn btn-destructive btn-sm" data-un-del="' + s.id + '">Delete</button>') + '</td></tr>';
     }).join('');
     body.querySelectorAll('[data-un-edit]').forEach(function (b) { b.onclick = function () { openDrawer(SCHED.filter(function (x) { return x.id === b.dataset.unEdit; })[0]); }; });
     body.querySelectorAll('[data-un-del]').forEach(function (b) { b.onclick = function () { SCHED = SCHED.filter(function (x) { return x.id !== b.dataset.unDel; }); renderExports(); renderReportCard(); toast('Schedule deleted'); }; });
@@ -8999,7 +9026,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
         '<span class="un-ico ' + t.ic + '">' + ICONS[t.ic] + '</span>' +
         '<div><div class="un-who" title="' + esc(strip(t.who)) + '">' + t.who + '</div><div class="un-what" title="' + esc(strip(t.what)) + '">' + t.what + '</div></div>' +
         '<div class="un-task-acts">' + actionHtml(t) + '</div>' +
-        (c ? '<div class="un-confirm"><span>Dismiss this task? It won\'t come back unless something changes.</span><button class="btn btn-primary btn-sm" data-un-dismiss="' + t.id + '">Dismiss</button><button class="btn btn-ghost btn-sm" data-un-cancel="1">Keep</button></div>' : '') + '</div>';
+        (c ? '<div class="un-confirm"><span>Dismiss this task? It won\'t come back unless something changes.</span><button class="btn btn-primary btn-sm" data-un-dismiss="' + t.id + '">Dismiss</button><button class="btn btn-link btn-sm" data-un-cancel="1">Keep</button></div>' : '') + '</div>';
     }).join('');
     var rest = tasks.length - shown.length;
     $('unTaskMore').hidden = rest <= 0;
@@ -9123,7 +9150,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
         '<span><span class="dl-l">' + c.label + '</span><span class="dl-d">Up top: ' + c.top + '</span></span><span class="dl-radio" aria-hidden="true"></span></button>';
     }).join('') + '</div>' +
     '<div class="dl-foot"><span class="dl-note">You can change this any time with Customize.</span>' +
-    '<button type="button" class="btn btn-ghost" id="dlSkip">Skip for now</button><button type="button" class="btn btn-primary" id="dlGo" disabled>Set up Dashboard</button></div>';
+    '<button type="button" class="btn btn-link" id="dlSkip">Skip for now</button><button type="button" class="btn btn-primary" id="dlGo" disabled>Set up Dashboard</button></div>';
   document.body.appendChild(scrim); document.body.appendChild(modal);
   var opts = [].slice.call(modal.querySelectorAll('.dl-opt'));
 
