@@ -1376,6 +1376,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5"/><path d="M16 11l2 2 4-4"/></svg>
         Seats <span class="count" id="navIdleCount" hidden></span>
       </div>
+      <div class="nav-item" data-page="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Reports
+      </div>
     </nav>
 
     <div class="nav-label">Resources</div>
@@ -1465,6 +1469,7 @@
               <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--orange)"></span><span class="un-card-title">People Report</span></div></div>
               <div class="un-pr-stat"><span class="n" id="unRepN">—</span><span class="l" id="unRepL">certifications, last 30 days</span></div>
               <div class="un-spark" id="unRepSpark" aria-hidden="true"></div>
+              <div class="un-pr-row un-pr-ttc"><span>Avg time to certify</span><span id="unRepTtc">—</span></div>
               <div class="un-pr-row"><span id="unRepSched">—</span><button class="un-link" data-un-manage-exports>Manage</button></div>
               <div class="un-pr-acts"><button class="btn btn-primary btn-sm" data-page="people">Open People report</button><button class="btn btn-ghost btn-sm" id="unRepCsv">Download CSV</button></div>
             </div>
@@ -1924,6 +1929,8 @@
              below) so seated/bench/all stay in sync with every seat action. -->
         <!-- Reports Slice 1: completions summary for the rows below -->
         <div id="unSummary"></div>
+        <!-- PRD-496: average time to certification -->
+        <div id="unTtc"></div>
         <div class="card" id="peopleCard" style="animation-delay:.02s">
           <table id="peopleTable">
             <thead id="peopleHead"></thead>
@@ -2604,6 +2611,8 @@
           </div>
         </div>
 
+        <!-- PRD-496: who is assigned this certification, slowest first -->
+        <div id="unCertAssigned"></div>
         <!-- 1. General Safety Orientation -->
         <div class="card detail-course" style="animation-delay:.02s">
           <div class="card-head">
@@ -4850,6 +4859,49 @@
     </div>
 
     <!-- ============ SETTINGS ============ -->
+    <!-- ============ REPORTS (gallery of every chart so far) ============ -->
+    <div class="page" id="page-reports">
+      <header class="topbar">
+        <div>
+          <h1>Reports</h1>
+          <div class="sub">Every chart in one place. Each one opens the page it comes from.</div>
+        </div>
+      </header>
+      <div class="scroll">
+        <div class="un-gal" id="unGal">
+          <section class="un-card un-gal-card">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--orange)"></span><span class="un-card-title">Completions over time</span></div><button class="un-link" data-page="people">Open in People ›</button></div>
+            <div class="un-gal-stat" id="galCompN">—</div><div class="un-gal-sub" id="galCompSub"></div>
+            <div class="un-chart" id="galCompChart"></div>
+            <div class="un-foot">Certifications completed per day, last 30 days, against the 30 days before. Source: People report.</div>
+          </section>
+          <section class="un-card un-gal-card">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--blue)"></span><span class="un-card-title">Engagement</span></div><button class="un-link" data-page="dashboard">Open on Dashboard ›</button></div>
+            <div class="un-gal-stat" id="galEngN">—</div><div class="un-gal-sub" id="galEngSub"></div>
+            <div class="un-chart un-eng-chart" id="galEngChart"></div>
+            <div class="un-eng-legend" aria-hidden="true"><span><i></i>This week</span><span><i class="prev"></i>Last week</span></div>
+            <div class="un-foot">Share of seated users who opened SkillCat at least once, Mon–Sun, against the same days last week.</div>
+          </section>
+          <section class="un-card un-gal-card">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--green)"></span><span class="un-card-title">Average time to certification</span></div><button class="un-link" data-page="people">Open in People ›</button></div>
+            <div class="un-gal-stat" id="galTtcN">—</div><div class="un-gal-sub" id="galTtcSub"></div>
+            <div class="un-chart un-ttc-trend" id="galTtcChart"></div>
+            <div class="un-foot">Rolling 90-day average of days from assignment to completion, last 26 weeks. Child certifications completed through a parent are excluded.</div>
+          </section>
+          <section class="un-card un-gal-card">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--green)"></span><span class="un-card-title">Time to certify by certification</span></div></div>
+            <div class="un-gal-sub" style="padding-top:12px">Average days from assignment to completion, last 30 days. Click one to see who has it.</div>
+            <div id="galBd"></div>
+          </section>
+          <section class="un-card un-gal-card">
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--red)"></span><span class="un-card-title">Behind on assigned certifications</span></div></div>
+            <div class="un-gal-stat" id="galBehindN">—</div>
+            <div class="un-gal-sub">Open assignments past their due date, or open longer than that certification's average when there's no due date.</div>
+            <div id="galBehind"></div>
+          </section>
+        </div>
+      </div>
+    </div>
     <div class="page" id="page-settings">
       <header class="topbar">
         <div class="topbar-left">
@@ -5276,7 +5328,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', 'task-detail': 'Library', 'task-wizard': 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { reports: 'Reports', dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', 'task-detail': 'Library', 'task-wizard': 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');
@@ -8468,6 +8520,98 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   }
   function lastCompletedOff(id) { var m = null; COMPS.forEach(function (c) { if (c.id === id && (m === null || c.off < m)) m = c.off; }); return m; }
 
+  /* ---------------- Time to certification data (PRD-496) ----------------
+     Every completion gets the day it was assigned, and seated people get
+     their open assignments, so "days to certify" (assigned → completed) and
+     "days so far" (assigned → today) exist. Child certifications completed
+     through a parent take the parent's dates and are flagged auto: they
+     still count as completions but never as time to certify. Due dates are
+     optional (about half have one), as in production. */
+  var CERT_BASE = { 'EPA 608 Universal': 34, 'HVAC Basics': 24, 'Plumbing Fundamentals': 26, 'Electrical Code': 28,
+    'Refrigerant Handling': 22, 'Installation Fundamentals': 20, 'Confined Space Entry': 14, 'Quality Assurance Standards': 16,
+    'Equipment Operations': 12, 'Safety Onboarding': 15, 'OSHA 10': 9, 'Customer Service Basics': 5 };
+  var CHILDREN = { 'Safety Onboarding': ['Hazard Communication', 'Fall Protection', 'Lockout/Tagout'] };
+  var SLOWPOKES = { david_kim: 2.6, amanda_lee: 2.2, daniel_garcia: 2.0, nicole_anderson: 1.8, emily_rodriguez: 1.6, olivia_davis: 2.0 };
+  var ASSIGN = [];
+  function baseOf(cert) { return CERT_BASE[cert] || 12; }
+  (function enrich() {
+    var mineBy = {};
+    COMPS.forEach(function (c) { (mineBy[c.id] = mineBy[c.id] || []).push(c); });
+    SEATS.roster.forEach(function (p) {
+      var r = rng(hash(p.id + ':ttc')), speed = SLOWPOKES[p.id] || (0.6 + r() * 1.0), mine = mineBy[p.id] || [], parents = {};
+      mine.forEach(function (c) { if (CHILDREN[c.cert]) parents[c.cert] = c; });
+      mine.forEach(function (c) {
+        Object.keys(parents).forEach(function (k) { if (CHILDREN[k].indexOf(c.cert) >= 0) { c.auto = true; c.parent = k; c.off = parents[k].off; } });
+      });
+      mine.forEach(function (c) {
+        if (c.auto) return;
+        var b = baseOf(c.cert);
+        c.assignedOff = c.off + Math.max(1, Math.round(b * speed * (0.7 + r() * 0.6)));
+        c.dueOff = r() < 0.5 ? c.assignedOff - Math.round(b * 1.4) : null;
+      });
+      mine.forEach(function (c) { if (c.auto) { c.assignedOff = parents[c.parent].assignedOff; c.dueOff = null; } });
+      mine.forEach(function (c) { ASSIGN.push({ id: c.id, cert: c.cert, assignedOff: c.assignedOff, doneOff: c.off, dueOff: c.dueOff, auto: !!c.auto, parent: c.parent || null, pct: 100 }); });
+      // Open assignments: the next one or two certifications on their plan.
+      if (p.seat == null) return;
+      var open = Math.min(2, Math.max(0, p.certsTotal - p.certsDone)), pool = Object.keys(CERT_BASE).filter(function (k) { return p.certs.indexOf(k) < 0; });
+      for (var sh = pool.length - 1; sh > 0; sh--) { var sj = Math.floor(r() * (sh + 1)), st = pool[sh]; pool[sh] = pool[sj]; pool[sj] = st; }
+      if (SLOWPOKES[p.id] && pool.indexOf('EPA 608 Universal') > 0) { pool.splice(pool.indexOf('EPA 608 Universal'), 1); pool.unshift('EPA 608 Universal'); }
+      for (var i = 0; i < open && i < pool.length; i++) {
+        var b = baseOf(pool[i]), ago = SLOWPOKES[p.id] ? 55 + Math.floor(r() * 70) : 3 + Math.floor(r() * 32);
+        var notStarted = p.last == null || r() < 0.2;
+        ASSIGN.push({ id: p.id, cert: pool[i], assignedOff: ago, doneOff: null, dueOff: r() < 0.5 ? ago - Math.round(b * 1.4) : null, auto: false, parent: null, pct: notStarted ? 0 : 5 + Math.floor(r() * 75) });
+      }
+    });
+  })();
+  function certAvgAll(cert) {
+    var s = 0, n = 0;
+    COMPS.forEach(function (c) { if (c.cert === cert && !c.auto && c.assignedOff != null) { s += c.assignedOff - c.off; n++; } });
+    return n ? s / n : null;
+  }
+  // Average days from assignment to completion for completions in r by people in list.
+  function ttc(list, r) {
+    var ids = {}, s = 0, n = 0, auto = 0;
+    list.forEach(function (p) { ids[p.id] = 1; });
+    COMPS.forEach(function (c) {
+      if (!ids[c.id] || !inR(c.off, r)) return;
+      if (c.auto) { auto++; return; }
+      if (c.assignedOff == null) return;
+      s += c.assignedOff - c.off; n++;
+    });
+    return { avg: n ? s / n : null, n: n, auto: auto };
+  }
+  function ttcByCert(list, r) {
+    var ids = {}, g = {};
+    list.forEach(function (p) { ids[p.id] = 1; });
+    var pr = prevRange(r);
+    COMPS.forEach(function (c) {
+      if (!ids[c.id] || c.auto || c.assignedOff == null) return;
+      var k = inR(c.off, r) ? 'cur' : inR(c.off, pr) ? 'prev' : null; if (!k) return;
+      var row = g[c.cert] = g[c.cert] || { cert: c.cert, cur: [], prev: [] };
+      row[k].push(c.assignedOff - c.off);
+    });
+    var avg = function (a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; };
+    return Object.keys(g).map(function (k) { var x = g[k]; return { cert: k, n: x.cur.length, avg: avg(x.cur), prev: avg(x.prev), prevN: x.prev.length }; })
+      .filter(function (x) { return x.n > 0; }).sort(function (a, b) { return b.avg - a.avg; });
+  }
+  // Rolling 90-day average, one point per week for the last 26 weeks (oldest first).
+  function ttcTrend(list) {
+    var out = [];
+    for (var k = 25; k >= 0; k--) { var end = k * 7, t = ttc(list, { o: end + 89, n: end, len: 90 }); out.push({ end: end, avg: t.avg, n: t.n }); }
+    return out;
+  }
+  // Is an assignment behind? A due date decides when there is one; otherwise the certification's average does.
+  function behind(a) {
+    var days = a.doneOff == null ? a.assignedOff : a.assignedOff - a.doneOff;
+    if (a.auto) return null;
+    if (a.dueOff != null) {
+      var late = a.doneOff == null ? a.dueOff > 0 : a.doneOff < a.dueOff;
+      return late ? 'Past due' : null;
+    }
+    var avg = certAvgAll(a.cert);
+    return avg != null && days > avg ? 'Slower than avg' : null;
+  }
+
   /* ---------------- range ---------------- */
   var R = { range: '30d', custom: null, grouping: null, collapsed: LS.get('un-rs1-collapsed') === '1', sort: null };
   function curRange() {
@@ -9012,7 +9156,261 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     else if (t.act.kind === 'page' && typeof showPage === 'function') showPage(t.act.page);
   });
 
+
+  /* ---------------- Time to certification UI (PRD-496) + Reports gallery ---------------- */
+  var CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg>';
+  var TTC = { open: LS.get('un-ttc-open') === '1', cert: null, from: null };
+  function fmtDays(v) { return v == null ? '—' : String(Math.round(v)); }
+  // Lower is better: a drop is good (green ↓), a rise is bad (red ↑).
+  function ttcDelta(cur, prev, all) {
+    if (all || cur == null || prev == null) return '';
+    var d = Math.round(cur) - Math.round(prev);
+    if (d < 0) return '<span class="un-delta un-d-up">↓' + Math.abs(d) + '</span>';
+    if (d > 0) return '<span class="un-delta un-d-down">↑' + d + '</span>';
+    return '<span class="un-delta un-d-flat">—</span>';
+  }
+  function rangeSuffix(r) { return rangeTitle(r).replace('Completions, ', ''); }
+
+  function drawTrend(host, pts, opts) {
+    opts = opts || {};
+    var cw = host.clientWidth; host.dataset.w = cw;
+    var w = Math.max(240, cw || 420), h = opts.h || 96, pl = 30, pr = 10, pt = 8, pb = 18, iw = w - pl - pr, ih = h - pt - pb;
+    var vals = pts.filter(function (p) { return p.avg != null; }).map(function (p) { return p.avg; });
+    if (!vals.length) { host.innerHTML = '<div class="un-ttc-empty">Not enough completions to show a trend.</div>'; return; }
+    var lo = Math.floor(Math.min.apply(null, vals) / 5) * 5 - 5, hi = Math.ceil(Math.max.apply(null, vals) / 5) * 5 + 5; lo = Math.max(0, lo);
+    var x = function (i) { return pl + i * iw / (pts.length - 1); }, y = function (v) { return pt + (hi - v) / (hi - lo) * ih; };
+    var d = '', started = false;
+    pts.forEach(function (p, i) { if (p.avg == null) { started = false; return; } d += (started ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p.avg).toFixed(1); started = true; });
+    var last = pts.length - 1;
+    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" height="' + h + '" role="img" aria-label="Rolling 90-day average time to certification, weekly for 26 weeks">';
+    [lo, Math.round((lo + hi) / 2), hi].forEach(function (v) { svg += '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#202026"/><text class="axis" x="' + (pl - 6) + '" y="' + (y(v) + 3.5) + '" text-anchor="end">' + v + '</text>'; });
+    svg += '<path d="' + d + '" fill="none" stroke="#e5531f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    if (pts[last].avg != null) svg += '<circle cx="' + x(last) + '" cy="' + y(pts[last].avg) + '" r="4" fill="#f4702f" stroke="#121214" stroke-width="2"/>';
+    svg += '<text class="axis" x="' + pl + '" y="' + (h - 4) + '">' + fmtD(dOf(pts[0].end)) + '</text><text class="axis" x="' + (w - pr) + '" y="' + (h - 4) + '" text-anchor="end">' + fmtD(dOf(pts[last].end)) + '</text>';
+    pts.forEach(function (p, i) { svg += '<rect class="un-hit" data-i="' + i + '" x="' + (x(i) - iw / (pts.length - 1) / 2) + '" y="' + pt + '" width="' + iw / (pts.length - 1) + '" height="' + ih + '" fill="transparent"/>'; });
+    svg += '</svg>';
+    host.innerHTML = svg + '<div class="un-tipbox" hidden></div><table class="un-sr"><caption>Rolling 90-day average days to certify</caption><tbody>' +
+      pts.map(function (p) { return '<tr><td>Week to ' + fmtD(dOf(p.end)) + '</td><td>' + fmtDays(p.avg) + ' days</td></tr>'; }).join('') + '</tbody></table>';
+    var tip = host.querySelector('.un-tipbox'), s = host.querySelector('svg');
+    host.querySelectorAll('.un-hit').forEach(function (rect) {
+      rect.addEventListener('mouseenter', function () {
+        var p = pts[+rect.dataset.i]; if (p.avg == null) return;
+        tip.innerHTML = '<div class="tl">90 days to ' + fmtD(dOf(p.end)) + '</div><b>' + fmtDays(p.avg) + '</b> days · ' + p.n + ' certification' + (p.n === 1 ? '' : 's');
+        tip.hidden = false;
+        var sc = s.getBoundingClientRect().width / w || 1, half = tip.offsetWidth / 2, left = x(+rect.dataset.i) * sc;
+        tip.style.left = Math.min(host.clientWidth - half - 4, Math.max(half + 4, left)) + 'px';
+        tip.style.top = (y(p.avg) * sc - 2) + 'px';
+      });
+    });
+    s.addEventListener('mouseleave', function () { tip.hidden = true; });
+  }
+
+  function hbars(rows, opts) {
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+    return '<div class="un-hb">' + rows.map(function (r) {
+      return '<button class="un-hb-row' + (r.muted ? ' muted' : '') + '" data-un-cert="' + esc(r.cert) + '"' + (opts.from ? ' data-un-from="' + opts.from + '"' : '') + '>' +
+        '<span class="un-hb-l">' + esc(r.label) + (r.sub ? '<span class="un-hb-s">' + esc(r.sub) + '</span>' : '') + '</span>' +
+        '<span class="un-hb-bar"><i style="width:' + Math.max(2, r.value / max * 100) + '%"></i></span>' +
+        '<span class="un-hb-v">' + r.text + '</span>' + (r.extra || '') + '<span class="un-hb-go">' + CHEV + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function breakdownRows(list, r) {
+    return ttcByCert(list, r).map(function (x) {
+      var enough = x.n >= 3 && x.prevN >= 3;
+      return { cert: x.cert, label: x.cert, sub: x.n + ' completed', value: x.avg, text: fmtDays(x.avg) + ' days', muted: x.n < 3,
+        extra: '<span class="un-hb-d">' + (enough && r.kind !== 'all' ? ttcDelta(x.avg, x.prev) : '<span class="un-faint">' + (x.n < 3 ? 'too few' : '—') + '</span>') + '</span>' };
+    });
+  }
+
+  /* People page tile */
+  function renderTtc() {
+    var host = $('unTtc'); if (!host) return;
+    if (!SEATS.roster.length) { host.innerHTML = ''; return; }
+    var r = curRange(), list = PPL.rows(), t = ttc(list, r), all = r.kind === 'all', p = all ? null : ttc(list, prevRange(r));
+    var info = 'Average days from when a certification was assigned to when it was completed, for certifications completed in this period. Child certifications completed through a parent are excluded. Lower is better.';
+    var sub = t.n ? 'Across ' + t.n + ' certification' + (t.n === 1 ? '' : 's') + ' completed in this period' + (t.auto ? ' · ' + t.auto + ' child certification' + (t.auto === 1 ? '' : 's') + ' excluded' : '') + ' · lower is better' : 'No certifications completed in this period.';
+    host.innerHTML = '<div class="un-card un-ttc"><div class="un-sum-head"><h3>Average time to certification, ' + esc(rangeSuffix(r)) + '</h3><span class="un-info" title="' + esc(info) + '" tabindex="0" aria-label="' + esc(info) + '">i</span></div>' +
+      '<div class="un-ttc-body"><div class="un-ttc-big"><span class="n">' + fmtDays(t.avg) + '</span><span class="u">days</span>' + (all ? '' : ttcDelta(t.avg, p && p.avg) + '<span class="un-faint" style="font-size:12px">vs previous ' + r.len + ' days</span>') + '</div>' +
+      '<div class="un-ttc-sub">' + sub + '</div><div class="un-ttc-trend-l">Rolling 90-day average, last 26 weeks</div><div class="un-chart un-ttc-trend" id="unTtcTrend"></div></div>' +
+      '<button class="un-ttc-toggle" id="unTtcToggle" aria-expanded="' + TTC.open + '">' + (TTC.open ? 'Hide breakdown' : 'View breakdown by certification') + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></button>' +
+      (TTC.open ? '<div class="un-ttc-bd"><div class="un-ttc-bd-head"><span>Certification</span><span>Avg days to certify</span><span>Change</span></div>' + (t.n ? hbars(breakdownRows(list, r), { from: 'people' }) : '<div class="un-ttc-empty">No certifications completed in this period.</div>') + '<div class="un-foot">Click a certification to see everyone assigned it, slowest first. Changes need 3+ completions in both periods.</div></div>' : '') + '</div>';
+    drawTrend($('unTtcTrend'), ttcTrend(list));
+    $('unTtcToggle').onclick = function () { TTC.open = !TTC.open; LS.set('un-ttc-open', TTC.open ? '1' : '0'); renderTtc(); };
+  }
+  document.addEventListener('ppl:rendered', renderTtc);
+  if (window.ResizeObserver && $('unTtc')) new ResizeObserver(function () { var c = $('unTtcTrend'); if (c && String(c.clientWidth) !== c.dataset.w) renderTtc(); }).observe($('unTtc'));
+
+  /* Dashboard People Report line */
+  function renderRepTtc() {
+    if (!$('unRepTtc')) return;
+    var r = { o: 29, n: 0, len: 30, kind: '30d' }, t = ttc(SEATS.roster, r), p = ttc(SEATS.roster, prevRange(r));
+    $('unRepTtc').innerHTML = '<b>' + fmtDays(t.avg) + ' days</b> ' + ttcDelta(t.avg, p.avg);
+  }
+
+  /* Certification page: Assigned */
+  function openCert(cert, from) { TTC.cert = cert; TTC.from = from || null; renderCertPage(); if (typeof showPage === 'function') showPage('cert'); }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-un-cert]'); if (!b) return;
+    openCert(b.getAttribute('data-un-cert'), b.getAttribute('data-un-from'));
+  });
+  // Library rows open the same page for their certification.
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('[data-go-cert]'); if (!row || e.target.closest('.cb-cell') || e.target.closest('.row-edit')) return;
+    var cell = row.querySelectorAll('td')[1]; TTC.cert = cell ? cell.textContent.trim() : null; TTC.from = null; renderCertPage();
+  }, true);
+  function renderCertPage() {
+    var host = $('unCertAssigned'); if (!host || !TTC.cert) return;
+    var cert = TTC.cert, h1 = document.querySelector('#page-cert .person-header h1'), subEl = document.querySelector('#page-cert .person-header .person-sub');
+    var rows = ASSIGN.filter(function (a) { return a.cert === cert; });
+    if (h1) h1.textContent = cert;
+    var byId = {}; SEATS.roster.forEach(function (p) { byId[p.id] = p; });
+    var done = rows.filter(function (a) { return a.doneOff != null; }), prog = rows.filter(function (a) { return a.doneOff == null && a.pct > 0; }), none = rows.filter(function (a) { return a.doneOff == null && a.pct === 0; });
+    var avg = certAvgAll(cert), recent = done.filter(function (a) { return a.doneOff <= 29; }).length;
+    if (subEl) subEl.textContent = rows.length ? 'Assigned to ' + rows.length + ' ' + (rows.length === 1 ? 'person' : 'people') + ' · ' + recent + ' completed in the last 30 days' : 'Not assigned to anyone yet';
+    var back = TTC.from ? '<button class="un-link" data-page-back="' + TTC.from + '">‹ Back to ' + (TTC.from === 'reports' ? 'Reports' : 'People') + '</button>' : '';
+    if (!rows.length) { host.innerHTML = '<div class="un-card un-assigned"><div class="un-card-head"><span class="un-card-title">Assigned</span>' + back + '</div><div class="un-ttc-empty">Nobody has been assigned ' + esc(cert) + ' yet.</div></div>'; bindBack(); return; }
+    var days = function (a) { return a.doneOff == null ? a.assignedOff : a.assignedOff - a.doneOff; };
+    rows.sort(function (a, b) { return days(b) - days(a); });
+    var max = Math.max.apply(null, rows.map(days).concat([avg || 1, 1])), behindN = rows.filter(function (a) { return a.doneOff == null && behind(a); }).length;
+    var avgLeft = avg != null ? Math.min(100, avg / max * 100) : null;
+    var chip = function (k, v, cls) { return '<div class="un-chip"><span class="k">' + k + '</span><span class="n' + (cls ? ' ' + cls : '') + '">' + v + '</span></div>'; };
+    host.innerHTML = '<div class="un-card un-assigned"><div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--orange)"></span><span class="un-card-title">Assigned</span><span class="un-faint" style="font-size:12px">Slowest first</span></div>' + back + '</div>' +
+      '<div class="un-chips">' + chip('Avg days to certify', fmtDays(avg)) + chip('Completed', done.length) + chip('In progress', prog.length) + chip('Not started', none.length) + chip('Behind', behindN, behindN ? 'bad' : '') + '</div>' +
+      '<div class="ptable-wrap un-assigned-wrap"><table class="un-assigned-t"><thead><tr><th>Name</th><th>Status</th><th>Assigned</th><th>Due</th><th>Completed</th><th class="un-days-h">Days</th><th class="num"></th></tr></thead><tbody>' +
+      rows.map(function (a) {
+        var p = byId[a.id], d = days(a), flag = behind(a), open = a.doneOff == null;
+        var status = a.auto ? '<span class="un-st un-st-auto">Via ' + esc(a.parent) + '</span>' : open ? (a.pct ? '<span class="un-st un-st-prog">In progress · ' + a.pct + '%</span>' : '<span class="un-st un-st-none">Not started</span>') : '<span class="un-st un-st-done">Completed</span>';
+        var barCls = a.auto ? 'auto' : open ? 'open' : flag ? 'slow' : '';
+        return '<tr data-un-person="' + a.id + '"><td><span class="un-nm">' + esc(p ? p.name : a.id) + '</span>' + (flag ? '<span class="un-flag">' + flag + '</span>' : '') + '</td><td>' + status + '</td>' +
+          '<td class="un-dt">' + fmtD(dOf(a.assignedOff)) + '</td><td class="un-dt">' + (a.dueOff != null ? fmtD(dOf(a.dueOff)) : '<span class="un-faint">—</span>') + '</td><td class="un-dt">' + (open ? '<span class="un-faint">—</span>' : fmtD(dOf(a.doneOff))) + '</td>' +
+          '<td class="un-days-c"><span class="un-dbar ' + barCls + '"><i style="width:' + Math.max(a.auto ? 0 : 2, d / max * 100) + '%"></i>' + (avgLeft != null ? '<b style="left:' + avgLeft + '%"></b>' : '') + '</span></td><td class="num un-mono">' + (a.auto ? '<span class="un-faint">—</span>' : d) + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="un-legend"><span><i class="c"></i>Completed</span><span><i class="s"></i>Completed late or slower than average</span><span><i class="o"></i>Still open, days so far</span>' + (avg != null ? '<span><i class="a"></i>Average (' + fmtDays(avg) + ' days)</span>' : '') + '</div>' +
+      '<div class="un-foot">Behind = past the due date when one is set; otherwise longer than this certification\'s average. Child certifications completed through a parent are listed but not counted.</div></div>';
+    host.querySelectorAll('[data-un-person]').forEach(function (tr) { tr.onclick = function () { var p = byId[tr.getAttribute('data-un-person')]; if (p) openPerson(p); }; });
+    bindBack();
+  }
+  function bindBack() { var b = document.querySelector('[data-page-back]'); if (b) b.onclick = function () { if (typeof showPage === 'function') showPage(b.getAttribute('data-page-back')); }; }
+
+  /* Reports gallery */
+  var GAL_R = { o: 29, n: 0, len: 30, kind: '30d' };
+  function behindByCert() {
+    var g = {};
+    ASSIGN.forEach(function (a) { if (a.doneOff == null && behind(a)) g[a.cert] = (g[a.cert] || 0) + 1; });
+    return Object.keys(g).map(function (k) { return { cert: k, n: g[k] }; }).sort(function (a, b) { return b.n - a.n || a.cert.localeCompare(b.cert); });
+  }
+  function renderGallery() {
+    if (!$('unGal')) return;
+    var roster = SEATS.roster, r = GAL_R, m = metrics(roster, r), pm = metrics(roster, prevRange(r));
+    // 1. Completions over time
+    $('galCompN').innerHTML = m.certs + ' <span class="u">certifications</span> ' + deltaHtml(m.certs, pm.certs);
+    $('galCompSub').textContent = m.people + ' people completing · ' + m.hrs + ' hours spent';
+    if (!R.grouping) R.grouping = 'daily';
+    drawChart($('galCompChart'), buckets(roster, r, 'daily'), '');
+    // 2. Engagement
+    var seated = roster.filter(function (p) { return p.seat != null; }), a = weekCurve(seated, DOW, DOW), b = weekCurve(seated, DOW + 7, 6);
+    $('galEngN').innerHTML = a[DOW].pct + '% <span class="u">active this week</span> ' + ptsHtml(a[DOW].pct - b[DOW].pct);
+    $('galEngSub').innerHTML = a[DOW].n === 0 ? 'Nobody has opened SkillCat yet this week. By ' + WDL[DOW] + ' last week, <b>' + b[DOW].pct + '%</b> had.' : '<b>' + a[DOW].n + '</b> of <b>' + seated.length + '</b> seated users so far. By ' + WDL[DOW] + ' last week: <b>' + b[DOW].pct + '%</b>.';
+    drawEngage($('galEngChart'), a, b, DOW, true);
+    // 3. Average time to certification
+    var t = ttc(roster, r), tp = ttc(roster, prevRange(r));
+    $('galTtcN').innerHTML = fmtDays(t.avg) + ' <span class="u">days</span> ' + ttcDelta(t.avg, tp.avg);
+    $('galTtcSub').textContent = 'Across ' + t.n + ' certifications completed in the last 30 days · lower is better';
+    drawTrend($('galTtcChart'), ttcTrend(roster), { h: 120 });
+    // 4. Time to certify by certification
+    var bd = breakdownRows(roster, r);
+    $('galBd').innerHTML = bd.length ? hbars(bd.slice(0, 7), { from: 'reports' }) : '<div class="un-ttc-empty">No certifications completed in the last 30 days.</div>';
+    // 5. Behind on assigned certifications
+    var bh = behindByCert(), total = bh.reduce(function (s, x) { return s + x.n; }, 0);
+    $('galBehindN').innerHTML = total + ' <span class="u">open assignments behind</span>';
+    $('galBehind').innerHTML = bh.length ? hbars(bh.slice(0, 7).map(function (x) { return { cert: x.cert, label: x.cert, value: x.n, text: x.n + ' behind' }; }), { from: 'reports' }) : '<div class="un-ttc-empty">Nobody is behind. Nice.</div>';
+  }
+  if (window.ResizeObserver && $('unGal')) new ResizeObserver(function () { var c = $('galCompChart'); if (c && String(c.clientWidth) !== c.dataset.w) renderGallery(); }).observe($('unGal'));
+  function renderTtcAll() { renderRepTtc(); renderGallery(); }
+
   /* ---------------- boot ---------------- */
-  renderTasks(); renderReportCard(); renderEngage(); renderRecentCard(); renderExports(); refreshPeople();
+  renderTasks(); renderReportCard(); renderEngage(); renderRecentCard(); renderExports(); refreshPeople(); renderTtcAll();
 })();
 </script>
+
+<style>
+/* ---- PRD-496 time to certification + Reports gallery ---- */
+#unTtc { margin-bottom: 16px; }
+#unTtc [hidden], #unCertAssigned [hidden], #unGal [hidden] { display: none !important; }
+.un-info { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--text-faint); color: var(--text-faint); font-size: 11px; font-family: var(--mono); display: inline-grid; place-items: center; cursor: help; }
+.un-ttc-body { padding: 14px 16px 6px; display: grid; gap: 6px; }
+.un-ttc-big { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.un-ttc-big .n { font-family: var(--mono); font-size: 38px; line-height: 1; font-variant-numeric: tabular-nums; }
+.un-ttc-big .u { color: var(--text-dim); font-size: 14px; }
+.un-ttc-sub { font-size: 12.5px; color: var(--text-faint); }
+.un-ttc-trend-l { font-size: 11.5px; color: var(--text-faint); margin-top: 6px; }
+.un-ttc-trend { padding: 4px 0 6px; }
+.un-ttc-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: none; border: 0; border-top: 1px solid var(--border-soft); color: var(--orange-bright); font: inherit; font-size: 12.5px; font-weight: 600; padding: 10px 16px; cursor: pointer; }
+.un-ttc-toggle svg { width: 14px; height: 14px; stroke-width: 2.2; transition: transform .2s; }
+.un-ttc-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.un-ttc-bd { border-top: 1px solid var(--border-soft); }
+.un-ttc-bd-head { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr) 70px; gap: 12px; padding: 9px 16px; font-size: 11px; font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-faint); }
+.un-ttc-empty { padding: 22px 16px; color: var(--text-faint); font-size: 13px; text-align: center; }
+.un-hb { display: grid; }
+.un-hb-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 64px auto 18px; gap: 12px; align-items: center; width: 100%; background: none; border: 0; border-top: 1px solid var(--border-soft); padding: 10px 16px; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.un-hb-row:hover { background: #17171b; }
+.un-hb-row.muted .un-hb-l, .un-hb-row.muted .un-hb-v { color: var(--text-faint); }
+.un-hb-row.muted .un-hb-bar i { opacity: .45; }
+.un-hb-l { font-size: 13px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.un-hb-s { display: block; font-size: 11.5px; font-weight: 400; color: var(--text-faint); }
+.un-hb-bar { height: 8px; background: #1d1d22; border-radius: 4px; position: relative; overflow: hidden; }
+.un-hb-bar i { position: absolute; inset: 0 auto 0 0; background: var(--orange); border-radius: 4px; }
+.un-hb-v { font-family: var(--mono); font-size: 12px; text-align: right; white-space: nowrap; }
+.un-hb-d { min-width: 44px; text-align: right; font-size: 12px; }
+.un-hb-go { color: var(--text-faint); display: grid; place-items: center; }
+.un-hb-go svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.un-ttc-bd .un-hb-row { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 64px 70px 18px; }
+/* certification page: Assigned */
+#unCertAssigned { margin-bottom: 18px; }
+.un-assigned .un-card-head { gap: 10px; }
+.un-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--border-soft); }
+.un-chip { background: #0e0e11; border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 12px; display: grid; gap: 2px; min-width: 112px; }
+.un-chip .k { font-size: 11.5px; color: var(--text-dim); }
+.un-chip .n { font-family: var(--mono); font-size: 18px; font-variant-numeric: tabular-nums; }
+.un-chip .n.bad { color: var(--red); }
+.un-assigned-wrap { overflow-x: auto; }
+.un-assigned-t { width: 100%; min-width: 720px; }
+.un-assigned-t tbody tr { cursor: pointer; }
+.un-assigned-t tbody tr:hover td { background: #151518; }
+.un-nm { font-weight: 600; }
+.un-flag { font-family: var(--mono); font-size: 10.5px; color: var(--red); border: 1px solid rgba(240,88,75,.45); border-radius: 5px; padding: 0 5px; margin-left: 8px; white-space: nowrap; }
+.un-st { font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.un-st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+.un-st-done { color: var(--green); } .un-st-done::before { background: var(--green); }
+.un-st-prog { color: var(--amber); } .un-st-prog::before { background: var(--amber); }
+.un-st-none { color: var(--red); } .un-st-none::before { background: var(--red); }
+.un-st-auto { color: var(--text-faint); } .un-st-auto::before { background: var(--text-faint); }
+.un-dt { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.un-days-h { width: 30%; }
+.un-dbar { display: block; position: relative; height: 8px; background: #1d1d22; border-radius: 4px; min-width: 120px; }
+.un-dbar i { position: absolute; inset: 0 auto 0 0; background: var(--orange); border-radius: 4px; }
+.un-dbar.slow i { background: var(--red); }
+.un-dbar.open i { background: repeating-linear-gradient(135deg, var(--amber) 0 4px, rgba(241,167,58,.45) 4px 8px); }
+.un-dbar.auto i { background: var(--text-faint); }
+.un-dbar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-dim); }
+.un-legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 16px 0; font-size: 12px; color: var(--text-faint); }
+.un-legend i { display: inline-block; width: 18px; height: 8px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+.un-legend i.c { background: var(--orange); } .un-legend i.s { background: var(--red); }
+.un-legend i.o { background: repeating-linear-gradient(135deg, var(--amber) 0 4px, rgba(241,167,58,.45) 4px 8px); }
+.un-legend i.a { background: var(--text-dim); width: 2px; }
+/* Reports gallery */
+.un-gal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 1000px) { .un-gal { grid-template-columns: 1fr; } }
+.un-gal-stat { padding: 14px 16px 0; font-family: var(--mono); font-size: 26px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.un-gal-stat .u { font-family: var(--sans); font-size: 13px; color: var(--text-dim); }
+.un-gal-sub { padding: 4px 16px 8px; font-size: 12.5px; color: var(--text-faint); }
+.un-gal-sub b { color: var(--text); font-weight: 600; }
+.un-gal-card .un-chart { padding: 4px 16px 0; }
+.un-gal-card .un-foot { padding-top: 10px; }
+.un-gal-card .un-eng-legend { padding: 4px 16px 0; }
+@media (max-width: 640px) {
+  .un-hb-row, .un-ttc-bd .un-hb-row { grid-template-columns: minmax(0, 1fr) 56px auto 16px; }
+  .un-hb-bar { display: none; }
+  .un-ttc-bd-head { display: none; }
+}
+</style>
