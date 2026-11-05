@@ -613,6 +613,41 @@
   .assign-bottom-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 28px; background: #0c0c0e; border-top: 1px solid var(--border); z-index: 10; }
   .assign-bottom-bar .left { display: flex; gap: 8px; }
   .assign-bottom-bar .right { display: flex; gap: 8px; }
+  /* Assign flow: the people picked in step 1 stay in view on later steps
+     (Option C). Rendered into #assignStrip by the assign script. */
+  .stepper:has(+ .as-strip:not([hidden])) { border-bottom-color: transparent; }
+  .as-strip { position: relative; z-index: 20; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 2px 28px 12px; background: #0c0c0e; border-bottom: 1px solid var(--border); }
+  .as-strip[hidden] { display: none; }
+  .as-l { margin-right: 2px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+  .as-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 220px; height: 30px; padding: 0 4px; box-sizing: border-box; border-radius: 16px; background: #1a1a1e; border: 1px solid #2a2a30; color: var(--text); font-family: var(--sans); font-size: 12.5px; font-weight: 600; }
+  .as-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .as-av { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: #0a0a0b; }
+  .as-x { flex: none; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--text-dim); cursor: pointer; }
+  .as-x:hover { background: #2a2a30; color: var(--text); }
+  .as-x svg { width: 11px; height: 11px; stroke-width: 2.6; }
+  .as-x:focus-visible, .as-more:focus-visible { outline: 1.5px solid #7a7a7a; outline-offset: 2px; }
+  .as-more { padding: 0 12px; background: #232328; border-color: #3a3a42; cursor: pointer; }
+  .as-more:hover { background: #2a2a30; }
+  .as-pop { position: absolute; top: calc(100% + 6px); left: 28px; width: min(360px, calc(100vw - 32px)); overflow: hidden; background: #161619; border: 1px solid #2c2c33; border-radius: 12px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  .as-pop-h { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .as-pop-h b { font-size: 13.5px; }
+  .as-pop-s { display: flex; align-items: center; gap: 8px; height: 34px; margin: 10px 14px 6px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; background: #0d0d10; color: var(--text-faint); }
+  .as-pop-s svg { width: 13px; height: 13px; flex: none; }
+  .as-pop-s input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); font: 12.5px var(--mono); }
+  .as-pop-list { max-height: 300px; overflow-y: auto; padding-bottom: 6px; }
+  .as-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 26px; gap: 10px; align-items: center; padding: 7px 14px; }
+  .as-row[hidden] { display: none; }
+  .as-row .as-av { width: 26px; height: 26px; font-size: 10px; }
+  .as-row b { display: block; font-size: 13px; }
+  .as-row .s { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .as-row .as-x { width: 26px; height: 26px; border-radius: 7px; }
+  .as-pop-empty { padding: 10px 14px; font-size: 12.5px; color: var(--text-faint); }
+  @media (max-width: 600px) {
+    .as-strip { padding: 0 16px 10px; }
+    .as-chip { max-width: 160px; height: 34px; }
+    .as-chip .as-x { width: 28px; height: 28px; }
+    .as-pop { left: 16px; right: 16px; width: auto; }
+  }
 
   /* Training load dot in table */
   .tl-cell { text-align: center; }
@@ -645,7 +680,53 @@
   .pace-option.selected .check { opacity: 1; }
 
   /* Schedule rows */
-  .sched-list { margin-top: 22px; }
+  /* Order & schedule uses the training table module (same rows, chevron and
+     course list as "What training"); only the lead and trailing cells differ. */
+  .sched-card { margin-top: 22px; }
+  /* Assign › Training: a filter icon beside the search box; its options open
+     in a modal (a bottom sheet on phones). */
+  #page-assign .people-search-row { display: flex; align-items: stretch; gap: 8px; }
+  .filter-btn { position: relative; flex: none; align-self: stretch; width: 42px; min-height: 38px; padding: 0; display: grid; place-items: center; background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 10px; color: var(--text-dim); cursor: pointer; }
+  .filter-btn:hover { color: var(--text); border-color: #34343b; }
+  .filter-btn.is-active { color: var(--orange-bright); border-color: rgba(229,83,31,.5); }
+  .filter-btn:focus-visible { outline: 1.5px solid #7a7a7a; outline-offset: 3px; }
+  .filter-btn svg { width: 16px; height: 16px; stroke-width: 2; }
+  .filter-count { position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; display: grid; place-items: center; background: var(--orange); color: #fff; font: 600 10.5px var(--mono); }
+  .filter-count[hidden] { display: none; }
+  #page-assign tr[data-filtered] { display: none !important; }
+  .tf-none td { padding: 18px 16px; text-align: center; color: var(--text-faint); font-size: 13px; }
+  .tf-scrim { position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,.6); }
+  .tf-modal { position: fixed; z-index: 96; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100% - 32px)); max-height: calc(100% - 32px); display: flex; flex-direction: column; background: #111114; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); color: var(--text); font-family: var(--sans); }
+  .tf-scrim[hidden], .tf-modal[hidden] { display: none; }
+  .tf-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px 14px; border-bottom: 1px solid var(--border-soft); }
+  .tf-head h2 { margin: 0; font-size: 17px; }
+  .tf-x { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 8px; background: none; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+  .tf-x:hover { color: var(--text); }
+  .tf-x svg { width: 13px; height: 13px; stroke-width: 2.4; }
+  .tf-body { padding: 4px 20px 10px; overflow-y: auto; }
+  .tf-group { margin: 16px 0 4px; padding: 0; border: 0; min-width: 0; }
+  .tf-group legend { margin-bottom: 10px; padding: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+  .tf-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tf-opt { position: relative; }
+  .tf-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .tf-opt > span { display: inline-flex; align-items: center; height: 32px; padding: 0 13px; border-radius: 16px; border: 1px solid var(--border); background: #0e0e11; color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; }
+  .tf-opt > span:hover { color: var(--text); border-color: #34343b; }
+  .tf-opt input:checked + span { border-color: var(--orange); background: rgba(229,83,31,.1); color: var(--text); }
+  .tf-opt .tl-dot { width: 8px; height: 8px; margin-right: 8px; }
+  .tf-opt input:focus-visible + span { outline: 1.5px solid #7a7a7a; outline-offset: 2px; }
+  .tf-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-soft); }
+  @media (max-width: 600px) {
+    .tf-modal { top: auto; bottom: 0; left: 0; right: 0; transform: none; width: 100%; max-height: 85%; border-radius: 16px 16px 0 0; }
+    .tf-opt > span { height: 38px; }
+    .tf-foot .btn-primary { flex: 1; height: 40px; }
+  }
+  .sched-table th.sched-lead, .sched-table td.sched-lead { width: 58px; white-space: nowrap; }
+  .sched-table td.sched-lead { display: table-cell; }
+  .sched-table td.sched-lead .sched-drag { vertical-align: middle; margin-right: 10px; }
+  .sched-table td.sched-lead .sched-num { vertical-align: middle; }
+  .sched-table th.sched-due, .sched-table td.sched-due { text-align: right; white-space: nowrap; }
+  tbody tr.tracker-row.is-leaf { cursor: default; }
+  .sched-empty { padding: 22px 16px; font-size: 13px; color: var(--text-faint); text-align: center; }
   .sched-row { display: grid; grid-template-columns: 28px 32px 1fr auto; gap: 16px; align-items: center; padding: 18px 16px; border-top: 1px solid var(--border-soft); }
   .sched-row:first-child { border-top: 1px solid var(--border); }
   .sched-row:last-child { border-bottom: 1px solid var(--border-soft); }
@@ -3417,6 +3498,7 @@
         <div class="step-line" data-stepline="2"></div>
         <div class="step" data-stepper="3" data-section="schedule"><span class="step-num">3</span><span class="step-label">Schedule</span></div>
       </div>
+      <div class="as-strip" id="assignStrip" role="group" aria-label="People in this assignment" hidden></div>
 
       <div class="scroll">
 
@@ -3424,71 +3506,16 @@
         <div class="assign-step active" id="assign-step-people" data-section="people">
           <h2 class="assign-q">Who do you want to assign training to?</h2>
 
-          <!-- Search + Settings card (People paradigm) -->
+          <!-- Search + filter icon (filters open in a modal) -->
           <div class="people-search-row">
             <div class="search-wrap" style="flex:1; max-width:520px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
               <input placeholder="Search people..." />
             </div>
-          </div>
-
-          <div class="settings-card" id="assignPeopleSettings">
-            <div class="settings-head" data-action="toggle-settings">
-              <span class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 00-1.7-1l-.3-2.6h-4l-.3 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.3-1a7 7 0 001.7 1l.3 2.6h4l.3-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg></span>
-              <span class="label">Settings</span>
-              <span class="indicator">tap to filter people</span>
-              <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
-            </div>
-            <div class="settings-body" data-body="tabs">
-              <div class="tabs-strip">
-                <button class="on" data-tab="ar-region">Region <span class="tab-count"></span></button>
-                <button data-tab="ar-title">Title <span class="tab-count"></span></button>
-                <button data-tab="ar-load">Training Load <span class="tab-count"></span></button>
-              </div>
-              <div class="tab-panels">
-                <div class="tab-panel on" data-tab="ar-region">
-                  <div class="opt-grid">
-                    <label class="opt"><input type="checkbox"> Arizona</label>
-                    <label class="opt"><input type="checkbox"> California</label>
-                    <label class="opt"><input type="checkbox"> Colorado</label>
-                    <label class="opt"><input type="checkbox"> Florida</label>
-                    <label class="opt"><input type="checkbox"> Georgia</label>
-                    <label class="opt"><input type="checkbox"> Illinois</label>
-                    <label class="opt"><input type="checkbox"> Massachusetts</label>
-                    <label class="opt"><input type="checkbox"> Oregon</label>
-                    <label class="opt"><input type="checkbox"> Texas</label>
-                    <label class="opt"><input type="checkbox"> Washington</label>
-                  </div>
-                </div>
-                <div class="tab-panel" data-tab="ar-title">
-                  <div class="opt-grid">
-                    <label class="opt"><input type="checkbox"> Equipment Specialist</label>
-                    <label class="opt"><input type="checkbox"> Field Assistant</label>
-                    <label class="opt"><input type="checkbox"> Field Coordinator</label>
-                    <label class="opt"><input type="checkbox"> Field Supervisor</label>
-                    <label class="opt"><input type="checkbox"> Field Technician</label>
-                    <label class="opt"><input type="checkbox"> Installation Specialist</label>
-                    <label class="opt"><input type="checkbox"> Lead Technician</label>
-                    <label class="opt"><input type="checkbox"> Maintenance Technician</label>
-                    <label class="opt"><input type="checkbox"> Quality Assurance Specialist</label>
-                    <label class="opt"><input type="checkbox"> Senior Field Engineer</label>
-                    <label class="opt"><input type="checkbox"> Senior Operator</label>
-                  </div>
-                </div>
-                <div class="tab-panel" data-tab="ar-load">
-                  <div class="opt-grid">
-                    <label class="opt"><input type="checkbox"> <span class="tl-dot green" style="margin:0 6px 0 2px;"></span> Light (Green)</label>
-                    <label class="opt"><input type="checkbox"> <span class="tl-dot yellow" style="margin:0 6px 0 2px;"></span> Moderate (Yellow)</label>
-                    <label class="opt"><input type="checkbox"> <span class="tl-dot red" style="margin:0 6px 0 2px;"></span> Heavy (Red)</label>
-                  </div>
-                </div>
-              </div>
-          </div>
-
-          <div class="settings-toolbar">
-            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
-            <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
-            </div>
+            <button type="button" class="filter-btn" id="peopleFilterBtn" aria-haspopup="dialog" aria-label="Filter people">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"/></svg>
+              <span class="filter-count" hidden></span>
+            </button>
           </div>
 
           <div class="card" style="margin-top:18px; animation-delay:.02s">
@@ -3588,47 +3615,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
               <input placeholder="Search training..." />
             </div>
-          </div>
-
-          <div class="settings-card" id="assignTrainingSettings">
-            <div class="settings-head" data-action="toggle-settings">
-              <span class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 00-1.7-1l-.3-2.6h-4l-.3 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.3-1a7 7 0 001.7 1l.3 2.6h4l.3-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg></span>
-              <span class="label">Settings</span>
-              <span class="indicator">tap to filter training</span>
-              <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
-            </div>
-            <div class="settings-body" data-body="tabs">
-              <div class="tabs-strip">
-                <button class="on" data-tab="at-category">Category <span class="tab-count"></span></button>
-                <button data-tab="at-length">Length <span class="tab-count"></span></button>
-              </div>
-              <div class="tab-panels">
-                <div class="tab-panel on" data-tab="at-category">
-                  <div class="opt-grid">
-                    <label class="opt"><input type="checkbox"> Maintenance</label>
-                    <label class="opt"><input type="checkbox"> HVAC</label>
-                    <label class="opt"><input type="checkbox"> Electrical</label>
-                    <label class="opt"><input type="checkbox"> Plumbing</label>
-                    <label class="opt"><input type="checkbox"> Safety</label>
-                    <label class="opt"><input type="checkbox"> General</label>
-                    <label class="opt"><input type="checkbox"> Mixed</label>
-                  </div>
-                </div>
-                <div class="tab-panel" data-tab="at-length">
-                  <div class="opt-grid">
-                    <label class="opt"><input type="checkbox"> Under 30 min</label>
-                    <label class="opt"><input type="checkbox"> 30 min – 1 hr</label>
-                    <label class="opt"><input type="checkbox"> 1 – 3 hr</label>
-                    <label class="opt"><input type="checkbox"> 3+ hr</label>
-                  </div>
-                </div>
-              </div>
-          </div>
-
-          <div class="settings-toolbar">
-            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
-            <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
-            </div>
+            <button type="button" class="filter-btn" id="trainingFilterBtn" aria-haspopup="dialog" aria-label="Filter training">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"/></svg>
+              <span class="filter-count" hidden></span>
+            </button>
           </div>
 
           <!-- Certifications -->
@@ -4014,44 +4004,24 @@
             </div>
           </div>
 
-          <!-- Schedule list -->
-          <div class="sched-list" id="schedList">
-            <div class="sched-head">
-              <span></span>
-              <span></span>
-              <span>Training</span>
-              <span style="text-align:right;">Due</span>
-            </div>
-            <div class="sched-row" data-sched-idx="0">
-              <span class="sched-drag" title="Drag to reorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>
-              <span class="sched-num">1</span>
-              <div>
-                <div class="sched-title">Safety Onboarding</div>
-                <div class="sched-sub">7 included certifications</div>
-              </div>
-              <div>
-                <span class="due-pace-label" data-pace-due="0">1 week <span class="when">(Jun 8)</span></span>
-                <button class="due-pill" data-manual-due="0" style="display:none;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
-                  Jun 8, 2026
-                </button>
-              </div>
-            </div>
-            <div class="sched-row" data-sched-idx="1">
-              <span class="sched-drag" title="Drag to reorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>
-              <span class="sched-num">2</span>
-              <div>
-                <div class="sched-title">HVAC Basics</div>
-                <div class="sched-sub">6 included certifications</div>
-              </div>
-              <div>
-                <span class="due-pace-label" data-pace-due="1">2 weeks <span class="when">(Jun 15)</span></span>
-                <button class="due-pill" data-manual-due="1" style="display:none;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
-                  Jun 15, 2026
-                </button>
-              </div>
-            </div>
+          <!-- Schedule list: the same training table module as step 2
+               (renderTrainingRows), with order instead of a checkbox and the
+               due date instead of the category. -->
+          <div class="card sched-card" id="schedList">
+            <table class="sched-table">
+              <thead>
+                <tr>
+                  <th class="sched-lead"><span class="un-sr">Order</span></th>
+                  <th></th>
+                  <th>Training</th>
+                  <th>Length</th>
+                  <th class="num">Courses</th>
+                  <th class="sched-due">Due</th>
+                </tr>
+              </thead>
+              <tbody id="schedBody"></tbody>
+            </table>
+            <div class="sched-empty" id="schedEmpty" hidden>No training picked yet. Go back a step to choose some.</div>
           </div>
         </div>
 
@@ -5561,7 +5531,7 @@
   document.querySelectorAll('input[data-select-all]').forEach(cb => {
     cb.addEventListener('change', e => {
       var table = cb.closest('table');
-      table.querySelectorAll('tbody input.cb').forEach(c => { c.checked = cb.checked; syncRowSelected(c); });
+      table.querySelectorAll('tbody input.cb').forEach(c => { if (c.closest('tr[data-filtered]')) return; c.checked = cb.checked; syncRowSelected(c); });
       updateFAB();
     });
   });
@@ -6986,11 +6956,13 @@
       var backBtn = page.querySelector('[data-assign-back]');
       var nextBtn = page.querySelector('[data-assign-next]');
       backBtn.style.display = n === 1 ? 'none' : '';
-      nextBtn.innerHTML = n === totalSteps ? 'Assign' : 'Next ›';
+      nextBtn.innerHTML = n === totalSteps ? assignLabel() : 'Next ›';
 
       // Scroll the scroll container back to top
       var scroll = page.querySelector('.scroll');
       if (scroll) scroll.scrollTop = 0;
+      renderStrip();
+      if (section === 'schedule') renderSchedule();
     }
 
     function updateStepCounts() {
@@ -7001,6 +6973,314 @@
       var tEl = page.querySelector('[data-stepcount="training"]');
       if (pEl) pEl.textContent = pCount > 0 ? '(' + pCount + ')' : '';
       if (tEl) tEl.textContent = tCount > 0 ? '(' + tCount + ')' : '';
+      if (currentStep === totalSteps) page.querySelector('[data-assign-next]').innerHTML = assignLabel();
+      renderStrip();
+      if (stepOrder[currentStep - 1] === 'schedule') renderSchedule();
+    }
+
+    // ---- People picked in step 1 stay in view on later steps (Option C) ----
+    // A strip under the stepper: the first few as chips, the rest behind
+    // "+n more" (a searchable list). Removing someone unticks them in step 1.
+    var strip = page.querySelector('#assignStrip'), stripOpen = false;
+    var AV_COLORS = ['#f4a27a', '#7aa7ff', '#2bd07a', '#b49cff', '#f1a73a', '#5fd0c5', '#f07a8a', '#c9c9cf'];
+    var X_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    function asEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function picked() {
+      return [].map.call(page.querySelectorAll('input[data-people-cb]:checked'), function (cb) {
+        var cell = cb.closest('tr').querySelectorAll('td')[1], sub = cell && cell.querySelector('.muted');
+        return { cb: cb, name: cell ? cell.firstElementChild.textContent.trim() : '', sub: sub ? sub.textContent.trim() : '' };
+      });
+    }
+    function initials(n) { return n.split(/\s+/).map(function (w) { return w.charAt(0); }).slice(0, 2).join('').toUpperCase(); }
+    function avColor(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) | 0; return AV_COLORS[Math.abs(h) % AV_COLORS.length]; }
+    function peopleStep() { return stepOrder.indexOf('people') + 1; }
+    function assignLabel() { var n = picked().length; return n ? 'Assign to ' + n + (n === 1 ? ' person' : ' people') : 'Assign'; }
+    function renderStrip() {
+      if (!strip) return;
+      var ps = picked(), show = currentStep > peopleStep() && ps.length > 0;
+      strip.hidden = !show;
+      if (!show) { stripOpen = false; strip.innerHTML = ''; return; }
+      var max = window.matchMedia('(max-width: 600px)').matches ? 2 : 4;
+      var shown = ps.length > max + 1 ? ps.slice(0, max) : ps, rest = ps.length - shown.length; // never hide just one
+      if (!rest) stripOpen = false;
+      var html = '<span class="as-l">Assigning to</span>' + shown.map(function (p, i) {
+        return '<span class="as-chip"><span class="as-av" style="background:' + avColor(p.name) + '" aria-hidden="true">' + initials(p.name) + '</span><span class="as-nm">' + asEsc(p.name) + '</span>' +
+          '<button type="button" class="as-x" data-as-remove="' + i + '" aria-label="Remove ' + asEsc(p.name) + '">' + X_SVG + '</button></span>';
+      }).join('');
+      if (rest) html += '<button type="button" class="as-chip as-more" data-as-more aria-expanded="' + stripOpen + '">+' + rest + ' more</button>';
+      html += '<button type="button" class="btn btn-link" data-as-add><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add people</button>';
+      if (rest && stripOpen) {
+        html += '<section class="as-pop" aria-label="Everyone in this assignment"><div class="as-pop-h"><b>All ' + ps.length + ' people</b><button type="button" class="btn btn-link" data-as-done>Done</button></div>' +
+          '<label class="as-pop-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input type="search" placeholder="Find someone..." aria-label="Find someone in this assignment" data-as-find></label>' +
+          '<div class="as-pop-list">' + ps.map(function (p, i) {
+            return '<div class="as-row" data-as-name="' + asEsc(p.name.toLowerCase()) + '"><span class="as-av" style="background:' + avColor(p.name) + '" aria-hidden="true">' + initials(p.name) + '</span>' +
+              '<div><b>' + asEsc(p.name) + '</b><span class="s">' + asEsc(p.sub) + '</span></div>' +
+              '<button type="button" class="as-x" data-as-remove="' + i + '" aria-label="Remove ' + asEsc(p.name) + '">' + X_SVG + '</button></div>';
+          }).join('') + '<div class="as-pop-empty" data-as-empty hidden>Nobody by that name in this assignment.</div></div></section>';
+      }
+      strip.innerHTML = html;
+    }
+    if (strip) {
+      strip.addEventListener('click', function (e) {
+        var rm = e.target.closest('[data-as-remove]');
+        if (rm) {
+          var p = picked()[+rm.dataset.asRemove]; if (!p) return;
+          var inPop = !!rm.closest('.as-pop');
+          p.cb.checked = false;
+          var all = page.querySelector('[data-select-all-people]'); if (all) all.checked = false;
+          p.cb.dispatchEvent(new Event('change', { bubbles: true }));
+          if (!picked().length) { setStep(peopleStep()); return; } // nobody left: pick again
+          var next = strip.querySelector(inPop ? '[data-as-find]' : '[data-as-more], [data-as-remove]');
+          if (next) next.focus();
+          return;
+        }
+        if (e.target.closest('[data-as-more]')) { stripOpen = !stripOpen; renderStrip(); var f = strip.querySelector(stripOpen ? '[data-as-find]' : '[data-as-more]'); if (f) f.focus(); return; }
+        if (e.target.closest('[data-as-done]')) { stripOpen = false; renderStrip(); var m = strip.querySelector('[data-as-more]'); if (m) m.focus(); return; }
+        if (e.target.closest('[data-as-add]')) setStep(peopleStep());
+      });
+      strip.addEventListener('input', function (e) {
+        if (!e.target.matches('[data-as-find]')) return;
+        var q = e.target.value.trim().toLowerCase(), any = false;
+        strip.querySelectorAll('.as-row').forEach(function (r) { var hit = !q || r.dataset.asName.indexOf(q) >= 0; r.hidden = !hit; any = any || hit; });
+        strip.querySelector('[data-as-empty]').hidden = any;
+      });
+      strip.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && stripOpen) { stripOpen = false; renderStrip(); var m = strip.querySelector('[data-as-more]'); if (m) m.focus(); }
+      });
+      // (a click inside re-renders the strip, so its target may already be detached)
+      document.addEventListener('click', function (e) { if (stripOpen && e.target.isConnected && !strip.contains(e.target)) { stripOpen = false; renderStrip(); } });
+      window.addEventListener('resize', function () { if (!strip.hidden) renderStrip(); });
+    }
+
+    /* ---- Training table module ----
+       One renderer for the training rows in "What training" and "Order &
+       schedule": same columns, chevron and expandable course list. Options:
+       lead 'check' (checkbox) | 'order' (drag handle + position), tail
+       'category' | 'due'. The training data is read once from step 2's tables. */
+    var CHEV_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg>';
+    var DRAG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>';
+    var CAL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>';
+    var TRAINING = {}, CERT_GROUPS = [];
+    var certBody = page.querySelector('#assign-step-training section .card tbody');
+    var courseSection = page.querySelectorAll('#assign-step-training section')[1];
+    function txt(el) { return el ? el.textContent.trim() : ''; }
+    function tEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    (function readTraining() {
+      var group = null, last = null, n = 0;
+      if (certBody) [].forEach.call(certBody.children, function (tr) {
+        if (tr.querySelector('.sub-section-head')) { group = { name: txt(tr), keys: [] }; CERT_GROUPS.push(group); return; }
+        if (tr.classList.contains('tracker-row')) {
+          var td = tr.querySelectorAll('td');
+          last = { key: 'cert-' + (n++), name: txt(td[2]), length: txt(td[3]), category: txt(td[5]), courses: [] };
+          TRAINING[last.key] = last;
+          if (!group) { group = { name: '', keys: [] }; CERT_GROUPS.push(group); }
+          group.keys.push(last.key);
+          return;
+        }
+        if (tr.classList.contains('tracker-child') && last) last.courses.push(txt(tr.querySelector('.child-name')));
+      });
+      // Standalone courses stay in their own table; they become leaf rows (no chevron).
+      if (courseSection) courseSection.querySelectorAll('tbody tr').forEach(function (tr, i) {
+        var cb = tr.querySelector('input[data-training-cb]'), td = tr.querySelectorAll('td'); if (!cb) return;
+        var key = 'course-' + i; cb.dataset.key = key;
+        TRAINING[key] = { key: key, name: txt(td[2]), length: txt(td[3]), category: txt(td[4]), courses: [] };
+      });
+    })();
+    function renderTrainingRows(items, o) {
+      return items.map(function (it, i) {
+        var leaf = !it.courses.length, id = o.prefix + it.key;
+        var lead = o.lead === 'check'
+          ? '<td class="cb-cell"><input type="checkbox" class="cb" data-training-cb data-key="' + it.key + '"' + (o.checked && o.checked[it.key] ? ' checked' : '') + '></td>'
+          : '<td class="sched-lead"><span class="sched-drag' + (o.dragHidden ? ' hidden' : '') + '" title="Drag to reorder">' + DRAG_SVG + '</span><span class="sched-num">' + (i + 1) + '</span></td>';
+        var tail = o.tail === 'due' ? '<td class="sched-due">' + o.due(i) + '</td>' : '<td class="muted">' + tEsc(it.category) + '</td>';
+        return '<tr class="tracker-row' + (leaf ? ' is-leaf' : '') + '" data-tracker="' + id + '">' + lead +
+          '<td>' + (leaf ? '' : '<span class="row-chev">' + CHEV_SVG + '</span>') + '</td>' +
+          '<td>' + tEsc(it.name) + '</td><td class="muted">' + tEsc(it.length) + '</td><td class="num">' + (leaf ? '<span class="muted">—</span>' : it.courses.length) + '</td>' + tail + '</tr>' +
+          it.courses.map(function (c) { return '<tr class="tracker-child" data-parent="' + id + '"><td colspan="6"><span class="child-name">' + tEsc(c) + '</span></td></tr>'; }).join('');
+      }).join('');
+    }
+    // Expand / collapse, scoped to one table (rows are re-rendered, so delegate).
+    function bindTrainingAccordion(tbody) {
+      if (!tbody) return;
+      tbody.addEventListener('click', function (e) {
+        if (e.target.closest('.cb-cell, .sched-due, .sched-drag')) return;
+        var row = e.target.closest('tr.tracker-row'); if (!row || row.classList.contains('is-leaf')) return;
+        var open = row.classList.toggle('expanded');
+        tbody.querySelectorAll('tr.tracker-child[data-parent="' + row.dataset.tracker + '"]').forEach(function (c) { c.classList.toggle('show', open); });
+      });
+    }
+    // Step 2's certifications table now renders through the module too.
+    if (certBody) {
+      certBody.innerHTML = CERT_GROUPS.map(function (g) {
+        return (g.name ? '<tr><td colspan="6" class="sub-section-head">' + tEsc(g.name) + '</td></tr>' : '') +
+          renderTrainingRows(g.keys.map(function (k) { return TRAINING[k]; }), { lead: 'check', tail: 'category', prefix: 'pick-' });
+      }).join('');
+      bindTrainingAccordion(certBody);
+      // Ticked rows keep the selected tint (the page-wide listener only saw the old rows).
+      certBody.addEventListener('change', function (e) {
+        var cb = e.target.closest('input.cb'); if (cb) cb.closest('tr').classList.toggle('selected', cb.checked);
+      });
+    }
+
+    /* ---- Filter modal (People and Training steps) ----
+       A filter icon beside each step's search box opens its options in a modal
+       (a bottom sheet on phones). One module, configured per step: within a
+       group any option matches; across groups all must. Rows that don't match
+       get data-filtered (hidden) and stay picked if they were. */
+    function fMatches(f, values) { return Object.keys(f).every(function (g) { return !f[g].length || f[g].indexOf(values[g]) >= 0; }); }
+    function fNoneRow(tbody, cols, label, show) {
+      var row = tbody.querySelector('tr.tf-none');
+      if (show && !row) { row = document.createElement('tr'); row.className = 'tf-none'; row.innerHTML = '<td colspan="' + cols + '">No ' + label + ' match these filters.</td>'; tbody.appendChild(row); }
+      if (!show && row) row.remove();
+    }
+    function makeFilter(cfg) {
+      if (!cfg.btn) return;
+      var groups = cfg.groups.map(function (g) {
+        return { id: g.id, label: g.label, opts: g.opts.map(function (o) { return typeof o === 'string' ? { value: o, label: o } : o; }) };
+      });
+      var applied = blank(), scrim, modal, lastFocus, titleId = 'fTitle-' + cfg.btn.id;
+      function blank() { var d = {}; groups.forEach(function (g) { d[g.id] = []; }); return d; }
+      function draft() { var d = blank(); modal.querySelectorAll('input:checked').forEach(function (i) { d[i.dataset.fGroup].push(i.value); }); return d; }
+      function syncFoot() {
+        var n = cfg.count(draft()), go = modal.querySelector('[data-f-apply]');
+        go.textContent = n ? 'Show ' + n + ' ' + (n === 1 ? cfg.one : cfg.many) : 'No matches';
+        go.disabled = !n;
+      }
+      function syncBadge() {
+        var n = 0; Object.keys(applied).forEach(function (k) { n += applied[k].length; });
+        var badge = cfg.btn.querySelector('.filter-count');
+        cfg.btn.classList.toggle('is-active', n > 0);
+        cfg.btn.setAttribute('aria-label', 'Filter ' + cfg.noun + (n ? ', ' + n + ' filter' + (n === 1 ? '' : 's') + ' on' : ''));
+        badge.hidden = !n; badge.textContent = n;
+      }
+      function build() {
+        scrim = document.createElement('div'); scrim.className = 'tf-scrim'; scrim.hidden = true;
+        modal = document.createElement('div'); modal.className = 'tf-modal'; modal.hidden = true;
+        modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-labelledby', titleId);
+        modal.innerHTML = '<div class="tf-head"><h2 id="' + titleId + '">Filter ' + cfg.noun + '</h2><button type="button" class="tf-x" data-f-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+          '<div class="tf-body">' + groups.map(function (g) {
+            return '<fieldset class="tf-group"><legend>' + g.label + '</legend><div class="tf-opts">' + g.opts.map(function (o) {
+              return '<label class="tf-opt"><input type="checkbox" data-f-group="' + g.id + '" value="' + tEsc(o.value) + '"><span>' +
+                (o.dot ? '<span class="tl-dot ' + o.dot + '" aria-hidden="true"></span>' : '') + tEsc(o.label) + '</span></label>';
+            }).join('') + '</div></fieldset>';
+          }).join('') + '</div>' +
+          '<div class="tf-foot"><button type="button" class="btn btn-link" data-f-clear>Clear all</button><button type="button" class="btn btn-primary" data-f-apply>Show results</button></div>';
+        document.body.appendChild(scrim); document.body.appendChild(modal);
+        modal.addEventListener('change', syncFoot);
+        modal.addEventListener('click', function (e) {
+          if (e.target.closest('[data-f-close]')) close(false);
+          else if (e.target.closest('[data-f-apply]')) close(true);
+          else if (e.target.closest('[data-f-clear]')) { modal.querySelectorAll('input').forEach(function (i) { i.checked = false; }); syncFoot(); }
+        });
+        modal.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') { e.preventDefault(); close(false); return; }
+          if (e.key !== 'Tab') return; // keep focus inside the dialog
+          var f = [].filter.call(modal.querySelectorAll('button, input'), function (el) { return !el.disabled; });
+          if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+        });
+        scrim.addEventListener('click', function () { close(false); });
+      }
+      function open() {
+        if (!modal) build();
+        lastFocus = document.activeElement;
+        modal.querySelectorAll('input').forEach(function (i) { i.checked = applied[i.dataset.fGroup].indexOf(i.value) >= 0; });
+        syncFoot();
+        scrim.hidden = false; modal.hidden = false;
+        modal.querySelector('input').focus();
+      }
+      function close(apply) { // closing without "Show" keeps the filters that were on
+        if (apply) { applied = draft(); cfg.apply(applied); syncBadge(); }
+        modal.hidden = true; scrim.hidden = true;
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+      cfg.btn.addEventListener('click', open);
+    }
+
+    // Training step
+    function minutesOf(len) { var h = /(\d+)\s*hr/.exec(len), m = /(\d+)\s*min/.exec(len); return (h ? +h[1] * 60 : 0) + (m ? +m[1] : 0); }
+    function lengthBucket(len) { var m = minutesOf(len); return m < 30 ? 'Under 30 min' : m <= 60 ? '30 min – 1 hr' : m < 180 ? '1 – 3 hr' : '3+ hr'; }
+    function trainingValues(it) { return { category: it.category, length: lengthBucket(it.length) }; }
+    makeFilter({
+      btn: page.querySelector('#trainingFilterBtn'), noun: 'training', one: 'result', many: 'results',
+      groups: [
+        { id: 'category', label: 'Category', opts: ['Maintenance', 'HVAC', 'Electrical', 'Plumbing', 'Safety', 'General', 'Mixed'] },
+        { id: 'length', label: 'Length', opts: ['Under 30 min', '30 min – 1 hr', '1 – 3 hr', '3+ hr'] }
+      ],
+      count: function (f) { return Object.keys(TRAINING).filter(function (k) { return fMatches(f, trainingValues(TRAINING[k])); }).length; },
+      apply: function (f) {
+        if (certBody) {
+          var head = null, headShown = false, any = false;
+          [].forEach.call(certBody.children, function (tr) {
+            if (tr.querySelector('.sub-section-head')) { if (head) head.toggleAttribute('data-filtered', !headShown); head = tr; headShown = false; return; }
+            if (!tr.classList.contains('tracker-row')) return;
+            var hit = fMatches(f, trainingValues(TRAINING[tr.dataset.tracker.replace(/^pick-/, '')]));
+            tr.toggleAttribute('data-filtered', !hit);
+            certBody.querySelectorAll('tr.tracker-child[data-parent="' + tr.dataset.tracker + '"]').forEach(function (c) { c.toggleAttribute('data-filtered', !hit); });
+            headShown = headShown || hit; any = any || hit;
+          });
+          if (head) head.toggleAttribute('data-filtered', !headShown);
+          fNoneRow(certBody, 6, 'certifications', !any);
+        }
+        if (courseSection) {
+          var cBody = courseSection.querySelector('tbody'), anyC = false;
+          cBody.querySelectorAll('tr').forEach(function (tr) {
+            var cb = tr.querySelector('input[data-key]'); if (!cb) return;
+            var hit = fMatches(f, trainingValues(TRAINING[cb.dataset.key])); tr.toggleAttribute('data-filtered', !hit); anyC = anyC || hit;
+          });
+          fNoneRow(cBody, 5, 'courses', !anyC);
+        }
+      }
+    });
+
+    // People step: region and title from each row's subtitle, load from its dot.
+    var peopleBody = page.querySelector('#assign-step-people table tbody');
+    function personValues(tr) {
+      var sub = txt(tr.querySelector('.muted')).split(' · '), dot = tr.querySelector('.tl-dot');
+      var load = !dot ? '' : dot.classList.contains('green') ? 'Light' : dot.classList.contains('red') ? 'Heavy' : 'Moderate';
+      return { region: sub[1] || '', title: sub[0] || '', load: load };
+    }
+    function personRows() { return peopleBody ? [].filter.call(peopleBody.querySelectorAll('tr'), function (tr) { return tr.querySelector('input[data-people-cb]'); }) : []; }
+    makeFilter({
+      btn: page.querySelector('#peopleFilterBtn'), noun: 'people', one: 'person', many: 'people',
+      groups: [
+        { id: 'region', label: 'Region', opts: ['Arizona', 'California', 'Colorado', 'Florida', 'Georgia', 'Illinois', 'Massachusetts', 'Oregon', 'Texas', 'Washington'] },
+        { id: 'title', label: 'Title', opts: ['Equipment Specialist', 'Field Assistant', 'Field Coordinator', 'Field Supervisor', 'Field Technician', 'Installation Specialist', 'Lead Technician', 'Maintenance Technician', 'Quality Assurance Specialist', 'Senior Field Engineer', 'Senior Operator'] },
+        { id: 'load', label: 'Training load', opts: [{ value: 'Light', label: 'Light', dot: 'green' }, { value: 'Moderate', label: 'Moderate', dot: 'yellow' }, { value: 'Heavy', label: 'Heavy', dot: 'red' }] }
+      ],
+      count: function (f) { return personRows().filter(function (tr) { return fMatches(f, personValues(tr)); }).length; },
+      apply: function (f) {
+        var any = false;
+        personRows().forEach(function (tr) { var hit = fMatches(f, personValues(tr)); tr.toggleAttribute('data-filtered', !hit); any = any || hit; });
+        if (peopleBody) fNoneRow(peopleBody, 4, 'people', !any);
+      }
+    });
+
+    // ---- Order & schedule ----
+    var DEMO_TODAY = Date.UTC(2026, 5, 1), MON3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var paceDays = 7, schedMode = 'pace', schedOrder = [];
+    var schedBody = page.querySelector('#schedBody');
+    bindTrainingAccordion(schedBody);
+    function dueHtml(i) {
+      var days = (i + 1) * paceDays, d = new Date(DEMO_TODAY + days * 864e5);
+      var label = days % 30 === 0 ? (days / 30) + ' month' + (days / 30 > 1 ? 's' : '') : days % 7 === 0 ? (days / 7) + ' week' + (days / 7 > 1 ? 's' : '') : days + ' days';
+      var when = MON3[d.getUTCMonth()] + ' ' + d.getUTCDate();
+      return '<span class="due-pace-label" data-pace-due="' + i + '"' + (schedMode === 'pace' ? '' : ' style="display:none;"') + '>' + label + ' <span class="when">(' + when + ')</span></span>' +
+        '<button class="due-pill" data-manual-due="' + i + '"' + (schedMode === 'manual' ? '' : ' style="display:none;"') + '>' + CAL_SVG + when + ', ' + d.getUTCFullYear() + '</button>';
+    }
+    function renderSchedule() {
+      if (!schedBody) return;
+      var picked = [].map.call(page.querySelectorAll('input[data-training-cb]:checked'), function (cb) { return cb.dataset.key; }).filter(function (k) { return k && TRAINING[k]; });
+      // Keep the order the manager set; new picks go to the end.
+      schedOrder = schedOrder.filter(function (k) { return picked.indexOf(k) >= 0; }).concat(picked.filter(function (k) { return schedOrder.indexOf(k) < 0; }));
+      var open = {}; schedBody.querySelectorAll('tr.tracker-row.expanded').forEach(function (r) { open[r.dataset.tracker] = 1; });
+      schedBody.innerHTML = renderTrainingRows(schedOrder.map(function (k) { return TRAINING[k]; }), { lead: 'order', tail: 'due', prefix: 'sched-', due: dueHtml, dragHidden: schedMode === 'manual' });
+      schedBody.querySelectorAll('tr.tracker-row').forEach(function (r) { // keep rows the manager had open
+        if (!open[r.dataset.tracker]) return;
+        r.classList.add('expanded');
+        schedBody.querySelectorAll('tr.tracker-child[data-parent="' + r.dataset.tracker + '"]').forEach(function (c) { c.classList.add('show'); });
+      });
+      var empty = page.querySelector('#schedEmpty'); if (empty) empty.hidden = schedOrder.length > 0;
     }
 
     // Clickable stepper sections
@@ -7044,7 +7324,7 @@
     var selAllPeople = page.querySelector('[data-select-all-people]');
     if (selAllPeople) {
       selAllPeople.addEventListener('change', function() {
-        page.querySelectorAll('input[data-people-cb]').forEach(function(cb) { cb.checked = selAllPeople.checked; });
+        page.querySelectorAll('input[data-people-cb]').forEach(function(cb) { if (!cb.closest('tr[data-filtered]')) cb.checked = selAllPeople.checked; });
         updateStepCounts();
       });
     }
@@ -7057,7 +7337,7 @@
     if (selAllCerts) {
       selAllCerts.addEventListener('change', function() {
         page.querySelectorAll('tr.tracker-row input[data-training-cb]').forEach(function(cb) {
-          cb.checked = selAllCerts.checked;
+          if (!cb.closest('tr[data-filtered]')) cb.checked = selAllCerts.checked;
         });
         updateStepCounts();
       });
@@ -7069,7 +7349,7 @@
         var coursesSection = page.querySelectorAll('#assign-step-training section')[1];
         if (coursesSection) {
           coursesSection.querySelectorAll('input[data-training-cb]').forEach(function(cb) {
-            cb.checked = selAllCourses.checked;
+            if (!cb.closest('tr[data-filtered]')) cb.checked = selAllCourses.checked;
           });
         }
         updateStepCounts();
@@ -7087,6 +7367,7 @@
           paceToggle.querySelectorAll('button').forEach(function(b) { b.classList.remove('active'); });
           btn.classList.add('active');
           var mode = btn.dataset.mode;
+          schedMode = mode;
           var paceControl = page.querySelector('#paceControl');
           if (mode === 'pace') {
             paceControl.style.display = '';
@@ -7119,19 +7400,8 @@
           paceSelect.querySelector('[data-pace-label]').textContent = label;
           paceSelect.classList.remove('open');
           var pace = opt.dataset.pace;
-          var paceDays = { '1w': 7, '2w': 14, '1m': 30, 'custom': 7 };
-          var step = paceDays[pace] || 7;
-          var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-          page.querySelectorAll('[data-pace-due]').forEach(function(el, idx) {
-            var d = new Date();
-            d.setDate(d.getDate() + (idx + 1) * step);
-            var totalDays = (idx + 1) * step;
-            var labelText;
-            if (totalDays % 30 === 0) labelText = (totalDays/30) + ' month' + (totalDays/30 > 1 ? 's' : '');
-            else if (totalDays % 7 === 0) labelText = (totalDays/7) + ' week' + (totalDays/7 > 1 ? 's' : '');
-            else labelText = totalDays + ' days';
-            el.innerHTML = labelText + ' <span class="when">(' + months[d.getMonth()] + ' ' + d.getDate() + ')</span>';
-          });
+          paceDays = { '1w': 7, '2w': 14, '1m': 30, 'custom': 7 }[pace] || 7;
+          renderSchedule();
         });
       });
       document.addEventListener('click', function(e) {
