@@ -685,6 +685,14 @@
   .sched-card { margin-top: 22px; }
   /* Assign › Training: a filter icon beside the search box; its options open
      in a modal (a bottom sheet on phones). */
+  .tf-note { margin: -4px 0 10px; font-size: 12px; color: var(--text-faint); }
+  .tf-metric { display: grid; grid-template-columns: minmax(0, 1fr) 64px 96px; gap: 8px; align-items: center; padding: 4px 0; font-size: 13px; color: var(--text-dim); }
+  .tf-metric select, .tf-metric input { min-width: 0; height: 32px; padding: 0 8px; box-sizing: border-box; background: #0e0e11; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: 13px var(--mono); color-scheme: dark; }
+  .tf-metric select:focus-visible, .tf-metric input:focus-visible { outline: 1.5px solid #7a7a7a; outline-offset: 2px; }
+  /* People page: search + filter + columns icons */
+  .ppl-find { flex: 1 1 280px; max-width: 800px; min-width: 0; display: flex; align-items: stretch; gap: 8px; }
+  .ppl-find .search-wrap { max-width: none; }
+  #peopleTable .col-off { display: none !important; }
   #page-assign .people-search-row { display: flex; align-items: stretch; gap: 8px; }
   .filter-btn { position: relative; flex: none; align-self: stretch; width: 42px; min-height: 38px; padding: 0; display: grid; place-items: center; background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 10px; color: var(--text-dim); cursor: pointer; }
   .filter-btn:hover { color: var(--text); border-color: #34343b; }
@@ -1281,7 +1289,7 @@
   .seg-tabs button.active .n { color: var(--text-dim); }
 
   .ppl-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
-  .ppl-toolbar-right { display: flex; align-items: center; gap: 9px; }
+  .ppl-toolbar-right { display: flex; align-items: center; gap: 9px; margin-left: auto; } /* stays right when the toolbar wraps */
 
   /* ---- Bench banner ---- */
   .bench-banner { display: flex; align-items: center; gap: 14px; background: linear-gradient(90deg, rgba(241,167,58,.11), rgba(241,167,58,.02)); border: 1px solid rgba(241,167,58,.28); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; }
@@ -1875,13 +1883,12 @@
           <h1>People</h1>
           <div class="sub" id="peopleSub">—</div>
         </div>
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input placeholder="Search people" id="peopleSearch" />
-        </div>
         <div class="topbar-right">
-          <!-- Reports Slice 1: time range + Export menu (rendered by the UP NEXT + REPORTS script) -->
-          <div class="un-pop-wrap" id="unRange"></div>
+          <button class="btn btn-ghost" data-open-import>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Import Roster
+          </button>
+          <!-- Reports Slice 1: Export menu (rendered by the UP NEXT + REPORTS script) -->
           <div class="un-pop-wrap">
             <button class="btn btn-ghost" id="unExportBtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></button>
             <div class="un-pop" id="unExportPop" hidden></div>
@@ -1892,125 +1899,37 @@
       <div class="scroll">
         <!-- Roster scope: seats are the billable slice, the bench is everyone
              else on the roster. Default view is Seated — seats are what costs
-             money — but the bench is one click away and never hidden. -->
+             money — but the bench is one click away and never hidden. The
+             search, filter and columns icons and the time range sit with it. -->
         <div class="ppl-toolbar">
           <div class="seg-tabs" id="peopleTabs">
             <button data-ppl-tab="seated" class="active">Seated <span class="n" data-count="seated">0</span></button>
             <button data-ppl-tab="bench">Bench <span class="n" data-count="bench">0</span></button>
             <button data-ppl-tab="all">All <span class="n" data-count="all">0</span></button>
           </div>
-          <div class="ppl-toolbar-right">
-            <button class="btn btn-ghost" data-open-import>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-              Import Roster
+          <div class="ppl-find">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+              <input placeholder="Search people" id="peopleSearch" />
+            </div>
+            <!-- Filters and columns open in modals (the Assign flow's filter module) -->
+            <button type="button" class="filter-btn" id="pplFilterBtn" aria-haspopup="dialog" aria-label="Filter people">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"/></svg>
+              <span class="filter-count" hidden></span>
             </button>
+            <button type="button" class="filter-btn" id="pplColsBtn" aria-haspopup="dialog" aria-label="Choose columns">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>
+            </button>
+          </div>
+          <!-- Reports Slice 1: time range (rendered by the UP NEXT + REPORTS script) -->
+          <div class="un-pop-wrap" id="unRange"></div>
+          <div class="ppl-toolbar-right">
             <button class="btn btn-primary" data-open-add-person><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add People</button>
-          </div>
-        </div>
-
-        <div class="bench-banner" id="benchBanner" hidden>
-          <div class="bb-text" id="benchBannerText">—</div>
-          <div class="bb-actions">
-            <button class="btn btn-ghost" data-open-add-seats>Add Seats</button>
-            <button class="btn btn-primary" data-open-give-seats>Give Seats</button>
-          </div>
-        </div>
-
-        <!-- Settings -->
-        <div class="settings-card" id="settingsCard">
-          <div class="settings-head" data-action="toggle-settings">
-            <span class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 00-1.7-1l-.3-2.6h-4l-.3 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.3-1a7 7 0 001.7 1l.3 2.6h4l.3-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg></span>
-            <span class="label">Settings</span>
-            <span class="indicator">tap to filter &amp; customize</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></span>
-          </div>
-
-          <!-- Settings (Tabs) -->
-          <div class="settings-body" data-body="tabs">
-            <div class="tabs-strip">
-              <button class="on" data-tab="status">Status <span class="tab-count"></span></button>
-              <button data-tab="activity">Activity <span class="tab-count"></span></button>
-              <button data-tab="region">Region <span class="tab-count"></span></button>
-              <button data-tab="title">Title <span class="tab-count"></span></button>
-              <button data-tab="metrics">Metrics <span class="tab-count"></span></button>
-              <button data-tab="cols">Display Columns <span class="tab-count"></span></button>
-            </div>
-            <div class="tab-panels">
-              <div class="tab-panel on" data-tab="status">
-                <div class="opt-grid">
-                  <label class="opt"><input type="checkbox"> On track</label>
-                  <label class="opt"><input type="checkbox"> At risk</label>
-                  <label class="opt"><input type="checkbox"> Overdue</label>
-                  <label class="opt"><input type="checkbox"> On Bench</label>
-                  <label class="opt"><input type="checkbox"> Idle Seat</label>
-                  <label class="opt"><input type="checkbox"> Completed</label>
-                  <label class="opt"><input type="checkbox"> No Assignments</label>
-                </div>
-              </div>
-              <div class="tab-panel" data-tab="activity">
-                <div class="opt-grid">
-                  <label class="opt"><input type="checkbox"> Active Users (Last 7 days)</label>
-                  <label class="opt"><input type="checkbox"> No Recent Activity (30+ days)</label>
-                  <label class="opt"><input type="checkbox"> Never Accessed</label>
-                </div>
-              </div>
-              <div class="tab-panel" data-tab="region">
-                <div class="opt-grid">
-                  <label class="opt"><input type="checkbox"> North</label>
-                  <label class="opt"><input type="checkbox"> South</label>
-                  <label class="opt"><input type="checkbox"> No Region</label>
-                </div>
-              </div>
-              <div class="tab-panel" data-tab="title">
-                <div class="opt-grid">
-                  <label class="opt"><input type="checkbox"> Equipment Specialist</label>
-                  <label class="opt"><input type="checkbox"> Field Assistant</label>
-                  <label class="opt"><input type="checkbox"> Field Coordinator</label>
-                  <label class="opt"><input type="checkbox"> Field Supervisor</label>
-                  <label class="opt"><input type="checkbox"> Field Technician</label>
-                  <label class="opt"><input type="checkbox"> Installation Specialist</label>
-                  <label class="opt"><input type="checkbox"> Lead Technician</label>
-                  <label class="opt"><input type="checkbox"> Maintenance Technician</label>
-                  <label class="opt"><input type="checkbox"> Quality Assurance Specialist</label>
-                  <label class="opt"><input type="checkbox"> Senior Field Engineer</label>
-                  <label class="opt"><input type="checkbox"> Senior Operator</label>
-                </div>
-              </div>
-              <div class="tab-panel" data-tab="metrics">
-                <div class="metric-row"><span class="lbl">Certifications Assigned</span><select><option>=</option><option>&gt;</option><option>&lt;</option><option>≥</option><option>≤</option></select><input type="number" placeholder="0" /></div>
-                <div class="metric-row"><span class="lbl">Certifications Completed</span><select><option>=</option><option>&gt;</option><option>&lt;</option><option>≥</option><option>≤</option></select><input type="number" placeholder="0" /></div>
-                <div class="metric-row"><span class="lbl">Time Spent (min)</span><select><option>=</option><option>&gt;</option><option>&lt;</option><option>≥</option><option>≤</option></select><input type="number" placeholder="0" /></div>
-                <div class="metric-row"><span class="lbl">Last Access (days)</span><select><option>=</option><option>&gt;</option><option>&lt;</option><option>≥</option><option>≤</option></select><input type="number" placeholder="0" /></div>
-              </div>
-              <div class="tab-panel" data-tab="cols">
-                <div class="col-list">
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Title</span><input type="checkbox"></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Role</span><input type="checkbox"></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Email</span><input type="checkbox"></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Phone</span><input type="checkbox"></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Status</span><input type="checkbox" checked></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Region</span><input type="checkbox" checked></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Organization</span><input type="checkbox"></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Last Access</span><input type="checkbox" checked></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Time Spent</span><input type="checkbox" checked></div>
-                  <div class="col-row"><span class="drag">⋮⋮</span><span class="nm">Certifications Completed</span><input type="checkbox" checked></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="settings-toolbar">
-            <button class="btn btn-link btn-sm" data-action="clear-settings">Clear All</button>
-            <button class="btn btn-primary btn-sm" data-action="apply-settings">Apply</button>
           </div>
         </div>
 
         <!-- People table — rendered from the roster model (see SEAT MODEL
              below) so seated/bench/all stay in sync with every seat action. -->
-        <!-- Reports Slice 1: completions summary for the rows below -->
-        <div id="unSummary"></div>
-        <!-- PRD-496: average time to certification -->
-        <div id="unTtc"></div>
         <div class="card" id="peopleCard" style="animation-delay:.02s">
           <table id="peopleTable">
             <thead id="peopleHead"></thead>
@@ -7133,47 +7052,75 @@
     }
     function makeFilter(cfg) {
       if (!cfg.btn) return;
+      // Groups are chip sets (opts) or number comparisons (metrics); a group may carry a note.
       var groups = cfg.groups.map(function (g) {
-        return { id: g.id, label: g.label, opts: g.opts.map(function (o) { return typeof o === 'string' ? { value: o, label: o } : o; }) };
+        return { id: g.id, label: g.label, note: g.note, metrics: g.metrics,
+          opts: (g.opts || []).map(function (o) { return typeof o === 'string' ? { value: o, label: o } : o; }) };
       });
-      var applied = blank(), scrim, modal, lastFocus, titleId = 'fTitle-' + cfg.btn.id;
+      var applied = cfg.initial ? copy(cfg.initial) : blank(), scrim, modal, lastFocus, uid = cfg.btn.id;
       function blank() { var d = {}; groups.forEach(function (g) { d[g.id] = []; }); return d; }
-      function draft() { var d = blank(); modal.querySelectorAll('input:checked').forEach(function (i) { d[i.dataset.fGroup].push(i.value); }); return d; }
+      function copy(f) { var d = blank(); Object.keys(f).forEach(function (k) { d[k] = f[k].slice(); }); return d; }
+      function draft() {
+        var d = blank();
+        modal.querySelectorAll('input[data-f-group]:checked').forEach(function (i) { d[i.dataset.fGroup].push(i.value); });
+        modal.querySelectorAll('input[data-f-metric]').forEach(function (i) {
+          if (i.value === '') return;
+          d[i.dataset.fIn].push({ id: i.dataset.fMetric, op: modal.querySelector('select[data-f-op="' + i.dataset.fMetric + '"]').value, val: +i.value });
+        });
+        return d;
+      }
+      function setInputs(f) {
+        modal.querySelectorAll('input[data-f-group]').forEach(function (i) { i.checked = f[i.dataset.fGroup].indexOf(i.value) >= 0; });
+        modal.querySelectorAll('input[data-f-metric]').forEach(function (i) {
+          var m = f[i.dataset.fIn].filter(function (x) { return x.id === i.dataset.fMetric; })[0];
+          i.value = m ? m.val : '';
+          modal.querySelector('select[data-f-op="' + i.dataset.fMetric + '"]').value = m ? m.op : '=';
+        });
+      }
       function syncFoot() {
         var n = cfg.count(draft()), go = modal.querySelector('[data-f-apply]');
-        go.textContent = n ? 'Show ' + n + ' ' + (n === 1 ? cfg.one : cfg.many) : 'No matches';
+        go.textContent = cfg.applyText ? cfg.applyText(n) : n ? 'Show ' + n + ' ' + (n === 1 ? cfg.one : cfg.many) : 'No matches';
         go.disabled = !n;
       }
       function syncBadge() {
+        if (cfg.badge === false) return;
         var n = 0; Object.keys(applied).forEach(function (k) { n += applied[k].length; });
         var badge = cfg.btn.querySelector('.filter-count');
         cfg.btn.classList.toggle('is-active', n > 0);
         cfg.btn.setAttribute('aria-label', 'Filter ' + cfg.noun + (n ? ', ' + n + ' filter' + (n === 1 ? '' : 's') + ' on' : ''));
-        badge.hidden = !n; badge.textContent = n;
+        if (badge) { badge.hidden = !n; badge.textContent = n; }
       }
       function build() {
         scrim = document.createElement('div'); scrim.className = 'tf-scrim'; scrim.hidden = true;
         modal = document.createElement('div'); modal.className = 'tf-modal'; modal.hidden = true;
-        modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-labelledby', titleId);
-        modal.innerHTML = '<div class="tf-head"><h2 id="' + titleId + '">Filter ' + cfg.noun + '</h2><button type="button" class="tf-x" data-f-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+        modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-labelledby', 'fTitle-' + uid);
+        modal.innerHTML = '<div class="tf-head"><h2 id="fTitle-' + uid + '">' + tEsc(cfg.title || 'Filter ' + cfg.noun) + '</h2><button type="button" class="tf-x" data-f-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
           '<div class="tf-body">' + groups.map(function (g) {
-            return '<fieldset class="tf-group"><legend>' + g.label + '</legend><div class="tf-opts">' + g.opts.map(function (o) {
+            var note = g.note ? '<p class="tf-note">' + tEsc(g.note) + '</p>' : '';
+            if (g.metrics) return '<fieldset class="tf-group"><legend>' + g.label + '</legend>' + note + g.metrics.map(function (m) {
+              var id = 'fm-' + uid + '-' + m.id;
+              return '<div class="tf-metric"><label for="' + id + '">' + tEsc(m.label) + '</label>' +
+                '<select data-f-op="' + m.id + '" aria-label="' + tEsc(m.label) + ' comparison"><option>=</option><option>&gt;</option><option>&lt;</option><option>≥</option><option>≤</option></select>' +
+                '<input id="' + id + '" type="number" min="0" inputmode="numeric" placeholder="Any" data-f-in="' + g.id + '" data-f-metric="' + m.id + '"></div>';
+            }).join('') + '</fieldset>';
+            return '<fieldset class="tf-group"><legend>' + g.label + '</legend>' + note + '<div class="tf-opts">' + g.opts.map(function (o) {
               return '<label class="tf-opt"><input type="checkbox" data-f-group="' + g.id + '" value="' + tEsc(o.value) + '"><span>' +
                 (o.dot ? '<span class="tl-dot ' + o.dot + '" aria-hidden="true"></span>' : '') + tEsc(o.label) + '</span></label>';
             }).join('') + '</div></fieldset>';
           }).join('') + '</div>' +
-          '<div class="tf-foot"><button type="button" class="btn btn-link" data-f-clear>Clear all</button><button type="button" class="btn btn-primary" data-f-apply>Show results</button></div>';
+          '<div class="tf-foot"><button type="button" class="btn btn-link" data-f-clear>' + (cfg.clearText || 'Clear all') + '</button><button type="button" class="btn btn-primary" data-f-apply>Show results</button></div>';
         document.body.appendChild(scrim); document.body.appendChild(modal);
         modal.addEventListener('change', syncFoot);
+        modal.addEventListener('input', syncFoot);
         modal.addEventListener('click', function (e) {
           if (e.target.closest('[data-f-close]')) close(false);
           else if (e.target.closest('[data-f-apply]')) close(true);
-          else if (e.target.closest('[data-f-clear]')) { modal.querySelectorAll('input').forEach(function (i) { i.checked = false; }); syncFoot(); }
+          else if (e.target.closest('[data-f-clear]')) { setInputs(cfg.resetTo ? copy(cfg.resetTo) : blank()); syncFoot(); }
         });
         modal.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') { e.preventDefault(); close(false); return; }
           if (e.key !== 'Tab') return; // keep focus inside the dialog
-          var f = [].filter.call(modal.querySelectorAll('button, input'), function (el) { return !el.disabled; });
+          var f = [].filter.call(modal.querySelectorAll('button, input, select'), function (el) { return !el.disabled; });
           if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
           else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
         });
@@ -7182,18 +7129,19 @@
       function open() {
         if (!modal) build();
         lastFocus = document.activeElement;
-        modal.querySelectorAll('input').forEach(function (i) { i.checked = applied[i.dataset.fGroup].indexOf(i.value) >= 0; });
+        setInputs(applied);
         syncFoot();
         scrim.hidden = false; modal.hidden = false;
         modal.querySelector('input').focus();
       }
-      function close(apply) { // closing without "Show" keeps the filters that were on
+      function close(apply) { // closing without applying keeps what was on
         if (apply) { applied = draft(); cfg.apply(applied); syncBadge(); }
         modal.hidden = true; scrim.hidden = true;
         if (lastFocus && lastFocus.focus) lastFocus.focus();
       }
       cfg.btn.addEventListener('click', open);
     }
+    window.__makeFilter = makeFilter; // the People page uses the same module
 
     // Training step
     function minutesOf(len) { var h = /(\d+)\s*hr/.exec(len), m = /(\d+)\s*min/.exec(len); return (h ? +h[1] * 60 : 0) + (m ? +m[1] : 0); }
@@ -7929,7 +7877,7 @@
   var pplQuery = '';
   var selected = {};   // id -> true, survives re-render
 
-  function peopleRows() {
+  function peopleRows(unfiltered) {
     var list = pplTab === 'seated' ? seated() : pplTab === 'bench' ? benchSorted() : S.roster;
     if (pplTab === 'seated') list = list.slice().sort(function (a, b) { return a.seat - b.seat; });
     if (pplTab === 'all') list = list.slice().sort(function (a, b) {
@@ -7942,6 +7890,7 @@
         return p.name.toLowerCase().indexOf(q) > -1 || p.region.toLowerCase().indexOf(q) > -1;
       });
     }
+    if (!unfiltered && window.__pplFilter) list = list.filter(window.__pplFilter); // People filter modal
     if (window.__unSort) list = window.__unSort(list);
     return list;
   }
@@ -8535,7 +8484,7 @@
   renderAll();
   window.updateFAB();
   // Reports Slice 1 reads the table's rows and re-renders it on range changes.
-  window.__ppl = { rows: peopleRows, render: renderPeople, toast: toast };
+  window.__ppl = { rows: peopleRows, base: function () { return peopleRows(true); }, render: renderPeople, toast: toast };
 })();
 </script>
 
@@ -9083,6 +9032,87 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     var c = $('unChart'); if (c && String(c.clientWidth) !== c.dataset.w) renderSummary();
   }).observe($('unSummary'));
 
+  /* ---------------- People: filter + columns modals ----------------
+     The Settings accordion became two icons beside the search box, both on
+     the Assign flow's filter module (window.__makeFilter). Filters narrow the
+     table through window.__pplFilter; Columns shows or hides table columns.
+     Title, Role, Email, Phone and Organization aren't in the demo roster. */
+  var makeFilter = window.__makeFilter;
+  function personStatuses(p) {
+    var s = [];
+    if (p.seat == null) s.push('On Bench');
+    else {
+      s.push({ ontrack: 'On track', atrisk: 'At risk', overdue: 'Overdue' }[p.status] || 'On track');
+      if (p.last == null || p.last >= 30) s.push('Idle Seat');
+    }
+    if (p.certsTotal > 0 && p.certsDone >= p.certsTotal) s.push('Completed');
+    if (!p.certsTotal) s.push('No Assignments');
+    return s;
+  }
+  function personActivity(p) {
+    if (p.last == null) return ['Never Accessed'];
+    var a = [];
+    if (p.last <= 7) a.push('Active Users (Last 7 days)');
+    if (p.last >= 30) a.push('No Recent Activity (30+ days)');
+    return a;
+  }
+  function metricVal(p, id) {
+    if (id === 'assigned') return p.certsTotal;
+    if (id === 'completed') return p.certsDone;
+    if (id === 'time') return parseInt(window.__unTime ? window.__unTime(p) : p.minutes, 10) || 0;
+    return p.last == null ? Infinity : p.last; // last access, in days
+  }
+  function cmp(a, op, b) { return op === '>' ? a > b : op === '<' ? a < b : op === '≥' ? a >= b : op === '≤' ? a <= b : a === b; }
+  function anyOf(sel, vals) { return !sel.length || vals.some(function (v) { return sel.indexOf(v) >= 0; }); }
+  function personMatches(p, f) {
+    return anyOf(f.status, personStatuses(p)) && anyOf(f.activity, personActivity(p)) && anyOf(f.region, [p.region]) &&
+      // Title: not in the demo roster yet, so it doesn't narrow anything.
+      f.metrics.every(function (m) { return cmp(metricVal(p, m.id), m.op, m.val); });
+  }
+  var pplFilter = null;
+  window.__pplFilter = function (p) { return !pplFilter || personMatches(p, pplFilter); };
+  if (makeFilter) makeFilter({
+    btn: $('pplFilterBtn'), noun: 'people', one: 'person', many: 'people',
+    groups: [
+      { id: 'status', label: 'Status', opts: ['On track', 'At risk', 'Overdue', 'On Bench', 'Idle Seat', 'Completed', 'No Assignments'] },
+      { id: 'activity', label: 'Activity', opts: ['Active Users (Last 7 days)', 'No Recent Activity (30+ days)', 'Never Accessed'] },
+      { id: 'region', label: 'Region', opts: ['North', 'South', 'No Region'] },
+      { id: 'title', label: 'Title', note: 'Not in the demo data yet, so these don’t filter anything.', opts: ['Equipment Specialist', 'Field Assistant', 'Field Coordinator', 'Field Supervisor', 'Field Technician', 'Installation Specialist', 'Lead Technician', 'Maintenance Technician', 'Quality Assurance Specialist', 'Senior Field Engineer', 'Senior Operator'] },
+      { id: 'metrics', label: 'Metrics', metrics: [
+        { id: 'assigned', label: 'Certifications Assigned' }, { id: 'completed', label: 'Certifications Completed' },
+        { id: 'time', label: 'Time Spent (min)' }, { id: 'last', label: 'Last Access (days)' }] }
+    ],
+    count: function (f) { return PPL.base().filter(function (p) { return personMatches(p, f); }).length; },
+    apply: function (f) { pplFilter = f; PPL.render(); }
+  });
+
+  var COLS_ALL = ['Title', 'Role', 'Email', 'Phone', 'Status', 'Region', 'Organization', 'Last Access', 'Time Spent', 'Certifications Completed'];
+  var COLS_NODATA = ['Title', 'Role', 'Email', 'Phone', 'Organization'];
+  var COLS_DEFAULT = ['Status', 'Region', 'Last Access', 'Time Spent', 'Certifications Completed'];
+  var colsOn = COLS_DEFAULT.slice();
+  if (makeFilter) makeFilter({
+    btn: $('pplColsBtn'), noun: 'columns', title: 'Columns', badge: false, clearText: 'Reset',
+    initial: { cols: COLS_DEFAULT }, resetTo: { cols: COLS_DEFAULT },
+    groups: [{ id: 'cols', label: 'Show in the table', note: 'Title, Role, Email, Phone and Organization aren’t in the demo data yet, so they show as —.', opts: COLS_ALL }],
+    count: function () { return 1; }, applyText: function () { return 'Apply'; },
+    apply: function (f) { colsOn = f.cols; PPL.render(); }
+  });
+  // After every render: hide switched-off columns, add the ones with no data yet.
+  document.addEventListener('ppl:rendered', function () {
+    var head = $('peopleHead'), body = $('peopleBody'); if (!head || !body) return;
+    var hr = head.querySelector('tr'), rows = [].slice.call(body.querySelectorAll('tr[data-person]'));
+    [].forEach.call(hr.children, function (th, i) {
+      var t = th.textContent.replace(/[▲▼]/g, '').trim();
+      if (COLS_ALL.indexOf(t) < 0 || colsOn.indexOf(t) >= 0) return;
+      th.classList.add('col-off');
+      rows.forEach(function (tr) { if (tr.children[i]) tr.children[i].classList.add('col-off'); });
+    });
+    COLS_NODATA.filter(function (c) { return colsOn.indexOf(c) >= 0; }).forEach(function (c) {
+      var th = document.createElement('th'); th.textContent = c; hr.insertBefore(th, hr.lastElementChild);
+      rows.forEach(function (tr) { var td = document.createElement('td'); td.className = 'muted'; td.textContent = '—'; tr.insertBefore(td, tr.lastElementChild); });
+    });
+  });
+
   /* ---------------- CSV ---------------- */
   var HEAD_MAP = {
     'Name': function (p) { return p.name; },
@@ -9098,7 +9128,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   };
   function csvHeaders(r) {
     var head = $('peopleHead'), names = [];
-    if (head) head.querySelectorAll('th').forEach(function (th) { var t = th.textContent.replace(/[▲▼]/g, '').trim(); if (HEAD_MAP[t]) names.push(t); });
+    if (head) head.querySelectorAll('th:not(.col-off)').forEach(function (th) { var t = th.textContent.replace(/[▲▼]/g, '').trim(); if (HEAD_MAP[t]) names.push(t); });
     if (!names.length) names = ['Name', 'Status', 'Region', 'Last Access', 'Time Spent', 'Certifications Completed', 'Last Completed'];
     var lab = rangeLabel(r);
     return names.map(function (n) { return { key: n, label: n === 'Time Spent' ? 'Time Spent (min, ' + lab + ')' : n === 'Certifications Completed' ? 'Certs Completed (' + lab + ')' : n }; });
