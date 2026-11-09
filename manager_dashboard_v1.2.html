@@ -8135,11 +8135,12 @@
                 same region first then longest wait, each with time on the
                 bench. Picking someone swaps at once, with Undo in the toast.
        'expand' (v1.2, Option C) a panel under the row: the bench as cards
-                (time on bench, progress kept); pick one, then Swap.
+                with time on the bench. Clicking a card swaps at once, with
+                Undo in the toast.
      Both end with "Invite a new user": the invitee takes the seat straight
      away as Invited and whoever held it goes to the bench. */
   var SWAP_UI = 'expand';
-  var sw = { seat: null, pick: null, q: '', inviting: false, focus: null };
+  var sw = { seat: null, q: '', inviting: false, focus: null };
   var SW_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>';
   var SW_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
 
@@ -8160,13 +8161,12 @@
       ? '<span class="sw-amber">idle ' + (p.last === null ? 'since they got the seat' : swDays(p.last)) + '</span>'
       : 'active ' + (p.last === 0 ? 'today' : swDays(p.last) + ' ago'));
   }
-  function swKept(p) { return p.held ? p.held.done + '/' + p.held.total + ' tasks kept' : 'No progress yet'; }
 
   // Remember the fields a swap touches so Undo can put them back exactly.
   function swSnap(p) { return p && { p: p, seat: p.seat, benchDays: p.benchDays, held: p.held, status: p.status }; }
   function swRestore(s) { if (s) { s.p.seat = s.seat; s.p.benchDays = s.benchDays; s.p.held = s.held; s.p.status = s.status; } }
 
-  function swClose() { sw.seat = null; sw.pick = null; sw.q = ''; sw.inviting = false; }
+  function swClose() { sw.seat = null; sw.q = ''; sw.inviting = false; }
   function swOpen(seatNo) {
     var again = sw.seat === seatNo;
     swClose();
@@ -8227,7 +8227,7 @@
     var other = list.filter(function (p) { return !(here && p.region === here.region); });
     var item = function (p) {
       return '<button type="button" class="sw-opt" data-sw-pick="' + p.id + '"><span class="sw-opt-nm">' + esc(p.name) + '</span>' +
-        '<span class="sw-wait">On bench ' + fmtWait(p) + '</span><span class="sw-opt-meta">' + esc(p.region) + ' · ' + swKept(p) + '</span></button>';
+        '<span class="sw-wait">On bench ' + fmtWait(p) + '</span><span class="sw-opt-meta">' + esc(p.region) + '</span></button>';
     };
     return '<div class="sw-pop" role="dialog" aria-label="Swap seat ' + seatNo + '">' +
       '<div class="sw-pop-head"><span class="sw-k">Seat ' + seatNo + (here ? ' · now' : ' · open') + '</span><span class="sw-v">' + swHolderLine(seatNo) + '</span></div>' +
@@ -8241,27 +8241,22 @@
       '</div>';
   }
   function swPanelRow(seatNo) {
-    var here = bySeat(seatNo), pick = sw.pick ? byId(sw.pick) : null;
+    var here = bySeat(seatNo), holder = here && !here.invited;
     var cards = swCands(seatNo).map(function (p) {
-      return '<button type="button" class="sw-card' + (sw.pick === p.id ? ' is-picked' : '') + '" data-sw-pick="' + p.id + '" aria-pressed="' + (sw.pick === p.id) + '">' +
+      return '<button type="button" class="sw-card" data-sw-pick="' + p.id + '">' +
         (here && p.region === here.region ? '<span class="sw-same">Same region</span>' : '') +
         '<span class="sw-card-nm">' + esc(p.name) + '</span><span class="sw-wait">On bench ' + swDays(p.benchDays) + '</span>' +
-        '<span class="sw-opt-meta">' + esc(p.region) + ' · ' + swKept(p) + '</span></button>';
+        '<span class="sw-opt-meta">' + esc(p.region) + '</span></button>';
     }).join('');
     var invite = sw.inviting ? swInviteForm('sw-card sw-card-form')
       : '<button type="button" class="sw-card sw-card-invite" data-sw-invite><span class="sw-card-nm">+ Invite a new user</span><span class="sw-opt-meta">They take this seat straight away</span></button>';
-    var holder = here && !here.invited;
-    var line = pick
-      ? (holder ? '<strong>' + esc(here.name) + '</strong> goes to the bench and <strong>' + esc(pick.name) + '</strong> takes Seat ' + seatNo + '. Seat charges don’t change.'
-                : '<strong>' + esc(pick.name) + '</strong> takes Seat ' + seatNo + '. You already pay for it.')
-      : 'Pick someone from the bench' + (bench().length ? '' : ' (nobody is on it), or invite a new user') + '.';
+    var hint = bench().length
+      ? 'Click someone to ' + (holder ? 'swap them in' : 'give them the seat') + ' · same region first, then longest wait'
+      : 'Nobody is on the bench';
     return '<tr class="sw-panel-row"><td colspan="6"><div class="sw-panel">' +
       '<div class="sw-panel-top"><span class="sw-v">' + (holder ? 'Swap ' : '') + swHolderLine(seatNo) + '</span>' +
-      '<span class="sw-hint">' + plural(bench().length, 'technician') + ' on the bench · same region first, then longest wait</span></div>' +
+      '<span class="sw-hint">' + hint + '</span></div>' +
       '<div class="sw-cards">' + cards + invite + '</div>' +
-      '<div class="sw-confirm"><span>' + line + '</span><span class="sw-confirm-btns">' +
-      '<button type="button" class="btn btn-link btn-sm" data-sw-close>Cancel</button>' +
-      '<button type="button" class="btn btn-primary btn-sm" data-sw-go' + (pick ? '' : ' disabled') + '>' + (holder ? 'Swap' : 'Assign') + '</button></span></div>' +
       '</div></td></tr>';
   }
 
@@ -8308,14 +8303,11 @@
     if ((el = t.closest('[data-sw-name]'))) { swOpen(parseInt(el.getAttribute('data-sw-name'), 10)); return; }
     if (sw.seat == null) return;
     if ((el = t.closest('[data-sw-pick]'))) {
-      if (SWAP_UI === 'quick') swDoSwap(sw.seat, el.getAttribute('data-sw-pick'));
-      else { sw.pick = el.getAttribute('data-sw-pick'); renderSeats(); }
+      swDoSwap(sw.seat, el.getAttribute('data-sw-pick'));
       return;
     }
-    if (t.closest('[data-sw-go]')) { if (sw.pick) swDoSwap(sw.seat, sw.pick); return; }
     if (t.closest('[data-sw-invite]')) { sw.inviting = true; sw.focus = 'invite'; renderSeats(); return; }
     if (t.closest('[data-sw-invite-cancel]')) { sw.inviting = false; renderSeats(); return; }
-    if (t.closest('[data-sw-close]')) { swClose(); renderSeats(); return; }
     // Outside the open dropdown or panel closes it. composedPath is fixed at
     // dispatch, so a click that re-rendered the table still counts as inside.
     var inside = e.composedPath().some(function (n) { return n.classList && (n.classList.contains('sw-pop') || n.classList.contains('sw-panel-row')); });
@@ -9956,15 +9948,11 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
 .sw-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .sw-card { display: grid; gap: 5px; align-content: start; padding: 11px 12px; background: #151518; border: 1px solid var(--border); border-radius: 11px; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .sw-card:hover { border-color: #3a3a44; }
-.sw-card.is-picked { border-color: var(--orange-bright); background: rgba(229,83,31,.08); }
 .sw-card-nm { font-weight: 700; font-size: 13.5px; }
 .sw-same { font: 600 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--orange-bright); }
 .sw-card-invite { border-style: dashed; align-content: center; }
 .sw-card-invite .sw-card-nm { color: var(--orange-bright); }
 .sw-card-form { cursor: default; gap: 8px; }
-.sw-confirm { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 9px 12px; background: #151518; border: 1px solid var(--border-soft); border-radius: 10px; font-size: 13px; color: var(--text-dim); }
-.sw-confirm strong { color: var(--text); }
-.sw-confirm-btns { display: flex; gap: 6px; }
 /* Undo in the shared seat toast (the toast ignores clicks otherwise) */
 #seatToast.sw-has-undo.show { pointer-events: auto; }
 .sw-undo { margin-left: 8px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 7px; background: #222228; color: var(--text); font: 600 12px var(--sans); cursor: pointer; }
