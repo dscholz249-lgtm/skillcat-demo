@@ -7723,7 +7723,7 @@
   // --- derived --------------------------------------------------------------
   function seated()  { return S.roster.filter(function (p) { return p.seat != null; }); }
   function bench()   { return S.roster.filter(function (p) { return p.seat == null; }); }
-  function isIdle(p) { return p.seat != null && (p.last === null || p.last >= IDLE_DAYS); }
+  function isIdle(p) { return p.seat != null && !p.invited && (p.last === null || p.last >= IDLE_DAYS); }
   function idle()    { return seated().filter(isIdle).sort(byStaleness); }
   function benchSorted() { return bench().slice().sort(function (a, b) { return b.benchDays - a.benchDays; }); }
   function byStaleness(a, b) { return (b.last === null ? 9999 : b.last) - (a.last === null ? 9999 : a.last); }
@@ -7740,6 +7740,7 @@
   // --- formatting -----------------------------------------------------------
   function fmtLast(p) { return p.last === null ? 'Never' : p.last + 'd'; }
   function lastCell(p) {
+    if (p.invited) return '<span class="muted">Invited</span>';
     var stale = p.last === null || p.last >= IDLE_DAYS;
     return '<span class="' + (stale ? 'stale' : 'muted') + '">' + fmtLast(p) + '</span>';
   }
@@ -7755,6 +7756,7 @@
 
   function statusCell(p) {
     if (p.seat == null) return '<span class="status s-noseat">On bench</span>';
+    if (p.invited) return '<span class="status s-noseat">Invited</span>';
     if (isIdle(p)) return '<span class="status s-atrisk">Idle seat</span>';
     var map = { ontrack: ['s-ontrack', 'On track'], atrisk: ['s-atrisk', 'At risk'], overdue: ['s-overdue', 'Overdue'] };
     var m = map[p.status] || map.ontrack;
@@ -8087,26 +8089,9 @@
     var body = document.getElementById('seatsBody');
     if (!body) return;
     var rows = seatRows();
-    body.innerHTML = rows.map(function (r) {
-      if (!r.person) {
-        return '<tr class="is-open empty-seat"><td class="seat-idx">Seat ' + r.seat + '</td>' +
-          '<td>Empty seat</td><td></td><td><span class="seat-pill sp-open">Open</span></td><td></td>' +
-          '<td class="actions-cell"><div class="seat-actions-inline">' +
-          '<button class="btn btn-ghost btn-sm" data-assign-seat="' + r.seat + '">Assign</button>' +
-          '<button class="btn btn-destructive btn-sm" data-remove-seat="' + r.seat + '">Remove seat</button>' +
-          '</div></td></tr>';
-      }
-      var p = r.person;
-      return '<tr' + (r.state === 'idle' ? ' class="r-amber"' : '') + '><td class="seat-idx">Seat ' + r.seat + '</td>' +
-        '<td>' + esc(p.name) + '</td><td>' + regionCell(p) + '</td>' +
-        '<td><span class="seat-pill ' + (r.state === 'idle' ? 'sp-idle' : 'sp-assigned') + '">' +
-        (r.state === 'idle' ? 'Idle ' + fmtLast(p) : 'Assigned') + '</span></td>' +
-        '<td>' + lastCell(p) + '</td>' +
-        '<td class="actions-cell"><div class="seat-actions-inline">' +
-        '<button class="btn btn-ghost btn-sm" data-swap-seat="' + r.seat + '">Swap</button>' +
-        '<button class="btn btn-ghost btn-sm" data-bench-seat="' + r.seat + '">Move to bench</button>' +
-        '</div></td></tr>';
-    }).join('');
+    // PRD-522: each row's name opens the swap (see swRow).
+    body.innerHTML = rows.map(swRow).join('');
+    swAfterRender();
     var empty = document.getElementById('seatsEmpty');
     if (empty) empty.hidden = rows.length > 0;
   }
@@ -8141,6 +8126,217 @@
   }
 
   function renderAll() { renderDashboard(); renderPeople(); renderSeats(); renderBilling(); }
+
+
+  /* ---- PRD-522: swap from the seat holder's name ---------------------------
+     The name in each Seats row (or "Empty seat") opens the swap. How long the
+     holder has been idle shows only once it is open; the table stays clean.
+       'quick'  (v1.1, Option A) a dropdown under the name: search, bench techs
+                same region first then longest wait, each with time on the
+                bench. Picking someone swaps at once, with Undo in the toast.
+       'expand' (v1.2, Option C) a panel under the row: the bench as cards
+                (time on bench, progress kept); pick one, then Swap.
+     Both end with "Invite a new user": the invitee takes the seat straight
+     away as Invited and whoever held it goes to the bench. */
+  var SWAP_UI = 'expand';
+  var sw = { seat: null, pick: null, q: '', inviting: false, focus: null };
+  var SW_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>';
+  var SW_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
+
+  function swDays(n) { return n + (n === 1 ? ' day' : ' days'); }
+  function swCands(seatNo) {
+    var here = bySeat(seatNo);
+    var region = here ? here.region : null;
+    return bench().slice().sort(function (a, b) {
+      return ((region && a.region === region) ? 0 : 1) - ((region && b.region === region) ? 0 : 1) ||
+        b.benchDays - a.benchDays;
+    });
+  }
+  function swHolderLine(seatNo) {
+    var p = bySeat(seatNo);
+    if (!p) return 'Seat ' + seatNo + ' is open and already on your plan, so filling it costs nothing extra.';
+    if (p.invited) return '<strong>' + esc(p.name) + '</strong> hasn’t accepted their invite yet.';
+    return '<strong>' + esc(p.name) + '</strong> · ' + (isIdle(p)
+      ? '<span class="sw-amber">idle ' + (p.last === null ? 'since they got the seat' : swDays(p.last)) + '</span>'
+      : 'active ' + (p.last === 0 ? 'today' : swDays(p.last) + ' ago'));
+  }
+  function swKept(p) { return p.held ? p.held.done + '/' + p.held.total + ' tasks kept' : 'No progress yet'; }
+
+  // Remember the fields a swap touches so Undo can put them back exactly.
+  function swSnap(p) { return p && { p: p, seat: p.seat, benchDays: p.benchDays, held: p.held, status: p.status }; }
+  function swRestore(s) { if (s) { s.p.seat = s.seat; s.p.benchDays = s.benchDays; s.p.held = s.held; s.p.status = s.status; } }
+
+  function swClose() { sw.seat = null; sw.pick = null; sw.q = ''; sw.inviting = false; }
+  function swOpen(seatNo) {
+    var again = sw.seat === seatNo;
+    swClose();
+    if (!again) { sw.seat = seatNo; sw.focus = SWAP_UI === 'quick' ? 'search' : 'first'; }
+    renderSeats();
+  }
+  function swDoSwap(seatNo, personId) {
+    var out = bySeat(seatNo), inc = byId(personId);
+    if (!inc || inc.seat != null) return;
+    var undo = [swSnap(out), swSnap(inc)];
+    swapSeat(seatNo, personId);
+    swClose();
+    renderAll();
+    swToast('<strong>' + esc(inc.name) + '</strong> is in Seat ' + seatNo + '.' +
+      (out ? ' <em>' + esc(out.name) + ' moved to the bench with their progress kept.</em>' : ''),
+      function () { undo.forEach(swRestore); });
+  }
+  function swDoInvite(seatNo, name, email) {
+    var out = bySeat(seatNo);
+    var undo = swSnap(out);
+    if (out) moveToBench(out.id);
+    var p = tech(name, out ? out.region : 'No Region', seatNo, null, 'atrisk', 0, 8, []);
+    var base = p.id, n = 2;
+    while (byId(p.id)) p.id = base + '_' + n++;
+    p.invited = true; p.email = email;
+    S.roster.push(p);
+    swClose();
+    renderAll();
+    swToast('Invite sent to <strong>' + esc(name) + '</strong>. Seat ' + seatNo + ' is theirs.' +
+      (out ? ' <em>' + esc(out.name) + ' moved to the bench.</em>' : ''),
+      function () { S.roster = S.roster.filter(function (x) { return x !== p; }); swRestore(undo); });
+  }
+  function swToast(msg, undo) {
+    toast(msg + (undo ? ' <button class="sw-undo" data-sw-undo>Undo</button>' : ''));
+    var t = document.getElementById('seatToast');
+    if (t) t.classList.toggle('sw-has-undo', !!undo);
+    swToast.undo = undo || null;
+  }
+
+  function swNameCell(r) {
+    var label = r.person ? esc(r.person.name) : 'Empty seat';
+    var open = sw.seat === r.seat;
+    return '<td class="sw-cell"><button type="button" class="sw-name' + (r.person ? '' : ' is-empty') + '" data-sw-name="' + r.seat +
+      '" aria-haspopup="true" aria-expanded="' + open + '">' + label + SW_CHEV + '</button>' +
+      (open && SWAP_UI === 'quick' ? swDropdown(r.seat) : '') + '</td>';
+  }
+  function swInviteForm(cls) {
+    return '<form class="' + cls + '" data-sw-invite-form>' +
+      '<label>Name<input name="sw-name" required autocomplete="off" placeholder="Jordan Price"></label>' +
+      '<label>Email<input name="sw-email" type="email" required autocomplete="off" placeholder="jordan@company.com"></label>' +
+      '<div class="sw-form-row"><button type="button" class="btn btn-link btn-sm" data-sw-invite-cancel>Cancel</button>' +
+      '<button class="btn btn-primary btn-sm">Send invite</button></div></form>';
+  }
+  function swDropdown(seatNo) {
+    var here = bySeat(seatNo), q = sw.q.toLowerCase();
+    var list = swCands(seatNo).filter(function (p) { return !q || p.name.toLowerCase().indexOf(q) >= 0; });
+    var same = list.filter(function (p) { return here && p.region === here.region; });
+    var other = list.filter(function (p) { return !(here && p.region === here.region); });
+    var item = function (p) {
+      return '<button type="button" class="sw-opt" data-sw-pick="' + p.id + '"><span class="sw-opt-nm">' + esc(p.name) + '</span>' +
+        '<span class="sw-wait">On bench ' + fmtWait(p) + '</span><span class="sw-opt-meta">' + esc(p.region) + ' · ' + swKept(p) + '</span></button>';
+    };
+    return '<div class="sw-pop" role="dialog" aria-label="Swap seat ' + seatNo + '">' +
+      '<div class="sw-pop-head"><span class="sw-k">Seat ' + seatNo + (here ? ' · now' : ' · open') + '</span><span class="sw-v">' + swHolderLine(seatNo) + '</span></div>' +
+      '<div class="sw-search"><input data-sw-q placeholder="Search the bench" value="' + esc(sw.q) + '" aria-label="Search the bench"></div>' +
+      '<div class="sw-list">' +
+      (same.length ? '<div class="sw-grp">' + esc(here.region) + '</div>' + same.map(item).join('') : '') +
+      (other.length ? '<div class="sw-grp">' + (same.length ? 'Other regions' : 'On the bench') + '</div>' + other.map(item).join('') : '') +
+      (list.length ? '' : '<div class="sw-none">' + (bench().length ? 'Nobody on the bench matches.' : 'Nobody is on the bench.') + '</div>') +
+      '</div>' +
+      (sw.inviting ? swInviteForm('sw-invite') : '<button type="button" class="sw-invite-btn" data-sw-invite>' + SW_PLUS + 'Invite a new user</button>') +
+      '</div>';
+  }
+  function swPanelRow(seatNo) {
+    var here = bySeat(seatNo), pick = sw.pick ? byId(sw.pick) : null;
+    var cards = swCands(seatNo).map(function (p) {
+      return '<button type="button" class="sw-card' + (sw.pick === p.id ? ' is-picked' : '') + '" data-sw-pick="' + p.id + '" aria-pressed="' + (sw.pick === p.id) + '">' +
+        (here && p.region === here.region ? '<span class="sw-same">Same region</span>' : '') +
+        '<span class="sw-card-nm">' + esc(p.name) + '</span><span class="sw-wait">On bench ' + swDays(p.benchDays) + '</span>' +
+        '<span class="sw-opt-meta">' + esc(p.region) + ' · ' + swKept(p) + '</span></button>';
+    }).join('');
+    var invite = sw.inviting ? swInviteForm('sw-card sw-card-form')
+      : '<button type="button" class="sw-card sw-card-invite" data-sw-invite><span class="sw-card-nm">+ Invite a new user</span><span class="sw-opt-meta">They take this seat straight away</span></button>';
+    var holder = here && !here.invited;
+    var line = pick
+      ? (holder ? '<strong>' + esc(here.name) + '</strong> goes to the bench and <strong>' + esc(pick.name) + '</strong> takes Seat ' + seatNo + '. Seat charges don’t change.'
+                : '<strong>' + esc(pick.name) + '</strong> takes Seat ' + seatNo + '. You already pay for it.')
+      : 'Pick someone from the bench' + (bench().length ? '' : ' (nobody is on it), or invite a new user') + '.';
+    return '<tr class="sw-panel-row"><td colspan="6"><div class="sw-panel">' +
+      '<div class="sw-panel-top"><span class="sw-v">' + (holder ? 'Swap ' : '') + swHolderLine(seatNo) + '</span>' +
+      '<span class="sw-hint">' + plural(bench().length, 'technician') + ' on the bench · same region first, then longest wait</span></div>' +
+      '<div class="sw-cards">' + cards + invite + '</div>' +
+      '<div class="sw-confirm"><span>' + line + '</span><span class="sw-confirm-btns">' +
+      '<button type="button" class="btn btn-link btn-sm" data-sw-close>Cancel</button>' +
+      '<button type="button" class="btn btn-primary btn-sm" data-sw-go' + (pick ? '' : ' disabled') + '>' + (holder ? 'Swap' : 'Assign') + '</button></span></div>' +
+      '</div></td></tr>';
+  }
+
+  // One seats-table row; replaces the old Swap / Assign buttons with the name.
+  function swRow(r) {
+    if (!r.person) {
+      return '<tr class="is-open empty-seat"><td class="seat-idx">Seat ' + r.seat + '</td>' +
+        swNameCell(r) + '<td></td><td><span class="seat-pill sp-open">Open</span></td><td></td>' +
+        '<td class="actions-cell"><div class="seat-actions-inline">' +
+        '<button class="btn btn-destructive btn-sm" data-remove-seat="' + r.seat + '">Remove seat</button>' +
+        '</div></td></tr>' + (sw.seat === r.seat && SWAP_UI === 'expand' ? swPanelRow(r.seat) : '');
+    }
+    var p = r.person;
+    var pill = p.invited ? '<span class="seat-pill sp-invited">Invited</span>'
+      : '<span class="seat-pill ' + (r.state === 'idle' ? 'sp-idle' : 'sp-assigned') + '">' +
+        (r.state === 'idle' ? 'Idle ' + fmtLast(p) : 'Assigned') + '</span>';
+    return '<tr' + (r.state === 'idle' ? ' class="r-amber"' : '') + '><td class="seat-idx">Seat ' + r.seat + '</td>' +
+      swNameCell(r) + '<td>' + regionCell(p) + '</td><td>' + pill + '</td>' +
+      '<td>' + lastCell(p) + '</td>' +
+      '<td class="actions-cell"><div class="seat-actions-inline">' +
+      '<button class="btn btn-ghost btn-sm" data-bench-seat="' + r.seat + '">Move to bench</button>' +
+      '</div></td></tr>' + (sw.seat === r.seat && SWAP_UI === 'expand' ? swPanelRow(r.seat) : '');
+  }
+  // After a render: keep the caret in the search box, or focus what just opened.
+  function swAfterRender() {
+    var f = sw.focus; sw.focus = null;
+    if (!f || sw.seat == null) return;
+    var root = document.getElementById('seatsBody');
+    var el = f === 'search' ? root.querySelector('[data-sw-q]')
+      : f === 'invite' ? root.querySelector('[data-sw-invite-form] input')
+      : root.querySelector('.sw-card, .sw-opt');
+    if (el) { el.focus(); if (f === 'search') el.setSelectionRange(el.value.length, el.value.length); }
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || typeof t.closest !== 'function') return;
+    var el;
+    if (t.closest('[data-sw-undo]')) {
+      if (swToast.undo) { swToast.undo(); swToast.undo = null; renderAll(); toast('Undone.'); }
+      var tt = document.getElementById('seatToast'); if (tt) tt.classList.remove('sw-has-undo');
+      return;
+    }
+    if ((el = t.closest('[data-sw-name]'))) { swOpen(parseInt(el.getAttribute('data-sw-name'), 10)); return; }
+    if (sw.seat == null) return;
+    if ((el = t.closest('[data-sw-pick]'))) {
+      if (SWAP_UI === 'quick') swDoSwap(sw.seat, el.getAttribute('data-sw-pick'));
+      else { sw.pick = el.getAttribute('data-sw-pick'); renderSeats(); }
+      return;
+    }
+    if (t.closest('[data-sw-go]')) { if (sw.pick) swDoSwap(sw.seat, sw.pick); return; }
+    if (t.closest('[data-sw-invite]')) { sw.inviting = true; sw.focus = 'invite'; renderSeats(); return; }
+    if (t.closest('[data-sw-invite-cancel]')) { sw.inviting = false; renderSeats(); return; }
+    if (t.closest('[data-sw-close]')) { swClose(); renderSeats(); return; }
+    // Outside the open dropdown or panel closes it. composedPath is fixed at
+    // dispatch, so a click that re-rendered the table still counts as inside.
+    var inside = e.composedPath().some(function (n) { return n.classList && (n.classList.contains('sw-pop') || n.classList.contains('sw-panel-row')); });
+    if (!inside) { swClose(); renderSeats(); }
+  });
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches('[data-sw-invite-form]')) return;
+    e.preventDefault();
+    var name = f.querySelector('[name="sw-name"]').value.trim();
+    var email = f.querySelector('[name="sw-email"]').value.trim();
+    if (name && email && sw.seat != null) swDoInvite(sw.seat, name, email);
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.matches && e.target.matches('[data-sw-q]')) { sw.q = e.target.value; sw.focus = 'search'; renderSeats(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || sw.seat == null) return;
+    var n = sw.seat; swClose(); renderSeats();
+    var b = document.querySelector('[data-sw-name="' + n + '"]'); if (b) b.focus();
+  });
 
   /* ======================= MODALS ======================= */
 
@@ -8366,7 +8562,7 @@
     if (t.closest('[data-open-give-seats]')) { openGiveSeats(null); return; }
     if (t.closest('[data-open-swap-picker]')) {
       var stalest = idle()[0];
-      if (stalest) openSwap(stalest.seat); else toast('No idle seats right now.');
+      if (stalest) swOpen(stalest.seat); else toast('No idle seats right now.');
       return;
     }
     if ((el = t.closest('[data-swap-seat]'))) { openSwap(parseInt(el.getAttribute('data-swap-seat'), 10)); return; }
@@ -9711,5 +9907,70 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   .un-hb-row, .un-ttc-bd .un-hb-row { grid-template-columns: minmax(0, 1fr) 56px auto 16px; }
   .un-hb-bar { display: none; }
   .un-ttc-bd-head { display: none; }
+}
+</style>
+
+<style>
+/* ---- PRD-522: swap from the seat holder's name ---- */
+.seats-table td.sw-cell { position: relative; font-family: var(--sans); }
+.sw-name { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; margin: -6px -9px; padding: 5px 8px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--text); font: 600 14px var(--sans); text-align: left; cursor: pointer; }
+.sw-name:hover, .sw-name[aria-expanded="true"] { background: #1c1c21; border-color: var(--border); }
+.sw-name svg { width: 14px; height: 14px; flex: none; stroke-width: 2; color: var(--text-faint); transition: transform .15s; }
+.sw-name[aria-expanded="true"] svg { transform: rotate(180deg); }
+.sw-name.is-empty { color: var(--text-faint); font-weight: 500; font-style: italic; }
+.sw-name:focus-visible, .sw-opt:focus-visible, .sw-card:focus-visible, .sw-invite-btn:focus-visible, .sw-undo:focus-visible { outline: 2px solid var(--orange-bright); outline-offset: 2px; }
+.sw-amber { color: var(--amber); }
+.sp-invited { background: rgba(229,83,31,.15); color: var(--orange-bright); }
+/* Option A: dropdown */
+.sw-pop { position: absolute; z-index: 40; top: calc(100% - 6px); left: 8px; width: 340px; background: #151518; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.6); overflow: hidden; text-align: left; font-family: var(--sans); }
+.sw-pop-head { display: grid; gap: 2px; padding: 11px 13px; border-bottom: 1px solid var(--border-soft); }
+.sw-k { font: 600 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.sw-v { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.sw-v strong { color: var(--text); }
+.sw-search { padding: 8px 10px; border-bottom: 1px solid var(--border-soft); }
+.sw-search input { width: 100%; box-sizing: border-box; background: #0e0e11; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: 13px var(--sans); padding: 7px 10px; }
+.sw-search input:focus-visible { outline: 1.5px solid #7a7a7a; outline-offset: 2px; }
+.sw-list { max-height: 260px; overflow-y: auto; }
+.sw-grp { font: 600 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: 9px 13px 4px; }
+.sw-opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 10px; align-items: center; width: 100%; padding: 8px 13px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.sw-opt:hover { background: #1f1f25; }
+.sw-opt-nm { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-opt-meta { font-size: 11.5px; color: var(--text-faint); }
+.sw-opt .sw-opt-meta { grid-column: 1; }
+.sw-wait { font: 600 11.5px var(--mono); color: var(--green); white-space: nowrap; }
+.sw-opt .sw-wait { grid-column: 2; grid-row: 1 / span 2; background: rgba(63,191,127,.12); border-radius: 6px; padding: 2px 7px; }
+.sw-none { padding: 14px 13px; font-size: 12.5px; color: var(--text-faint); }
+.sw-invite-btn { display: flex; align-items: center; gap: 9px; width: 100%; padding: 11px 13px; background: none; border: 0; border-top: 1px solid var(--border-soft); color: var(--orange-bright); font: 600 13px var(--sans); text-align: left; cursor: pointer; }
+.sw-invite-btn:hover { background: #1f1f25; }
+.sw-invite-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+.sw-invite { display: grid; gap: 8px; padding: 11px 13px; border-top: 1px solid var(--border-soft); }
+.sw-invite label, .sw-card-form label { display: grid; gap: 3px; font-size: 11.5px; color: var(--text-faint); }
+.sw-invite input, .sw-card-form input { background: #0e0e11; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: 13px var(--sans); padding: 7px 10px; min-width: 0; }
+.sw-form-row { display: flex; justify-content: flex-end; gap: 6px; }
+/* Option C: panel under the row */
+.seats-table tr.sw-panel-row td { padding: 0; background: #0f0f12; font-family: var(--sans); }
+.sw-panel { display: grid; gap: 12px; padding: 14px 16px 16px; }
+.sw-panel-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sw-panel-top .sw-v { font-size: 13.5px; }
+.sw-hint { font-size: 12px; color: var(--text-faint); }
+.sw-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.sw-card { display: grid; gap: 5px; align-content: start; padding: 11px 12px; background: #151518; border: 1px solid var(--border); border-radius: 11px; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.sw-card:hover { border-color: #3a3a44; }
+.sw-card.is-picked { border-color: var(--orange-bright); background: rgba(229,83,31,.08); }
+.sw-card-nm { font-weight: 700; font-size: 13.5px; }
+.sw-same { font: 600 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--orange-bright); }
+.sw-card-invite { border-style: dashed; align-content: center; }
+.sw-card-invite .sw-card-nm { color: var(--orange-bright); }
+.sw-card-form { cursor: default; gap: 8px; }
+.sw-confirm { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 9px 12px; background: #151518; border: 1px solid var(--border-soft); border-radius: 10px; font-size: 13px; color: var(--text-dim); }
+.sw-confirm strong { color: var(--text); }
+.sw-confirm-btns { display: flex; gap: 6px; }
+/* Undo in the shared seat toast (the toast ignores clicks otherwise) */
+#seatToast.sw-has-undo.show { pointer-events: auto; }
+.sw-undo { margin-left: 8px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 7px; background: #222228; color: var(--text); font: 600 12px var(--sans); cursor: pointer; }
+.sw-undo:hover { border-color: #44444e; }
+@media (max-width: 760px) {
+  .sw-pop { position: fixed; z-index: 10000; /* above the demo's live badge (9998) */ left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-height: 75vh; display: flex; flex-direction: column; }
+  .sw-pop .sw-list { max-height: none; flex: 1; }
 }
 </style>
