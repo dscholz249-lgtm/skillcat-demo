@@ -1884,7 +1884,18 @@
           <h1>People</h1>
           <div class="sub" id="peopleSub">—</div>
         </div>
-        <div class="topbar-right">
+        <!-- PRD-526: on phones Import / Export / Columns live in one menu -->
+        <div class="un-pop-wrap m-only">
+          <button type="button" class="filter-btn" data-m-more aria-haspopup="true" aria-expanded="false" aria-label="Import, export and columns">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+          </button>
+          <div class="un-pop m-more-pop" id="pplMorePop" hidden>
+            <button type="button" class="un-mi" data-open-import>Import Roster<span class="sub">Upload a CSV of technicians</span></button>
+            <button type="button" class="un-mi" data-m-more-act="csv">Download CSV<span class="sub">The people you're looking at</span></button>
+            <button type="button" class="un-mi" data-m-more-act="cols">Columns<span class="sub">What the desktop table shows</span></button>
+          </div>
+        </div>
+        <div class="topbar-right m-hide">
           <button class="btn btn-ghost" data-open-import>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Import Roster
@@ -1918,19 +1929,22 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"/></svg>
               <span class="filter-count" hidden></span>
             </button>
-            <button type="button" class="filter-btn" id="pplColsBtn" aria-haspopup="dialog" aria-label="Choose columns">
+            <button type="button" class="btn btn-secondary m-only" data-m-select aria-pressed="false">Select</button>
+            <button type="button" class="btn btn-link m-only m-sel-only" data-m-selall>Select all</button>
+            <button type="button" class="filter-btn m-hide" id="pplColsBtn" aria-haspopup="dialog" aria-label="Choose columns">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>
             </button>
           </div>
           <!-- Reports Slice 1: time range (rendered by the UP NEXT + REPORTS script) -->
           <div class="un-pop-wrap" id="unRange"></div>
-          <div class="ppl-toolbar-right">
+          <div class="ppl-toolbar-right m-hide">
             <button class="btn btn-primary" data-open-add-person><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Add People</button>
           </div>
         </div>
 
         <!-- People table — rendered from the roster model (see SEAT MODEL
              below) so seated/bench/all stay in sync with every seat action. -->
+        <button type="button" class="m-add m-only" data-open-add-person aria-label="Add people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
         <div class="card" id="peopleCard" style="animation-delay:.02s">
           <table id="peopleTable">
             <thead id="peopleHead"></thead>
@@ -2323,6 +2337,8 @@
           <input placeholder="Search Library" />
         </div>
         <div class="topbar-right">
+          <button type="button" class="btn btn-link m-only m-sel-only" data-m-selall>Select all</button>
+          <button type="button" class="btn btn-secondary m-only" data-m-select aria-pressed="false">Select</button>
           <button class="icon-btn" title="Download">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13M7 12l5 5 5-5M5 21h14"/></svg>
           </button>
@@ -8588,7 +8604,7 @@ a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
 .dl-row > .card > .table-scroll > table { height: 100%; } /* rows share any spare height */
 #dlFocusBody > .un-ares { margin-top: 0; }
 @media (max-width: 1360px) { .dl-row.dl-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .dl-row.dl-3 > :first-child { grid-column: 1 / -1; } }
-@media (max-width: 900px) { .dl-row { grid-template-columns: minmax(0, 1fr) !important; } }
+@media (max-width: 900px) { .dl-row, .dl-row.dl-3 { grid-template-columns: minmax(0, 1fr) !important; } .dl-row.dl-3 > :first-child { grid-column: auto; } }
 .dl-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.62); z-index: 95; }
 .dl-modal { position: fixed; z-index: 96; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(540px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto; background: #111114; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); padding: 22px; color: var(--text); font-family: var(--sans); }
 .dl-scrim[hidden], .dl-modal[hidden] { display: none; }
@@ -9273,6 +9289,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
     $('unRepSched').textContent = n ? n + ' scheduled email' + (n === 1 ? '' : 's') + (nx ? ' · next ' + nx : '') : 'No scheduled emails';
   }
   $('unRepCsv') && ($('unRepCsv').onclick = function () { downloadCsv(SEATS.roster, { o: 29, n: 0, len: 30, kind: '30d' }); });
+  window.__pplDownloadCsv = function () { downloadCsv(PPL.rows(), curRange()); }; // PRD-526 phone menu
 
   /* ---------------- Dashboard: Certifications Completed card ---------------- */
   function openPerson(p) {
@@ -9902,3 +9919,192 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   .un-ttc-bd-head { display: none; }
 }
 </style>
+
+<style>
+/* =====================================================================
+   PRD-526 — the dashboard on phones (under 600px). Desktop is unchanged.
+   - Tables become cards (the .m-cards class is added by the script below);
+     Billing's invoice tables stay tables and scroll sideways.
+   - Picking lists (Assign): the whole card ticks. People and Library get a
+     Select button: while selecting a tap ticks, otherwise it opens.
+   - Bigger targets: buttons 40px, small 36px, icons and inputs 44px,
+     bottom bars 48px and clear of the home indicator.
+   ===================================================================== */
+.m-only { display: none !important; }
+@media (max-width: 600px) {
+  .m-only { display: inline-flex !important; }
+  .m-hide { display: none !important; }
+  .page:not(.m-selecting) .m-sel-only { display: none !important; }
+
+  /* targets */
+  .btn { height: 40px; padding: 0 16px; font-size: 14px; }
+  .btn-sm { height: 36px; padding: 0 13px; font-size: 13.5px; border-radius: 8px; }
+  .btn-link { min-height: 44px; padding: 0 6px; }
+  .icon-btn, .filter-btn, .hamburger { min-width: 44px; min-height: 44px; }
+  .search-wrap { min-height: 44px; }
+  .search-wrap input, .settings-input, .settings-select, .un-field input, .un-field select { font-size: 16px; }
+  .seg-tabs button, .un-seg button { min-height: 40px; }
+  .chip { min-height: 36px; }
+  .un-link, .un-view-more { min-height: 44px; display: inline-flex; align-items: center; }
+  .ppl-toolbar, .people-search-row, .row-gap { gap: 10px; }
+
+  /* tables -> cards */
+  table.m-cards { display: block; width: 100% !important; min-width: 0 !important; border: 0; }
+  table.m-cards thead { display: none; }
+  table.m-cards tbody { display: grid; gap: 8px; }
+  table.m-cards tbody tr { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-height: 64px; padding: 12px 40px 12px 14px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 12px; background: var(--card-bg-real); }
+  table.m-cards tbody tr > td { display: block; width: auto !important; padding: 0 !important; border: 0 !important; background: none !important; text-align: left !important; white-space: normal; font-size: 12.5px; color: var(--text-dim); }
+  table.m-cards tbody tr > td.m-title { flex: 1 1 100%; font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--text); }
+  table.m-cards tbody tr > td[data-label]:not(.m-title)::before { content: attr(data-label) " "; color: var(--text-faint); font-family: var(--sans); font-weight: 500; }
+  table.m-cards td.view-cell { display: none !important; }
+  table.m-cards tbody tr[data-go-person]::after, #peopleBody tr::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; border-right: 2px solid #6c6c75; border-bottom: 2px solid #6c6c75; transform: translateY(-50%) rotate(-45deg); }
+  table.m-cards td.cb-cell { display: none !important; }
+  /* expandable rows: the chevron is its own 44px target on the right */
+  table.m-cards td.m-chev { position: absolute !important; right: 0; top: 0; width: 44px !important; height: 64px; display: grid !important; place-items: center; }
+  table.m-cards td.m-chev .row-chev { margin: 0; }
+  table.m-cards tbody tr.tracker-child { display: none; min-height: 0; margin-top: -6px; padding: 8px 14px 8px 56px; border-radius: 10px; background: #0d0d10; }
+  table.m-cards tbody tr.tracker-child.show { display: block; }
+  table.m-cards tbody tr:has(> td.sub-section-head) { min-height: 0; padding: 10px 2px 0; border: 0; background: none; }
+  /* the card shells around a carded table step back */
+  .card:has(table.m-cards), .table-scroll:has(table.m-cards), .sched-card:has(table.m-cards) { background: none !important; border: 0 !important; box-shadow: none !important; overflow: visible !important; }
+  /* picking: a check on the left, the whole card ticks */
+  .m-pick table.m-cards tbody tr:not(.tracker-child):not(:has(> td.sub-section-head)):has(input.cb), .m-selecting table.m-cards tbody tr:has(input.cb) { padding-left: 56px; cursor: pointer; }
+  .m-pick table.m-cards td.cb-cell, .m-selecting table.m-cards td.cb-cell { display: block !important; position: absolute !important; left: 14px; top: 50%; transform: translateY(-50%); }
+  .m-pick table.m-cards input.cb, .m-selecting table.m-cards input.cb { width: 28px; height: 28px; border-width: 2px; border-color: #5a5a63; }
+  .m-selecting table.m-cards input.cb { border-radius: 50%; }
+  .m-pick table.m-cards input.cb { border-radius: 8px; }
+  .m-pick table.m-cards input.cb:checked, .m-selecting table.m-cards input.cb:checked { background: var(--orange); border-color: var(--orange); }
+  .m-pick table.m-cards input.cb:checked::after, .m-selecting table.m-cards input.cb:checked::after { width: 11px; height: 6px; border-color: #fff; }
+  table.m-cards tbody tr.selected { border-color: var(--orange); background: rgba(229,83,31,.08); }
+  .m-selecting #peopleBody tr::after { display: none; }
+  /* Billing invoices: a sideways scroller with a hint */
+  .m-scroll-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .m-scroll-wrap::after { content: "Swipe for more →"; display: block; padding: 8px 12px; font-size: 11.5px; color: var(--text-faint); text-align: right; position: sticky; left: 0; }
+
+  /* bottom bars: thumb-sized, clear of the home indicator */
+  .fab { left: 0 !important; right: 0 !important; bottom: 0 !important; border-radius: 16px 16px 0 0; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)) !important; flex-wrap: wrap; }
+  .fab-btn { flex: 1; min-height: 48px; justify-content: center; font-size: 15px; }
+  .fab-close { width: 44px; height: 44px; margin-left: 0; }
+  .un-seg button { min-width: 44px; }
+  .sw-name { min-height: 44px; }
+  #unEngPrev, #unEngNext { width: 44px; height: 44px; display: grid; place-items: center; }
+  .region-select { min-height: 44px; font-size: 16px; }
+  .bill-download-btn { width: 44px; height: 44px; display: grid; place-items: center; }
+  .fab-count { flex-basis: 100%; }
+  .ppl-footer:not([hidden]) { position: sticky; bottom: 0; z-index: 90; margin: 8px -12px 0; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+  .ppl-footer .btn { height: 48px; font-size: 15px; }
+  .assign-bottom-bar { padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .assign-bottom-bar .btn { height: 48px; font-size: 15px; }
+  .scroll { padding-bottom: 120px; }
+  /* People: Add People as a + button */
+  .m-add { position: fixed; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 80; width: 56px; height: 56px; border-radius: 28px; border: 0; background: linear-gradient(180deg, #b7431e, #792d14); color: #fff; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(0,0,0,.5); }
+  .m-add svg { width: 24px; height: 24px; stroke-width: 2.4; }
+  .m-selecting .m-add, body:has(.ppl-footer:not([hidden])) .m-add { display: none !important; }
+  .m-more-pop { right: 0; left: auto; min-width: 220px; }
+  /* People: search takes the slack so Select stays on screen */
+  .ppl-find { flex: 1 1 100%; }
+  .ppl-find .search-wrap { flex: 1 1 0; min-width: 0; }
+  .ppl-find > .btn { flex: none; }
+  /* selection bar: two per row, an odd first button spans the row */
+  .ppl-footer .pf-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ppl-footer .pf-actions .btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+  .ppl-footer .pf-actions .btn { padding: 0 10px; }
+  /* Dashboard To Do: a bigger box with a 44px hit area */
+  .un-task { grid-template-columns: 28px auto minmax(0,1fr) auto; }
+  .un-cbx { position: relative; width: 26px !important; height: 26px !important; border-radius: 7px; }
+  .un-cbx::before { content: ""; position: absolute; inset: -9px; }
+  /* Assign / Training steppers: only the current step keeps its label */
+  .stepper { padding: 10px 12px; gap: 8px; }
+  .stepper .step:not(.active) .step-label, .stepper .step:not(.active) .step-count { display: none; }
+  .stepper .step-line { min-width: 12px; }
+  /* the page column must not squash collapsed sections (Billing) */
+  .scroll > details, .scroll > .card { flex-shrink: 0; }
+  /* People in Select mode: search gets its own line */
+  .m-selecting .ppl-find { flex-wrap: wrap; }
+  .m-selecting .ppl-find .search-wrap { flex-basis: 100%; }
+  /* Library course cards: same Select mode as the tables */
+  .page:not(.m-selecting) .course-card-head > input.cb { display: none; }
+  .m-selecting .course-card { cursor: pointer; }
+  .m-selecting .course-card-head > input.cb { width: 28px; height: 28px; border-width: 2px; border-color: #5a5a63; border-radius: 50%; flex: none; }
+  .m-selecting .course-card-head > input.cb:checked { background: var(--orange); border-color: var(--orange); }
+  .m-selecting .course-card-head > input.cb:checked::after { width: 11px; height: 6px; border-color: #fff; }
+  .course-card:has(> .course-card-head > input.cb:checked) { border-color: var(--orange); background: rgba(229,83,31,.08); }
+}
+</style>
+
+<script>
+/* PRD-526: phones. Marks tables as cards (CSS does the rest under 600px),
+   makes picking lists tap-to-tick, and runs People / Library Select mode. */
+(function () {
+  'use strict';
+  var mq = window.matchMedia('(max-width: 600px)');
+  function clean(s) { return s.replace(/[▲▼⇅↕]/g, '').replace(/\s+/g, ' ').trim(); }
+  function cardify() {
+    document.querySelectorAll('.page table').forEach(function (t) {
+      if (!t.tBodies.length) return;
+      if (t.closest('#page-billing')) { if (!t.parentElement.classList.contains('m-scroll-wrap')) { var w = document.createElement('div'); w.className = 'm-scroll-wrap'; t.parentNode.insertBefore(w, t); w.appendChild(t); } return; }
+      t.classList.add('m-cards');
+      var head = t.tHead && t.tHead.rows[0] ? [].map.call(t.tHead.rows[0].cells, function (c) { return clean(c.textContent); }) : [];
+      [].forEach.call(t.tBodies[0].rows, function (tr) {
+        if (tr.classList.contains('tracker-child')) return;
+        var titled = !!tr.querySelector('.m-title');
+        [].forEach.call(tr.cells, function (td, i) {
+          if (td.classList.contains('cb-cell') || td.classList.contains('view-cell') || td.colSpan > 1) return;
+          if (td.querySelector('.row-chev')) { td.classList.add('m-chev'); return; }
+          var txt = td.textContent.trim();
+          if (!titled && txt && !/^[\d\s.:]+$/.test(txt)) { td.classList.add('m-title'); titled = true; return; }
+          if (!td.hasAttribute('data-label') && head[i] && head[i] !== '#') td.setAttribute('data-label', head[i]);
+        });
+      });
+    });
+  }
+  var pending = false;
+  function soon() { if (pending) return; pending = true; requestAnimationFrame(function () { pending = false; cardify(); }); }
+  cardify();
+  new MutationObserver(soon).observe(document.body, { childList: true, subtree: true });
+
+  // The Assign steps are picking lists: the whole card ticks.
+  var assign = document.getElementById('page-assign'); if (assign) assign.classList.add('m-pick');
+
+  // Tap to tick (picking lists, or a page in Select mode). Runs before the
+  // rows' own handlers, which would open the person or expand the row.
+  document.addEventListener('click', function (e) {
+    if (!mq.matches) return;
+    var tr = e.target.closest('table.m-cards tbody tr, .m-selecting .course-card'); if (!tr) return;
+    if (!tr.closest('.m-pick, .m-selecting')) return;
+    if (e.target.closest('a, button, input, select, label, .m-chev, .sched-drag, .due-pill')) return;
+    var cb = tr.querySelector('input.cb'); if (!cb) return;
+    e.preventDefault(); e.stopPropagation();
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+  }, true);
+
+  // Select mode (People, Library).
+  function boxes(page) { return [].filter.call(page.querySelectorAll('tbody input.cb, .course-card input.cb'), function (c) { return !c.closest('tr[data-filtered]') && c.offsetParent !== null; }); }
+  function setAll(page, on) { boxes(page).forEach(function (c) { if (c.checked !== on) { c.checked = on; c.dispatchEvent(new Event('change', { bubbles: true })); } }); }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-m-select]');
+    if (b) {
+      var page = b.closest('.page'), on = !page.classList.contains('m-selecting');
+      page.classList.toggle('m-selecting', on);
+      b.textContent = on ? 'Cancel' : 'Select';
+      b.setAttribute('aria-pressed', on);
+      if (!on) setAll(page, false);
+      return;
+    }
+    var a = e.target.closest('[data-m-selall]');
+    if (a) setAll(a.closest('.page'), true);
+    var more = e.target.closest('[data-m-more]');
+    var pop = document.getElementById('pplMorePop');
+    if (more && pop) { pop.hidden = !pop.hidden; more.setAttribute('aria-expanded', !pop.hidden); return; }
+    if (pop && !pop.hidden && !e.target.closest('#pplMorePop')) pop.hidden = true;
+    var act = e.target.closest('[data-m-more-act]');
+    if (act) {
+      if (pop) pop.hidden = true;
+      var k = act.dataset.mMoreAct;
+      if (k === 'csv' && window.__pplDownloadCsv) window.__pplDownloadCsv();
+      if (k === 'cols') { var c = document.getElementById('pplColsBtn'); if (c) c.click(); }
+    }
+  });
+})();
+</script>
