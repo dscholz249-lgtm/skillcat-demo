@@ -1465,6 +1465,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5"/><path d="M16 11l2 2 4-4"/></svg>
         Seats <span class="count" id="navIdleCount" hidden></span>
       </div>
+      <div class="nav-item" data-page="goals">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg>
+        Team Goals
+      </div>
       <div class="nav-item" data-page="reports">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
         Reports
@@ -4806,6 +4810,36 @@
         </div>
       </div>
     </div>
+    <!-- ============ TEAM GOALS (PRD-540 / PRD-541) ============
+         Goals a manager sets for the team: training hours, courses completed,
+         or everyone through one course, scoped to a region or the company,
+         with a due date. The tank fills by trade as people train. Managers
+         see names; technicians only ever see their own (see the preview). -->
+    <div class="page" id="page-goals">
+      <header class="topbar">
+        <div>
+          <h1>Team Goals</h1>
+          <div class="sub">Set a goal and everyone's training counts toward it.</div>
+        </div>
+        <div class="topbar-right">
+          <div class="tg-role">
+            <span id="tgRoleLbl">Viewing as</span>
+            <div class="tg-seg" role="group" aria-labelledby="tgRoleLbl">
+              <button type="button" data-tg-role="admin" aria-pressed="true">Company admin</button>
+              <button type="button" data-tg-role="North" aria-pressed="false">North manager</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" data-tg-new><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>New Goal</button>
+        </div>
+      </header>
+      <div class="scroll">
+        <div class="tg-layout">
+          <div class="tg-list" id="tgList" aria-label="Goals"></div>
+          <div class="tg-detail" id="tgDetail"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-settings">
       <header class="topbar">
         <div class="topbar-left">
@@ -5066,6 +5100,80 @@
     </div>
 
     <!-- ============ MODAL: ADD SEATS ============ -->
+    <!-- ============ MODAL: NEW TEAM GOAL ============ -->
+    <div class="modal-overlay" id="tgModal">
+      <div class="modal tg-modal" role="dialog" aria-modal="true" aria-labelledby="tgModalTitle">
+        <div class="modal-head">
+          <h2 id="tgModalTitle">New Goal</h2>
+          <button class="modal-close" data-modal-cancel aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form class="tg-form" id="tgForm" novalidate>
+          <div class="tg-field">
+            <label for="tgName">Goal name</label>
+            <input class="tg-input" id="tgName" placeholder="e.g. 400 training hours by June 30" autocomplete="off">
+          </div>
+          <fieldset class="tg-field tg-fs">
+            <legend class="lbl">What counts</legend>
+            <div class="tg-types">
+              <label class="tg-type"><input type="radio" name="tgType" value="hours" checked><b>Training hours</b><span>Time spent in courses</span></label>
+              <label class="tg-type"><input type="radio" name="tgType" value="courses"><b>Courses completed</b><span>Any course, by anyone</span></label>
+              <label class="tg-type"><input type="radio" name="tgType" value="course"><b>One course</b><span>Everyone completes it</span></label>
+            </div>
+          </fieldset>
+          <div class="tg-row2">
+            <div class="tg-field" id="tgTargetWrap">
+              <label for="tgTarget" id="tgTargetLbl">Target (hours)</label>
+              <input class="tg-input" id="tgTarget" inputmode="numeric" value="400">
+            </div>
+            <div class="tg-field" id="tgCourseWrap" hidden>
+              <label for="tgCourse">Course</label>
+              <select class="tg-input" id="tgCourse"></select>
+            </div>
+            <div class="tg-field">
+              <label for="tgDue">Due date</label>
+              <input class="tg-input" id="tgDue" type="date" value="2026-06-30" min="2026-06-02">
+            </div>
+          </div>
+          <div class="tg-field">
+            <label for="tgScope" id="tgScopeLbl">Who it's for</label>
+            <select class="tg-input" id="tgScope">
+              <option value="all">Whole company</option>
+              <option value="North">North region</option>
+              <option value="South">South region</option>
+            </select>
+            <div class="tg-fixed" id="tgScopeFixed" hidden>North region (your region)</div>
+            <div class="tg-help" id="tgScopeHelp">Everyone's training in this group counts, seated or on the bench.</div>
+          </div>
+          <div class="tg-field">
+            <div class="lbl">Milestones <span class="tg-opt">optional</span></div>
+            <div id="tgMs"></div>
+            <button type="button" class="tg-more" data-tg-addms>+ Add milestone</button>
+          </div>
+          <div class="tg-err" id="tgErr" role="alert"></div>
+        </form>
+        <div class="modal-footer">
+          <button class="btn btn-link" data-modal-cancel>Cancel</button>
+          <button class="btn btn-primary" id="tgCreate">Create Goal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: TECHNICIAN PREVIEW ============ -->
+    <div class="modal-overlay" id="tgPreview">
+      <div class="modal tg-modal" role="dialog" aria-modal="true" aria-labelledby="tgPrevTitle">
+        <div class="modal-head">
+          <h2 id="tgPrevTitle">What technicians see</h2>
+          <button class="modal-close" data-modal-cancel aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div id="tgPrevBody"></div>
+        <div class="modal-footer"><button class="btn btn-ghost" data-modal-cancel>Close</button></div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="addSeatModal">
       <div class="modal">
         <div class="modal-head">
@@ -5232,7 +5340,7 @@
     target.classList.add('active');
 
     // sidebar active state
-    var sideMap = { reports: 'Reports', dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', 'task-detail': 'Library', 'task-wizard': 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
+    var sideMap = { goals: 'Team', reports: 'Reports', dashboard: 'Dashboard', people: 'People', person: 'People', library: 'Library', course: 'Library', cert: 'Library', 'task-detail': 'Library', 'task-wizard': 'Library', inbox: 'Inbox', 'inbox-detail': 'Inbox', 'ridealong-detail': 'Inbox', assign: 'Assign', seats: 'Seats', roster: 'Test', reviews: 'Reviews', billing: 'Billing', pricing: 'Billing', settings: 'Settings' };
     var label = sideMap[id];
     document.querySelectorAll('.sidebar .nav-item').forEach(n => {
       n.classList.remove('active');
@@ -10190,5 +10298,547 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
       if (k === 'cols') { var c = document.getElementById('pplColsBtn'); if (c) c.click(); }
     }
   });
+})();
+</script>
+
+<style>
+/* =====================================================================
+   TEAM GOALS (PRD-540 tank, PRD-541 goal types / scope / due date)
+   ===================================================================== */
+.tg-role { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #a1a1aa; }
+.tg-seg { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: #111114; }
+.tg-seg button { min-height: 34px; padding: 0 12px; border: 0; background: none; color: #a1a1aa; font: 600 13px var(--sans); border-radius: 7px; cursor: pointer; }
+.tg-seg button[aria-pressed="true"] { background: #232328; color: #fff; }
+.tg-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
+.tg-list { display: flex; flex-direction: column; gap: 10px; }
+.tg-gcard { text-align: left; width: 100%; background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text); font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+.tg-gcard:hover { border-color: #3a3a42; }
+.tg-gcard[aria-current="true"] { border-color: var(--orange); background: rgba(229,83,31,.07); }
+.tg-gname { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+.tg-gmeta { font-size: 12.5px; color: #a1a1aa; }
+.tg-bar { height: 6px; border-radius: 3px; background: #232328; overflow: hidden; }
+.tg-bar i { display: block; height: 100%; background: var(--orange); border-radius: 3px; }
+.tg-gnum { display: flex; justify-content: space-between; font: 500 12px var(--mono); color: #d4d4d8; }
+.tg-empty { border: 1px dashed #3a3a42; border-radius: 14px; padding: 28px 20px; text-align: center; color: #a1a1aa; font-size: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.tg-detail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tg-panel { background: var(--card-bg-real); border: 1px solid var(--border); border-radius: 14px; padding: 20px; min-width: 0; }
+.tg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.tg-title { margin: 0; font-size: 19px; font-weight: 700; }
+.tg-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tg-chip { font-size: 12px; padding: 3px 9px; border-radius: 12px; background: #1f1f24; color: #d4d4d8; border: 1px solid #2a2a30; }
+.tg-big { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.tg-big b { font: 600 40px var(--mono); }
+.tg-big span { color: #a1a1aa; font-size: 15px; }
+.tg-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.tg-stat { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tg-lbl { font: 600 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #a1a1aa; }
+.tg-stat .v { font: 500 20px var(--mono); margin-top: 4px; }
+.tg-stat .s { font-size: 12px; color: #a1a1aa; margin-top: 2px; }
+.tg-body { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 16px; align-items: start; }
+.tg-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tg-tankbox { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.tg-tankwrap { position: relative; width: 290px; height: 400px; }
+.tg-tank { position: absolute; left: 64px; bottom: 0; width: 110px; height: 400px; border: 3px solid #3a3a42; border-radius: 20px 20px 26px 26px; box-sizing: border-box; background: #0d0d10; overflow: hidden; }
+.tg-fill { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; display: flex; flex-direction: column-reverse; gap: 2px; }
+.tg-layer { flex: none; border-radius: 3px; position: relative; }
+.tg-layer:first-child { border-radius: 3px 3px 16px 16px; }
+.tg-you { position: absolute; left: 0; right: 0; top: 0; min-height: 6px; background: repeating-linear-gradient(135deg, #fff 0 4px, transparent 4px 8px); outline: 2px solid #fff; outline-offset: -2px; }
+.tg-mark { position: absolute; left: 64px; width: 110px; border-top: 1px dashed rgba(255,255,255,.45); }
+.tg-mark.goal { border-top-style: solid; border-color: rgba(255,255,255,.6); }
+.tg-mlabel { position: absolute; left: 186px; right: 0; font-size: 12px; line-height: 1.3; transform: translateY(50%); }
+.tg-mlabel .n { font: 600 12px var(--mono); color: var(--text); }
+.tg-mlabel .ok { color: #2bd07a; } .tg-mlabel .next { color: #f1c84b; } .tg-mlabel .dim { color: #a1a1aa; }
+.tg-now { position: absolute; left: 0; width: 56px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; font: 600 12.5px var(--mono); transform: translateY(50%); }
+.tg-now::after { content: ""; width: 8px; border-top: 2px solid #f4f4f5; }
+.tg-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-size: 12.5px; color: #d4d4d8; }
+.tg-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.tg-sw { width: 10px; height: 10px; border-radius: 3px; flex: none; display: inline-block; }
+.tg-h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.tg-ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.tg-weeks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; align-items: end; height: 130px; }
+.tg-wk { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; font-size: 11.5px; color: #a1a1aa; height: 100%; }
+.tg-wk .n { font: 500 11.5px var(--mono); color: #d4d4d8; }
+.tg-wk i { display: block; width: 100%; max-width: 44px; background: #3a3a42; border-radius: 5px 5px 2px 2px; }
+.tg-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #1a1a1e; font-size: 13.5px; }
+.tg-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-row .rg { color: #a1a1aa; font-size: 12.5px; }
+.tg-row .vv { font: 500 13px var(--mono); min-width: 64px; text-align: right; }
+.tg-more { min-height: 44px; background: none; border: 0; color: #f7763d; font: 600 13.5px var(--sans); padding: 0; cursor: pointer; }
+.tg-more:hover { color: #ff9a6b; }
+.tg-adm { font-size: 12px; color: #a1a1aa; display: inline-flex; gap: 6px; align-items: center; }
+.tg-adm svg { width: 14px; height: 14px; stroke-width: 2; }
+.tg-foot { font-size: 12.5px; color: #a1a1aa; margin-top: 8px; }
+.tg-tabs { display: flex; width: 100%; box-sizing: border-box; }
+.tg-tabs button { flex: 1; min-height: 40px; }
+.tg-n { font: 500 11.5px var(--mono); color: #a1a1aa; margin-left: 4px; }
+.tg-gtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.tg-stamp { flex: none; display: inline-block; border: 2px solid currentColor; border-radius: 6px; padding: 2px 7px; font: 800 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; transform: rotate(-6deg); }
+.tg-stamp.ok { color: #2bd07a; }
+.tg-stamp.miss { color: #f0584b; }
+.tg-tankbox { position: relative; }
+.tg-stamp.over { position: absolute; left: 119px; top: 96px; z-index: 2; transform: translate(-50%, -50%) rotate(-12deg); font-size: 20px; white-space: nowrap; padding: 6px 16px; border-width: 3px; border-radius: 10px; background: rgba(10,10,11,.8); box-shadow: 0 10px 30px rgba(0,0,0,.5); pointer-events: none; }
+.tg-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tg-del svg { width: 15px; height: 15px; }
+.tg-danger { background: #8f2620; border: 1px solid #b4382f; color: #fff; }
+.tg-danger:hover { background: #a32c25; }
+.tg-confirm { font-size: 13.5px; color: #d4d4d8; }
+/* New Goal form */
+.tg-modal { max-height: calc(100vh - 48px); overflow-y: auto; }
+.tg-form { display: flex; flex-direction: column; gap: 16px; margin: 14px 0 18px; }
+.tg-field > label, .tg-field .lbl, .tg-fs legend { display: block; font-size: 13.5px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; padding: 0; }
+.tg-fs { border: 0; margin: 0; padding: 0; min-width: 0; }
+.tg-opt { font-weight: 500; color: #a1a1aa; }
+.tg-input { width: 100%; box-sizing: border-box; height: 44px; background: #08080a; border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 0 14px; font: 500 15px var(--sans); color-scheme: dark; }
+.tg-input:focus { outline: none; border-color: var(--orange); }
+.tg-input[aria-invalid="true"] { border-color: #f0584b; }
+.tg-fixed[hidden] { display: none; }
+.tg-fixed { height: 44px; display: flex; align-items: center; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--text); background: #111114; font-size: 15px; }
+.tg-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tg-type { position: relative; border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: #a1a1aa; min-height: 44px; }
+.tg-type b { color: var(--text); font-size: 14px; }
+.tg-type input { position: absolute; opacity: 0; pointer-events: none; }
+.tg-type:has(input:checked) { border-color: var(--orange); background: rgba(229,83,31,.08); }
+.tg-type:has(input:focus-visible) { outline: 2px solid var(--orange); outline-offset: 2px; }
+.tg-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tg-row2 > [hidden] { display: none; }
+.tg-ms { display: grid; grid-template-columns: 110px minmax(0, 1fr) 44px; gap: 8px; margin-bottom: 8px; }
+.tg-x { width: 44px; height: 44px; border: 1px solid var(--border); background: none; color: #a1a1aa; border-radius: 10px; cursor: pointer; display: grid; place-items: center; }
+.tg-x svg { width: 16px; height: 16px; stroke-width: 2; }
+.tg-help { font-size: 12.5px; color: #a1a1aa; margin-top: 6px; line-height: 1.45; }
+.tg-err { color: #f0584b; font-size: 13px; min-height: 18px; }
+/* technician preview */
+.tg-phone { max-width: 360px; margin: 12px auto 4px; background: #0a0a0b; border: 1px solid var(--border); border-radius: 24px; padding: 18px 14px; display: flex; flex-direction: column; gap: 12px; }
+.tg-phone .tg-tankwrap { width: 300px; height: 330px; }
+.tg-phone .tg-tank { height: 330px; }
+.tg-yours { background: #1a120e; border: 1px solid #5a2a14; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tg-yours b { font-size: 15px; } .tg-yours .s { font-size: 12.5px; color: #d4d4d8; margin-top: 2px; }
+.tg-note { font-size: 12.5px; color: #a1a1aa; line-height: 1.45; margin-top: 10px; }
+@media (max-width: 1180px) { .tg-body { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .tg-layout { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .tg-stats { grid-template-columns: 1fr 1fr; }
+  .tg-role { width: 100%; }
+  .tg-seg button { min-height: 40px; white-space: nowrap; }
+  #page-goals .topbar-right { flex-wrap: wrap; width: 100%; }
+  .tg-types, .tg-row2 { grid-template-columns: 1fr; }
+  .tg-tankwrap { width: 100%; max-width: 290px; }
+  #page-goals .topbar { flex-wrap: wrap; }
+}
+</style>
+
+<script>
+/* TEAM GOALS — PRD-540 (tank) + PRD-541 (goal types, scope, due date).
+   Progress is synthesized from the seat roster so it lines up with People:
+   hours from each person's training-time rate, courses from their
+   completion rate, one-course goals from the certifications they hold. */
+(function () {
+  'use strict';
+  var S = window.SEATS;
+  var page = document.getElementById('page-goals');
+  if (!S || !page) return;
+
+  var DAY = 864e5, TODAY = Date.UTC(2026, 5, 1);
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var TRADES = [{ k: 'HVAC', c: '#f7763d' }, { k: 'Electrical', c: '#f1c84b' }, { k: 'Plumbing', c: '#7aa7ff' }, { k: 'Safety', c: '#2bd07a' }];
+  var COLOR = {}; TRADES.forEach(function (t) { COLOR[t.k] = t.c; });
+  var MIN_GROUP = 3; // technicians never see a trade with fewer contributors
+
+  function d(s) { return Date.parse(s + 'T00:00:00Z'); }
+  function fmt(t) { var x = new Date(t); return MON[x.getUTCMonth()] + ' ' + x.getUTCDate(); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { return (Math.round(v * 10) / 10).toLocaleString('en-US'); }
+  function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  function primary(p) { return ['HVAC', 'Electrical', 'Plumbing'][hash(p.id) % 3]; }
+
+  var COURSES = (function () {
+    var seen = {};
+    S.roster.forEach(function (p) { p.certs.forEach(function (c) { seen[c] = true; }); });
+    return Object.keys(seen).sort();
+  })();
+
+  var goals = [
+    { id: 'g1', name: '400 training hours by June 15', type: 'hours', target: 400, scope: 'all',
+      start: d('2026-05-01'), due: d('2026-06-15'),
+      milestones: [{ at: 100, reward: 'Coffee for the shop' }, { at: 200, reward: '' }, { at: 300, reward: 'Shop lunch' }] },
+    { id: 'g2', name: 'North: 60 courses by June 30', type: 'courses', target: 60, scope: 'North',
+      start: d('2026-04-01'), due: d('2026-06-30'), milestones: [{ at: 25, reward: '' }] },
+    { id: 'g3', name: 'Everyone in South through Lockout/Tagout', type: 'course', course: 'Lockout/Tagout', scope: 'South',
+      start: d('2026-05-20'), due: d('2026-07-15'), milestones: [] },
+    // Past goals: the due date has passed, so they sit in the archive.
+    { id: 'g4', name: 'North: 40 courses by May 31', type: 'courses', target: 40, scope: 'North',
+      start: d('2026-04-15'), due: d('2026-05-31'), milestones: [{ at: 20, reward: 'Pizza Friday' }] },
+    { id: 'g5', name: 'Everyone in North through OSHA 10', type: 'course', course: 'OSHA 10', scope: 'North',
+      start: d('2026-04-01'), due: d('2026-05-15'), milestones: [] },
+    { id: 'g6', name: '250 training hours in April', type: 'hours', target: 250, scope: 'all',
+      start: d('2026-04-01'), due: d('2026-04-30'), milestones: [{ at: 125, reward: 'Coffee for the shop' }] }
+  ];
+  var role = 'admin', sel = 'g1', showAll = {}, seq = 7, view = 'active', confirmDel = null;
+
+  // Regional managers see their region's goals and company-wide ones, never
+  // another region's. Only the goal's own level can delete it.
+  function canSee(g) { return role === 'admin' || g.scope === role || g.scope === 'all'; }
+  function canDelete(g) { return role === 'admin' || g.scope === role; }
+  function isPast(g) { return g.due < TODAY; }
+  function visible() {
+    return goals.filter(function (g) { return canSee(g) && (view === 'past') === isPast(g); })
+      .sort(function (a, b) { return view === 'past' ? b.due - a.due : 0; });
+  }
+  function unit(g) { return g.type === 'hours' ? 'hrs' : g.type === 'courses' ? 'courses' : 'people'; }
+  function typeLabel(g) { return g.type === 'hours' ? 'Training hours' : g.type === 'courses' ? 'Courses completed' : 'Course: ' + g.course; }
+  function scopeLabel(s) { return s === 'all' ? 'Whole company' : s + ' region'; }
+  function inScope(g) { return S.roster.filter(function (p) { return g.scope === 'all' || p.region === g.scope; }); }
+
+  function compute(g) {
+    var ppl = inScope(g);
+    var days = Math.max(0, (Math.min(TODAY, g.due) - g.start) / DAY);
+    var span = Math.max(1, (g.due - g.start) / DAY);
+    var rows = ppl.map(function (p) {
+      var tr = primary(p), split = {}, v = 0;
+      if (g.type === 'hours') {
+        v = Math.round(p.minutes / 60 / 30 * 3 * days * 2) / 2;
+        var safety = Math.round(v * 0.15 * 2) / 2;
+        split[tr] = v - safety; split.Safety = safety;
+      } else if (g.type === 'courses') {
+        v = Math.round(p.certsDone / 180 * days);
+        var sc = Math.floor(v / 6);
+        split[tr] = v - sc; split.Safety = sc;
+      } else {
+        v = p.certs.indexOf(g.course) >= 0 ? 1 : 0;
+        split.Completed = v;
+      }
+      return { p: p, v: v, split: split, trade: g.type === 'course' ? 'Completed' : tr };
+    });
+    var total = rows.reduce(function (a, r) { return a + r.v; }, 0);
+    var target = g.type === 'course' ? ppl.length : g.target;
+    var layers = g.type === 'course'
+      ? [{ k: 'Completed', c: '#2bd07a', v: total, n: total }]
+      : TRADES.map(function (t) {
+          var v = 0, n = 0;
+          rows.forEach(function (r) { if (r.split[t.k]) { v += r.split[t.k]; n++; } });
+          return { k: t.k, c: t.c, v: v, n: n };
+        });
+    var weeks = [];
+    if (g.type !== 'course' && days > 0) {
+      var wsum = 0, wk = Math.ceil(days / 7);
+      for (var i = 0; i < wk; i++) {
+        var len = Math.min(7, days - 7 * i), w = len * (1 + 0.3 * Math.sin(i * 1.9 + 1));
+        weeks.push({ label: fmt(g.start + 7 * i * DAY), w: w }); wsum += w;
+      }
+      weeks.forEach(function (x) { x.v = Math.round(total * x.w / wsum); });
+    }
+    return {
+      rows: rows.filter(function (r) { return r.v > 0; }).sort(function (a, b) { return b.v - a.v; }),
+      zero: rows.filter(function (r) { return r.v === 0; }),
+      people: ppl.length, total: total, target: target, layers: layers, weeks: weeks, days: days,
+      pct: target ? Math.min(100, Math.round(total / target * 100)) : 0,
+      left: Math.max(0, Math.ceil((g.due - TODAY) / DAY)),
+      proj: days > 0 && g.type !== 'course' ? total / days * span : null
+    };
+  }
+
+  // ---- tank ----------------------------------------------------------------
+  function tank(g, c, layers, you) {
+    var H = you ? 330 : 400, inner = H - 16;
+    var scale = c.target ? Math.min(1, c.target / Math.max(c.total, 1)) : 0;
+    var fill = layers.map(function (l) {
+      var h = c.target ? l.v / c.target * scale * inner : 0;
+      if (h <= 0) return '';
+      var band = '';
+      if (you && you.layer === l.k && l.v > 0) band = '<span class="tg-you" style="height:' + Math.max(6, you.v / l.v * h) + 'px"></span>';
+      return '<div class="tg-layer" style="height:' + h.toFixed(1) + 'px;background:' + l.c + '">' + band + '</div>';
+    }).join('');
+    var at = function (v) { return (8 + Math.min(1, v / (c.target || 1)) * inner).toFixed(1) + 'px'; };
+    var marks = (g.milestones || []).filter(function (m) { return m.at < c.target; }).map(function (m) {
+      var reached = c.total >= m.at, when = '';
+      if (reached) when = '<span class="ok">Reached ' + (c.days > 0 ? fmt(g.start + m.at / c.total * c.days * DAY) : '') + '</span>';
+      else when = '<span class="next">' + num(m.at - c.total) + ' ' + unit(g) + ' away</span>';
+      return '<div class="tg-mark" style="bottom:' + at(m.at) + '"></div>' +
+        '<div class="tg-mlabel" style="bottom:' + at(m.at) + '"><span class="n">' + num(m.at) + (reached ? ' ✓' : '') + '</span>' +
+        (m.reward ? ' <span class="dim">· ' + esc(m.reward) + '</span>' : '') + '<br>' + when + '</div>';
+    }).join('');
+    marks += '<div class="tg-mark goal" style="bottom:' + at(c.target) + '"></div>' +
+      '<div class="tg-mlabel" style="bottom:' + at(c.target) + '"><span class="n">' + num(c.target) + '</span><br><span class="dim">Goal · ' + fmt(g.due) + '</span></div>';
+    var now = c.total > 0 ? '<div class="tg-now" style="bottom:' + at(c.total) + '">' + num(c.total) + '</div>' : '';
+    var label = 'Tank: ' + num(c.total) + ' of ' + num(c.target) + ' ' + unit(g) + '. ' +
+      layers.filter(function (l) { return l.v > 0; }).map(function (l) { return l.k + ' ' + num(l.v); }).join(', ') + '.';
+    return '<div class="tg-tankwrap" style="height:' + H + 'px">' +
+      '<div class="tg-tank" role="img" aria-label="' + esc(label) + '" style="height:' + H + 'px"><div class="tg-fill">' + fill + '</div></div>' +
+      marks + now + '</div>';
+  }
+  function legend(layers, g) {
+    return '<div class="tg-legend">' + layers.map(function (l) {
+      return '<span><i class="tg-sw" style="background:' + l.c + '"></i>' + esc(l.k) + ' ' + num(l.v) + '</span>';
+    }).join('') + (g.type === 'course' ? '' : '') + '</div>';
+  }
+
+  // ---- list + detail -------------------------------------------------------
+  function stamp(g, c, cls) {
+    if (!isPast(g)) return '';
+    var ok = c.total >= c.target;
+    return '<span class="tg-stamp ' + (ok ? 'ok' : 'miss') + (cls ? ' ' + cls : '') + '">' + (ok ? 'Completed!' : 'Missed!') + '</span>';
+  }
+  function card(g) {
+    var c = compute(g), past = isPast(g), ok = c.total >= c.target;
+    var bar = past ? (ok ? '#2bd07a' : '#5a5a63') : 'var(--orange)';
+    return '<button type="button" class="tg-gcard" data-tg-goal="' + g.id + '" aria-current="' + (g.id === sel) + '">' +
+      '<span class="tg-gtop"><span class="tg-gname">' + esc(g.name) + '</span>' + stamp(g, c) + '</span>' +
+      '<span class="tg-gmeta">' + esc(typeLabel(g)) + ' · ' + scopeLabel(g.scope) + ' · ' + (past ? 'Ended ' : 'Due ') + fmt(g.due) + '</span>' +
+      '<span class="tg-bar"><i style="width:' + c.pct + '%;background:' + bar + '"></i></span>' +
+      '<span class="tg-gnum"><span>' + num(c.total) + ' / ' + num(c.target) + ' ' + unit(g) + '</span><span>' + c.pct + '%</span></span></button>';
+  }
+  function render() {
+    var all = goals.filter(canSee);
+    var nPast = all.filter(isPast).length, nActive = all.length - nPast;
+    var vis = visible();
+    if (!vis.some(function (g) { return g.id === sel; })) sel = vis.length ? vis[0].id : null;
+    var list = document.getElementById('tgList'), det = document.getElementById('tgDetail');
+    var tabs = '<div class="tg-seg tg-tabs" role="group" aria-label="Which goals">' +
+      '<button type="button" data-tg-view="active" aria-pressed="' + (view === 'active') + '">Active <span class="tg-n">' + nActive + '</span></button>' +
+      '<button type="button" data-tg-view="past" aria-pressed="' + (view === 'past') + '">Past Goals <span class="tg-n">' + nPast + '</span></button></div>';
+    list.innerHTML = tabs + vis.map(card).join('');
+    if (!vis.length) {
+      det.innerHTML = view === 'past'
+        ? '<div class="tg-empty">No past goals yet. Goals move here once their due date passes.</div>'
+        : '<div class="tg-empty">No active goals for ' + (role === 'admin' ? 'your company' : 'the ' + role + ' region') + '.' +
+          '<button type="button" class="btn btn-primary" data-tg-new>New Goal</button></div>';
+      return;
+    }
+    var g = goals.filter(function (x) { return x.id === sel; })[0];
+    det.innerHTML = detail(g, compute(g));
+  }
+
+  function lockNote() {
+    return '<span class="tg-adm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Names visible to managers only</span>';
+  }
+  function peopleRows(g, rows, all) {
+    var shown = all ? rows : rows.slice(0, 8);
+    return shown.map(function (r) {
+      return '<div class="tg-row"><i class="tg-sw" style="background:' + (COLOR[r.trade] || '#2bd07a') + '"></i>' +
+        '<span class="nm">' + esc(r.p.name) + '</span>' +
+        (g.scope === 'all' ? '<span class="rg">' + esc(r.p.region) + '</span>' : '') +
+        (g.type === 'course' ? '' : '<span class="vv">' + num(r.v) + ' ' + unit(g) + '</span>') + '</div>';
+    }).join('');
+  }
+
+  var TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+  function detail(g, c) {
+    var past = isPast(g), started = c.days > 0, ok = c.total >= c.target;
+    // A regional manager looking at a company-wide goal sees names from their
+    // own region only; everyone else is a count.
+    var mine = function (r) { return role === 'admin' || r.p.region === role; };
+    var rows = c.rows.filter(mine), zero = c.zero.filter(mine);
+    var hidRows = c.rows.length - rows.length, hidZero = c.zero.length - zero.length;
+    var hidNote = function (n, what) {
+      return n ? '<div class="tg-foot">+ ' + n + ' ' + what + ' in other regions. Names outside the ' + esc(role) + ' region are hidden.</div>' : '';
+    };
+
+    var acts = '<div class="tg-acts">';
+    if (confirmDel === g.id) {
+      acts += '<span class="tg-confirm">Delete this goal for everyone?</span>' +
+        '<button type="button" class="btn btn-ghost" data-tg-delno>Cancel</button>' +
+        '<button type="button" class="btn tg-danger" data-tg-delyes>Delete Goal</button>';
+    } else {
+      acts += '<button type="button" class="btn btn-ghost" data-tg-preview>Preview technician view</button>';
+      if (canDelete(g)) acts += '<button type="button" class="btn btn-ghost tg-del" data-tg-del>' + TRASH + 'Delete</button>';
+    }
+    acts += '</div>';
+
+    var pace = c.proj == null ? '<div class="v">—</div><div class="s">' + (g.type === 'course' ? 'Counts current completions' : 'Too early to tell') + '</div>'
+      : '<div class="v" style="color:' + (c.proj >= c.target ? '#2bd07a' : '#f1c84b') + '">' + num(Math.round(c.proj)) + '</div><div class="s">' +
+        (c.proj >= c.target ? 'On track for the due date' : 'Behind: needs ' + num(Math.ceil((c.target - c.total) / Math.max(1, c.left / 7))) + ' ' + unit(g) + '/week') + '</div>';
+    var s1 = past
+      ? '<div class="tg-stat"><div class="tg-lbl">Ended</div><div class="v">' + fmt(g.due) + '</div><div class="s">Ran ' + Math.round((g.due - g.start) / DAY) + ' days</div></div>'
+      : '<div class="tg-stat"><div class="tg-lbl">Days left</div><div class="v">' + c.left + '</div><div class="s">Due ' + fmt(g.due) + '</div></div>';
+    var s2 = past
+      ? '<div class="tg-stat"><div class="tg-lbl">Result</div><div class="v" style="color:' + (ok ? '#2bd07a' : '#f0584b') + '">' + (ok ? 'Completed' : 'Missed') + '</div><div class="s">' +
+          (ok ? (c.total > c.target ? num(c.total - c.target) + ' ' + unit(g) + ' over the goal' : 'Right on the goal') : 'Short by ' + num(c.target - c.total) + ' ' + unit(g)) + '</div></div>'
+      : '<div class="tg-stat"><div class="tg-lbl">' + (g.type === 'course' ? 'Still to go' : 'On pace for') + '</div>' +
+          (g.type === 'course' ? '<div class="v">' + (c.target - c.total) + '</div><div class="s">people</div>' : pace) + '</div>';
+    var s3 = '<div class="tg-stat"><div class="tg-lbl">' + (g.type === 'course' ? 'Completed' : 'Contributed') + '</div><div class="v">' + c.rows.length + ' of ' + c.people + '</div><div class="s">' + (g.type === 'course' ? 'people in scope' : 'people trained') + '</div></div>';
+
+    var head = '<div class="tg-panel">' +
+      '<div class="tg-head"><div><h2 class="tg-title">' + esc(g.name) + '</h2><div class="tg-chips">' +
+        '<span class="tg-chip">' + esc(typeLabel(g)) + '</span><span class="tg-chip">' + scopeLabel(g.scope) + '</span>' +
+        '<span class="tg-chip">' + (past ? 'Ended ' : 'Due ') + fmt(g.due) + '</span><span class="tg-chip">' + (past ? 'Counted from ' : 'Counting since ') + fmt(g.start) + '</span></div></div>' +
+        acts + '</div>' +
+      '<div class="tg-big"><b>' + num(c.total) + '</b><span>of ' + num(c.target) + ' ' + unit(g) + ' · ' + c.pct + '%</span></div>' +
+      '<div class="tg-stats">' + s1 + s2 + s3 + '</div>' +
+      (started || past || g.type === 'course' ? '' : '<div class="tg-foot">Counting starts today. Training from here to ' + fmt(g.due) + ' fills the tank.</div>') + '</div>';
+
+    var tankPanel = '<div class="tg-panel tg-tankbox">' + tank(g, c, c.layers).replace(/^(<div class="tg-tankwrap"[^>]*>)/, function (m) { return m + stamp(g, c, 'over'); }) + legend(c.layers, g) + '</div>';
+
+    var side = '';
+    if (g.type !== 'course') {
+      var max = Math.max.apply(null, c.weeks.map(function (w) { return w.v; }).concat([1]));
+      side += '<div class="tg-panel"><div class="tg-ph"><h3 class="tg-h3">By week</h3><span class="tg-adm">' + unit(g) + ' per week</span></div>' +
+        (c.weeks.length ? '<div class="tg-weeks">' + c.weeks.map(function (w) {
+          return '<div class="tg-wk"><span class="n">' + num(w.v) + '</span><i style="height:' + Math.round(w.v / max * 84) + 'px"></i><span>' + w.label + '</span></div>';
+        }).join('') + '</div>' : '<div class="tg-foot">No weeks yet.</div>') + '</div>';
+      side += '<div class="tg-panel"><div class="tg-ph"><h3 class="tg-h3">Contributors · ' + c.rows.length + '</h3>' + lockNote() + '</div>' +
+        (rows.length ? peopleRows(g, rows, showAll[g.id]) : '<div class="tg-foot">Nobody yet.</div>') +
+        (rows.length > 8 ? '<button type="button" class="tg-more" data-tg-all="' + g.id + '">' + (showAll[g.id] ? 'Show fewer' : 'Show all ' + rows.length) + '</button>' : '') +
+        hidNote(hidRows, hidRows === 1 ? 'contributor' : 'contributors') +
+        (c.zero.length ? '<div class="tg-foot">' + c.zero.length + ' ' + (c.zero.length === 1 ? 'person' : 'people') + (past ? ' didn\'t contribute.' : (c.zero.length === 1 ? ' hasn\'t' : ' haven\'t') + ' contributed yet.') + '</div>' : '') + '</div>';
+    } else {
+      side += '<div class="tg-panel"><div class="tg-ph"><h3 class="tg-h3">Completed · ' + c.rows.length + '</h3>' + lockNote() + '</div>' +
+        (rows.length ? peopleRows(g, rows, true) : '<div class="tg-foot">Nobody yet.</div>') + hidNote(hidRows, 'completed') + '</div>';
+      side += '<div class="tg-panel"><div class="tg-ph"><h3 class="tg-h3">' + (past ? 'Didn\'t finish' : 'Not yet') + ' · ' + c.zero.length + '</h3>' +
+        (past ? '' : '<button type="button" class="btn btn-ghost btn-sm" data-page="assign">Assign ' + esc(g.course) + '</button>') + '</div>' +
+        (zero.length ? peopleRows(g, zero, showAll[g.id]) : '<div class="tg-foot">Everyone\'s done.</div>') +
+        (zero.length > 8 ? '<button type="button" class="tg-more" data-tg-all="' + g.id + '">' + (showAll[g.id] ? 'Show fewer' : 'Show all ' + zero.length) + '</button>' : '') +
+        hidNote(hidZero, 'not finished') + '</div>';
+    }
+    return head + '<div class="tg-body">' + tankPanel + '<div class="tg-side">' + side + '</div></div>';
+  }
+
+  // ---- technician preview --------------------------------------------------
+  function preview(g) {
+    var c = compute(g);
+    var me = c.rows.length ? c.rows[Math.floor(c.rows.length / 2)] : null;
+    // Small-group rule: trades with fewer than MIN_GROUP contributors fold into "Other".
+    var layers = [], other = { k: 'Other trades', c: '#8b8b94', v: 0, n: 0 }, folded = [];
+    c.layers.forEach(function (l) {
+      if (g.type !== 'course' && l.n > 0 && l.n < MIN_GROUP) { other.v += l.v; other.n += l.n; folded.push(l.k); }
+      else layers.push(l);
+    });
+    if (other.v > 0) layers.push(other);
+    var you = null;
+    if (me) {
+      var k = g.type === 'course' ? 'Completed' : me.trade;
+      if (folded.indexOf(k) >= 0) k = other.k;
+      you = { layer: k, v: g.type === 'course' ? 1 : me.split[me.trade] };
+    }
+    var mates = Math.max(0, c.rows.length - (me ? 1 : 0));
+    var ms = (g.milestones || []).filter(function (m) { return m.at < c.target; });
+    var body = '<div class="tg-phone">' +
+      '<div><div class="tg-lbl">Team goal · ' + scopeLabel(g.scope) + '</div><div class="tg-title" style="font-size:18px;margin-top:4px">' + esc(g.name) + '</div>' +
+      '<div class="tg-foot" style="margin-top:4px">' + num(c.total) + ' of ' + num(c.target) + ' ' + unit(g) + ' · ' + c.left + ' days left</div></div>' +
+      tank(g, c, layers, you) + legend(layers, g) +
+      (me ? '<div class="tg-yours"><div><b>' + esc(me.p.name) + '</b><div class="s">' +
+        (mates >= MIN_GROUP ? 'You and ' + mates + ' teammates' : 'You and your teammates') + '. Names stay private.</div></div>' +
+        '<span style="font:500 17px var(--mono);white-space:nowrap">' + (g.type === 'course' ? 'Done ✓' : num(me.v) + ' ' + unit(g)) + '</span></div>' : '') +
+      '<span class="btn btn-primary" style="height:48px;justify-content:center">Continue training</span></div>';
+    body += '<div class="tg-note">Previewing as ' + (me ? esc(me.p.name) : 'a technician') + '. Technicians see the tank, ' + (ms.length ? 'milestones, ' : '') +
+      'the team total and only their own name and ' + unit(g) + '. ' +
+      (folded.length ? folded.join(' and ') + (folded.length === 1 ? ' has' : ' have') + ' fewer than ' + MIN_GROUP + ' contributors, so ' + (folded.length === 1 ? 'it shows' : 'they show') + ' as "Other trades" and nobody can be singled out.'
+        : 'Any trade with fewer than ' + MIN_GROUP + ' contributors would show as "Other trades", so nobody can be singled out.') + '</div>';
+    document.getElementById('tgPrevBody').innerHTML = body;
+    document.getElementById('tgPreview').classList.add('open');
+  }
+
+  // ---- New Goal ------------------------------------------------------------
+  var modal = document.getElementById('tgModal');
+  var X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+  function $(id) { return document.getElementById(id); }
+  function msRow() {
+    var n = $('tgMs').children.length + 1;
+    var div = document.createElement('div');
+    div.className = 'tg-ms';
+    div.innerHTML = '<input class="tg-input" inputmode="numeric" aria-label="Milestone ' + n + ' amount" placeholder="Amount">' +
+      '<input class="tg-input" aria-label="Milestone ' + n + ' reward" placeholder="Reward (optional), e.g. Shop lunch">' +
+      '<button type="button" class="tg-x" data-tg-delms aria-label="Remove milestone ' + n + '">' + X + '</button>';
+    $('tgMs').appendChild(div);
+  }
+  function syncType() {
+    var t = modal.querySelector('input[name="tgType"]:checked').value;
+    $('tgTargetWrap').hidden = t === 'course';
+    $('tgCourseWrap').hidden = t !== 'course';
+    $('tgTargetLbl').textContent = t === 'hours' ? 'Target (hours)' : 'Target (courses)';
+    if (t === 'courses' && $('tgTarget').value === '400') $('tgTarget').value = '50';
+    if (t === 'hours' && $('tgTarget').value === '50') $('tgTarget').value = '400';
+    syncScopeHelp();
+  }
+  function syncScopeHelp() {
+    var t = modal.querySelector('input[name="tgType"]:checked').value;
+    var scope = role === 'admin' ? $('tgScope').value : role;
+    var n = inScope({ scope: scope }).length;
+    $('tgScopeHelp').textContent = t === 'course'
+      ? 'Target: all ' + n + ' people in this group, seated or on the bench.'
+      : 'Training by all ' + n + ' people in this group counts, seated or on the bench.';
+  }
+  function openNew() {
+    $('tgForm').reset();
+    $('tgMs').innerHTML = '';
+    $('tgErr').textContent = '';
+    modal.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); });
+    $('tgCourse').innerHTML = COURSES.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+    $('tgScope').hidden = role !== 'admin';
+    $('tgScopeFixed').hidden = role === 'admin';
+    $('tgScopeLbl').setAttribute('for', role === 'admin' ? 'tgScope' : '');
+    syncType();
+    modal.classList.add('open');
+    setTimeout(function () { $('tgName').focus(); }, 30);
+  }
+  function fail(el, msg) { el.setAttribute('aria-invalid', 'true'); $('tgErr').textContent = msg; el.focus(); return false; }
+  function create() {
+    modal.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); });
+    var t = modal.querySelector('input[name="tgType"]:checked').value;
+    var name = $('tgName').value.trim();
+    var target = parseFloat($('tgTarget').value);
+    var due = d($('tgDue').value || '');
+    if (!name) return fail($('tgName'), 'Give the goal a name.');
+    if (t !== 'course' && !(target > 0)) return fail($('tgTarget'), 'Enter a target above zero.');
+    if (!(due > TODAY)) return fail($('tgDue'), 'Pick a due date after today.');
+    var ms = [];
+    [].forEach.call($('tgMs').children, function (row) {
+      var ins = row.querySelectorAll('input'), at = parseFloat(ins[0].value);
+      if (at > 0) ms.push({ at: at, reward: ins[1].value.trim() });
+    });
+    ms.sort(function (a, b) { return a.at - b.at; });
+    var g = { id: 'g' + (seq++), name: name, type: t, target: t === 'course' ? 0 : target,
+      course: t === 'course' ? $('tgCourse').value : null,
+      scope: role === 'admin' ? $('tgScope').value : role, start: TODAY, due: due, milestones: ms };
+    goals.unshift(g); sel = g.id; view = 'active'; confirmDel = null;
+    modal.classList.remove('open');
+    render();
+    if (window.__ppl && window.__ppl.toast) window.__ppl.toast('Goal created. ' + (g.scope === 'all' ? 'Everyone at the company' : 'Technicians in the ' + esc(g.scope) + ' region') + ' can see it now.');
+  }
+
+  // ---- events --------------------------------------------------------------
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.closest('[data-tg-new]')) { openNew(); return; }
+    var gc = t.closest('[data-tg-goal]');
+    if (gc) { sel = gc.dataset.tgGoal; confirmDel = null; render(); return; }
+    var tv = t.closest('[data-tg-view]');
+    if (tv) { view = tv.dataset.tgView; confirmDel = null; render(); return; }
+    if (t.closest('[data-tg-del]')) {
+      confirmDel = sel; render();
+      var no = page.querySelector('[data-tg-delno]'); if (no) no.focus();
+      return;
+    }
+    if (t.closest('[data-tg-delno]')) {
+      confirmDel = null; render();
+      var del = page.querySelector('[data-tg-del]'); if (del) del.focus();
+      return;
+    }
+    if (t.closest('[data-tg-delyes]')) {
+      var gone = goals.filter(function (x) { return x.id === sel; })[0];
+      goals = goals.filter(function (x) { return x.id !== sel; });
+      confirmDel = null; sel = null; render();
+      if (gone && window.__ppl && window.__ppl.toast) window.__ppl.toast('Deleted “' + esc(gone.name) + '”.');
+      return;
+    }
+    var r = t.closest('[data-tg-role]');
+    if (r) {
+      role = r.dataset.tgRole; confirmDel = null;
+      page.querySelectorAll('[data-tg-role]').forEach(function (b) { b.setAttribute('aria-pressed', String(b === r)); });
+      render(); return;
+    }
+    var a = t.closest('[data-tg-all]');
+    if (a) { showAll[a.dataset.tgAll] = !showAll[a.dataset.tgAll]; render(); return; }
+    if (t.closest('[data-tg-preview]')) { preview(goals.filter(function (x) { return x.id === sel; })[0]); return; }
+    if (t.closest('[data-tg-addms]')) { if ($('tgMs').children.length < 5) msRow(); return; }
+    var dm = t.closest('[data-tg-delms]');
+    if (dm) { dm.parentNode.remove(); return; }
+    if (t.closest('#tgCreate')) { create(); return; }
+  });
+  modal.addEventListener('change', function (e) {
+    if (e.target.name === 'tgType') syncType();
+    if (e.target.id === 'tgScope') syncScopeHelp();
+  });
+  $('tgForm').addEventListener('submit', function (e) { e.preventDefault(); create(); });
+
+  render();
 })();
 </script>
