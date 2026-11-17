@@ -30,7 +30,7 @@ python mock_platform.py
 The DB is recreated on every boot (and via the debug **reset** button). Nothing
 persists; this is throwaway.
 
-## Dashboard versions (v1.1 → v1.3)
+## Dashboard versions
 
 A blue **Design review** bar across the top of the page switches between whole
 copies of the dashboard, for showing how it progresses. The bar is a review
@@ -39,8 +39,10 @@ tool only, not part of the product:
 | Version | File |
 |---|---|
 | v1.1 | `manager_dashboard.html` |
-| v1.2 | `manager_dashboard_v1.2.html` |
-| v1.3 | `manager_dashboard_v1.3.html` |
+
+v1.2 and v1.3 were folded into v1.1 in Nov 2026 (v1.3's dashboard setup, v1.2's
+seat-swap panel). Design concepts are reviewed elsewhere now; the bar still
+works for more versions if a row is added to `VERSIONS`.
 
 - Edit each file freely; they share the mock API and data. The bar is added
   by the server (`version-switcher.js`), so don't add it to the files.

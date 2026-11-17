@@ -433,10 +433,11 @@ def resolve_prototype():
 # PRD-484: dashboard versions to present side by side, oldest first. Each is a
 # whole copy of the prototype, so a later version can move or add anything.
 # Only files that exist are offered; the first is the default for a bare "/".
+# v1.2 and v1.3 were folded into v1.1 (Nov 2026): v1.3's dashboard setup
+# (PRD-500) and v1.2's seat-swap panel (PRD-522). Design concepts are reviewed
+# elsewhere now, so there's one version unless a row is added back here.
 VERSIONS = [
     ("1.1", "manager_dashboard.html"),
-    ("1.2", "manager_dashboard_v1.2.html"),
-    ("1.3", "manager_dashboard_v1.3.html"),
 ]
 
 

@@ -78,6 +78,9 @@ def init_beta_db():
     CREATE TABLE IF NOT EXISTS codes (email TEXT PRIMARY KEY, hash TEXT, expires_at TEXT, attempts INTEGER, sent_at TEXT);
     CREATE INDEX IF NOT EXISTS events_at ON events (at);
     """)
+    # v1.2 and v1.3 were folded into v1.1: keep any screens promoted from them.
+    c.execute("UPDATE OR IGNORE promotions SET version='1.1' WHERE version != '1.1'")
+    c.execute("DELETE FROM promotions WHERE version != '1.1'")
     c.commit()
     c.close()
 
