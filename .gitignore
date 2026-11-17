@@ -18,3 +18,6 @@ mock_platform.db
 
 # macOS
 .DS_Store
+
+# Beta Group data when there's no /data volume (local runs)
+.beta-data/

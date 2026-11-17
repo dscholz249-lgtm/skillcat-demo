@@ -51,6 +51,52 @@ tool only, not part of the product:
   the version you last picked in that browser, or v1.1 for anyone new.
 - A fix that every version needs has to be made in each file.
 
+## Sign-in and Beta Group (PRD-543)
+
+The dashboard sits behind an email sign-in. A signed-in browser stays signed in
+for 400 days (the longest browsers allow); the lists are re-checked on every
+request, so removing someone locks them out straight away.
+
+- `@skillcatapp.com` addresses listed in `INTERNAL_EMAILS` get the internal demo
+  at `/`, after a 6-digit code emailed to them (10 minutes, 5 tries).
+- Addresses in `BETA_EMAILS` get the **Beta Group** version at `/beta` with just
+  their email (set `BETA_REQUIRE_CODE=1` to give them a code too).
+- Anyone else is refused. The mock API (`/api/...`) and portfolio pages stay open.
+
+**Promoting screens.** On any screen, turn on **Show to Beta Group** in the blue
+review bar. Everything starts off. Detail screens follow their parent (promote
+People and the person detail comes with it). Beta Group uses pages from one
+version at a time. **Beta Group** in the version links opens what testers see.
+
+**Testers** get a **Leave a note** button. Their screens, time on each screen and
+the names of buttons/links they click are recorded (never what they type, except
+the notes). SkillCat staff previewing `/beta` are never tracked.
+
+**Daily report.** At 11:55pm ET a Railway cron calls `POST /api/beta/daily-report`
+and the day's activity goes to Slack, with a written analysis (from Claude when
+`ANTHROPIC_API_KEY` is set, otherwise a plain summary). Staff can see a draft any
+time at `/api/beta/report-preview?day=YYYY-MM-DD`.
+
+Beta data lives in `beta.db` on the Railway volume at `/data`, so it survives
+deploys (the mock DB doesn't). Variables:
+
+| Variable | |
+|---|---|
+| `INTERNAL_EMAILS` | SkillCat staff for the internal demo, comma separated |
+| `BETA_EMAILS` | approved testers, comma separated |
+| `RESEND_API_KEY` | sends sign-in codes (`RESEND_FROM` optional, default `noreply@tryskillcat.com`) |
+| `BETA_REQUIRE_CODE` | optional; `1` gives testers a code too |
+| `SLACK_WEBHOOK_URL` | where the daily report posts |
+| `CRON_SECRET` | bearer token the report cron sends |
+| `ANTHROPIC_API_KEY` | optional, for the written analysis |
+| `SESSION_SECRET` | optional; otherwise generated and kept on the volume |
+
+Cron service (schedule `55 3,4 * * *`; only the run at 11pm ET does anything):
+
+```
+sh -c 'apk add --no-cache curl >/dev/null 2>&1; curl -fsS -X POST -H "authorization: Bearer $CRON_SECRET" "https://<demo-domain>/api/beta/daily-report"'
+```
+
 ## Deploy to Railway
 
 The repo includes `requirements.txt` and a `Procfile` — Railway/Nixpacks

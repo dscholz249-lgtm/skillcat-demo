@@ -80,8 +80,22 @@
     ".review-copy{background:transparent;border:1px solid #3b5aa8;color:#c9d7fb;border-radius:8px;",
     "padding:6px 11px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}",
     ".review-copy:hover{background:rgba(122,167,255,.12)}",
+    ".review-beta{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid #3b5aa8;",
+    "color:#c9d7fb;border-radius:8px;padding:5px 10px 5px 6px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}",
+    ".review-beta:hover{background:rgba(122,167,255,.12)}",
+    ".review-beta:focus-visible{outline:2px solid #fff;outline-offset:-2px}",
+    ".review-beta .sw{position:relative;width:28px;height:16px;border-radius:8px;background:#2b3a63;flex:none;transition:background .15s}",
+    ".review-beta .sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#c9d7fb;transition:left .15s}",
+    ".review-beta[aria-checked=true]{border-color:#f7763d;color:#fff}",
+    ".review-beta[aria-checked=true] .sw{background:#f7763d}",
+    ".review-beta[aria-checked=true] .sw::after{left:14px;background:#fff}",
+    ".review-beta[disabled]{opacity:.6;cursor:default}",
+    ".review-beta-msg{position:fixed;top:calc(var(--review-h) + 8px);right:16px;z-index:401;max-width:340px;",
+    "background:#16203a;border:1px solid #3b5aa8;border-radius:10px;padding:10px 12px;color:#e4ebff;",
+    "font:500 13px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.5)}",
     "@media (max-width:720px){.review-note{display:none}.review-bar{gap:8px;padding:0 10px}",
-    ".review-versions a{padding:6px 8px}.review-copy{padding:6px 8px}.review-copy .long{display:none}}",
+    ".review-versions a{padding:6px 8px}.review-copy{padding:6px 8px}.review-copy .long{display:none}",
+    ".review-beta .long{display:none}}",
   ].join("");
   document.head.appendChild(css);
 
@@ -95,6 +109,8 @@
     "Design review</span>" +
     '<span class="review-note">Not part of the product. For reviewing designs and flows only.</span>' +
     '<nav class="review-versions" aria-label="Dashboard version"></nav>' +
+    '<button type="button" class="review-beta" role="switch" aria-checked="false" disabled>' +
+    '<span class="sw" aria-hidden="true"></span><span><span class="long">Show to </span>Beta Group</span></button>' +
     '<button type="button" class="review-copy" aria-label="Copy link to this version and screen">Copy<span class="long"> link</span></button>';
 
   var nav = bar.querySelector(".review-versions");
@@ -111,6 +127,63 @@
       location.assign(urlFor(v)); // current screen, read at click time
     });
     nav.appendChild(a);
+  });
+
+  // PRD-543: "Beta Group" opens the tester version; it's not a file of its own.
+  var betaLink = document.createElement("a");
+  betaLink.textContent = "Beta Group";
+  betaLink.href = "/beta";
+  betaLink.title = "Open what Beta Group testers see";
+  nav.appendChild(betaLink);
+
+  // PRD-543: "Show to Beta Group" puts the current screen (and its detail
+  // screens) in the Beta Group version. Everything starts off.
+  var PARENT = { person: "people", course: "library", cert: "library", "task-detail": "library",
+    "task-wizard": "library", "inbox-detail": "inbox", "ridealong-detail": "inbox", pricing: "billing" };
+  var betaBtn = bar.querySelector(".review-beta");
+  var beta = { version: null, pages: [] }, betaMsgT;
+  function betaScreen() { var s = activeScreen(); return PARENT[s] || s; }
+  function betaMsg(text) {
+    var el = document.querySelector(".review-beta-msg");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "review-beta-msg";
+      el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.hidden = false;
+    clearTimeout(betaMsgT);
+    betaMsgT = setTimeout(function () { el.hidden = true; }, 4200);
+  }
+  function syncBeta() {
+    var s = betaScreen();
+    var on = beta.version === cfg.current && beta.pages.indexOf(s) !== -1;
+    betaBtn.setAttribute("aria-checked", String(on));
+    betaBtn.title = on ? "Testers can see this screen. Click to hide it from them."
+                       : "Testers can't see this screen. Click to show it to them.";
+  }
+  fetch("/api/beta/promotions", { credentials: "same-origin" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { if (!d) return; beta = d; betaBtn.disabled = false; syncBeta(); })
+    .catch(function () {});
+  betaBtn.addEventListener("click", function () {
+    var s = betaScreen(), on = betaBtn.getAttribute("aria-checked") !== "true";
+    betaBtn.disabled = true;
+    fetch("/api/beta/promotions", {
+      method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ version: cfg.current, page: s, on: on })
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        betaBtn.disabled = false;
+        if (res.d && res.d.pages) beta = res.d;
+        syncBeta();
+        if (!res.ok) { betaMsg(res.d && res.d.error || "Couldn't change Beta Group. Try again."); return; }
+        var n = beta.pages.length;
+        betaMsg((on ? "Testers can now see this screen. " : "Hidden from testers. ") +
+          (n ? n + " screen" + (n === 1 ? "" : "s") + " in Beta Group." : "Beta Group is empty."));
+      })
+      .catch(function () { betaBtn.disabled = false; betaMsg("Couldn't change Beta Group. Try again."); });
   });
 
   var copy = bar.querySelector(".review-copy");
@@ -139,9 +212,10 @@
 
   // Keep ?v, #screen and the version links current as the presenter moves around.
   function refresh() {
+    syncBeta();
     syncUrl();
     Array.prototype.forEach.call(nav.children, function (a, i) {
-      a.href = urlFor(cfg.versions[i]);
+      if (i < cfg.versions.length) a.href = urlFor(cfg.versions[i]);
     });
   }
   document.addEventListener("click", function () { setTimeout(refresh, 0); }, true);

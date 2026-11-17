@@ -15,16 +15,20 @@ Run:
 The prototype file is resolved from $PROTOTYPE_PATH, else ./manager_dashboard.html,
 else ../manager_dashboard.html.
 
-This is throwaway. No real auth, no real data. SQLite file is recreated on boot.
+This is throwaway. No real data. SQLite file is recreated on boot.
+The dashboard itself sits behind a typed-email sign-in, and the Beta Group
+version keeps its data on the Railway volume: see beta.py (PRD-543).
 """
 
 import os, json, sqlite3, hmac, hashlib, base64, datetime, pathlib
 from flask import Flask, request, jsonify, Response, abort
 
 from portfolio_mock import (portfolio_bp, create_portfolio_tables, seed_portfolio)
+import beta
 
 APP = Flask(__name__)
 APP.register_blueprint(portfolio_bp)
+beta.setup(APP)  # PRD-543: sign-in, /beta, notes, tracking, daily report
 
 
 # Mock-only CORS: lets a separately-hosted mini-app call the API cross-origin.
@@ -448,6 +452,11 @@ def available_versions():
 
 @APP.get("/")
 def serve_prototype():
+    # PRD-543: the internal demo is for @skillcatapp.com sign-ins; approved
+    # testers are sent to /beta, everyone else to the sign-in page.
+    gate = beta.internal_or_redirect()
+    if gate:
+        return gate
     versions = available_versions()
     if not versions:
         return ("<h1>Prototype not found</h1><p>Set PROTOTYPE_PATH or place "
@@ -464,6 +473,11 @@ def serve_prototype():
     )
     html = html + inject  # prototype ends with </script>, no </body>; append is safe
     return Response(html, mimetype="text/html")
+
+
+@APP.get("/beta")
+def serve_beta():
+    return beta.serve_beta(lambda label: dict(available_versions()).get(label))
 
 
 @APP.get("/version-switcher.js")
