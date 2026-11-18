@@ -104,10 +104,18 @@ sh -c 'apk add --no-cache curl >/dev/null 2>&1; curl -fsS -X POST -H "authorizat
 Registered in the Labs Console as **Beta Demo Dashboard**. Once a day a cron
 calls `POST /api/internal/labs-metrics` (bearer `CRON_SECRET`), which posts
 yesterday's snapshot (a UTC day) as two signed events: `metrics.daily` and
-`metrics.activity.daily`. No user events: the Console has no user model for
-this product. The code is in `labs_console.py`.
+`metrics.activity.daily`. The code is in `labs_console.py`.
 
-- **Users** are the Beta Group testers in `BETA_EMAILS`. Staff are never
+**The Beta Group lives in the Console (PRD-547).** Every 10 minutes the app reads
+it (signed `GET /v1/beta-group`) and stores it in `beta.db`; sign-in only reads
+the stored copy, so a Console outage never blocks anyone. Add or remove someone
+on the Console's People page and the demo follows within 10 minutes.
+`BETA_EMAILS` still adds one-off testers on top. A tester's first sign-in is
+sent as `user.registered` (losing access as `user.removed`), so the People page
+shows who is in this experiment. The Console's Update button calls
+`POST /api/labs/refresh` once that's set as the product's refresh URL.
+
+- **Users** are the Beta Group testers (the Console's Beta Group plus `BETA_EMAILS`). Staff are never
   tracked, so they never count. The breakdown is Active to date / Not yet active.
 - **Active** means a tester with any tracked screen view, time on a screen,
   click or note that day. DAU, MAU, last active and retention (d1/w1/m1/m6,

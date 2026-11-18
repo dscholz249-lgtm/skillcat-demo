@@ -1,17 +1,28 @@
 """
-Labs Console — the daily snapshot for "Beta Demo Dashboard" (PRD-539)
-====================================================================
-The Console (product-experiment-console) is a registry: it never calls this
-app, and this app never waits on it. Once a day a Railway cron hits
+Labs Console — "Beta Demo Dashboard" (PRD-539, PRD-547)
+=======================================================
+This app never waits on the Console (product-experiment-console).
+
+Daily snapshot (PRD-539). Once a day a Railway cron hits
 POST /api/internal/labs-metrics, which posts two signed events for yesterday
 (UTC day, as the Console's other products do):
 
   * metrics.daily           who the Beta Group is, and who used it
   * metrics.activity.daily  what they did
 
-No user events: the Console has this product registered without a user model.
+The Beta Group and who's in it (PRD-547). The Beta Group is kept on the
+Console's People page:
 
-The users are the Beta Group testers ($BETA_EMAILS). SkillCat staff on the
+  * Every 10 minutes this app reads it (signed GET /v1/beta-group) and stores
+    it in beta.db. Sign-in only ever reads the stored copy, so a Console outage
+    never blocks anyone. BETA_EMAILS still adds one-off testers on top.
+  * A tester's first sign-in is sent as user.registered (external_user_id is
+    their email), and losing access as user.removed, so the People page shows
+    who is in this experiment. Sent in the background, retried by the sync.
+  * The Console's Update button calls POST /api/labs/refresh (register it as
+    the product's refresh_url) to re-send today's snapshot.
+
+The users are the Beta Group testers (the Console's Beta Group plus $BETA_EMAILS). SkillCat staff on the
 internal demo are never tracked (beta.py), so they never count. A tester is
 "active" on a day with any tracked screen view, time on a screen, click or
 note — the same journey data the 11:55pm Slack report reads.
@@ -27,7 +38,7 @@ Environment:
   CRON_SECRET               bearer token the cron sends (shared with the daily report)
 """
 
-import os, json, hmac, uuid, time, hashlib, datetime, urllib.request, urllib.error
+import os, json, hmac, uuid, time, hashlib, datetime, threading, urllib.request, urllib.error
 from flask import Blueprint, request, jsonify, abort
 
 import beta
@@ -39,9 +50,10 @@ labs_bp = Blueprint("labs_console", __name__)
 
 
 # ------------------------------------------------------------------- the helper
-def labs_event(event_type, data):
+def labs_event(event_type, data, event_id=None, occurred_at=None):
     """Post one signed event. Returns {ok, status, body}, or None when the
-    Console isn't configured. Never raises."""
+    Console isn't configured. Never raises. Pass event_id to make a resend
+    idempotent (the Console ignores an id it has seen)."""
     product_id = os.environ.get("LABS_CONSOLE_PRODUCT_ID")
     secret = os.environ.get("LABS_CONSOLE_SECRET")
     if not product_id or not secret:
@@ -49,9 +61,9 @@ def labs_event(event_type, data):
     try:
         # Sign the exact bytes sent, not a re-serialized object.
         body = json.dumps({
-            "event_id": str(uuid.uuid4()),
+            "event_id": event_id or str(uuid.uuid4()),
             "event_type": event_type,
-            "occurred_at": datetime.datetime.now(UTC).isoformat(timespec="seconds"),
+            "occurred_at": occurred_at or datetime.datetime.now(UTC).isoformat(timespec="seconds"),
             "product_id": product_id,
             "data": data,
         }).encode()
@@ -172,3 +184,160 @@ def labs_metrics():
     return jsonify(console_status=sent["status"], console_response=sent["body"],
                    activity_status=activity_sent and activity_sent["status"],
                    daily=daily, activity=activity), (200 if ok else 502)
+
+
+# ------------------------------------------------------------------- Beta Group (PRD-547)
+SYNC_EVERY = 600  # seconds
+_synced = set()   # the Beta Group as of the last good read
+_lock = threading.Lock()
+
+
+def _creds():
+    pid = (os.environ.get("LABS_CONSOLE_PRODUCT_ID") or "").strip()
+    secret = (os.environ.get("LABS_CONSOLE_SECRET") or "").strip()
+    return (pid, secret) if pid and secret else None
+
+
+def _base_url():
+    endpoint = os.environ.get("LABS_CONSOLE_ENDPOINT") or DEFAULT_ENDPOINT
+    return endpoint.rstrip("/").removesuffix("/v1/events")
+
+
+def _sign(secret, ts, body):
+    return "v1=" + hmac.new(secret.encode(), f"{ts}.{body}".encode(), hashlib.sha256).hexdigest()
+
+
+def init():
+    """From beta.setup(): tables, the stored list, and the sync thread."""
+    c = beta._db()
+    c.executescript("""
+    CREATE TABLE IF NOT EXISTS beta_list (email TEXT PRIMARY KEY);
+    CREATE TABLE IF NOT EXISTS labs_meta (k TEXT PRIMARY KEY, v TEXT);
+    CREATE TABLE IF NOT EXISTS console_members (email TEXT PRIMARY KEY, registered_at TEXT,
+                                                sent INTEGER DEFAULT 0, removed_at TEXT);
+    """)
+    rows = c.execute("SELECT email FROM beta_list").fetchall()
+    c.close()
+    with _lock:
+        _synced.clear()
+        _synced.update(r["email"] for r in rows)
+    if _creds() and not os.environ.get("LABS_NO_SYNC"):
+        threading.Thread(target=_loop, name="labs-sync", daemon=True).start()
+
+
+def synced_emails():
+    with _lock:
+        return set(_synced)
+
+
+def _loop():
+    while True:
+        try:
+            sync_once()
+        except Exception as e:  # keep the last good list; try again next round
+            print("[labs] Beta Group sync failed:", e)
+        time.sleep(SYNC_EVERY)
+
+
+def sync_once():
+    """Read the Beta Group, store it, then settle memberships with the Console.
+    Raises on a failed read so the stored list is left alone."""
+    creds = _creds()
+    if not creds:
+        return
+    pid, secret = creds
+    ts = str(int(time.time()))
+    req = urllib.request.Request(
+        _base_url() + "/v1/beta-group",
+        headers={"X-Labs-Product": pid, "X-Labs-Timestamp": ts, "X-Labs-Signature": _sign(secret, ts, ""),
+                 "User-Agent": "skillcat-demo/1.0"})
+    with urllib.request.urlopen(req, timeout=15) as r:
+        data = json.loads(r.read() or b"{}")
+    emails = {str(e).strip().lower() for e in data.get("emails", []) if str(e).strip()}
+    c = beta._db()
+    c.execute("DELETE FROM beta_list")
+    c.executemany("INSERT INTO beta_list VALUES (?)", [(e,) for e in sorted(emails)])
+    c.execute("INSERT OR REPLACE INTO labs_meta VALUES ('last_sync', ?)", (beta.now_iso(),))
+    c.commit()
+    c.close()
+    with _lock:
+        _synced.clear()
+        _synced.update(emails)
+    settle()
+    print(f"[labs] Beta Group synced: {len(emails)} emails")
+
+
+def settle():
+    """Retry unsent registrations, and tell the Console about anyone who lost access."""
+    c = beta._db()
+    members = c.execute("SELECT * FROM console_members WHERE removed_at IS NULL").fetchall()
+    c.close()
+    for m in members:
+        if beta.role_for(m["email"]) != "beta":
+            _member_event(m["email"], m["registered_at"], removed=True)
+        elif not m["sent"]:
+            _member_event(m["email"], m["registered_at"])
+
+
+def _member_event(email, registered_at, removed=False):
+    # Ids derived from the registration, so a retry is a no-op at the Console
+    # but a later re-registration is a new event.
+    key = hashlib.sha256(f"{email}|{registered_at}".encode()).hexdigest()[:32]
+    if removed:
+        res = labs_event("user.removed", {"external_user_id": email, "reason": "other"},
+                         event_id=f"demo-rm-{key}")
+    else:
+        res = labs_event("user.registered", {"external_user_id": email, "email": email, "role": "tester"},
+                         event_id=f"demo-reg-{key}", occurred_at=registered_at)
+    if not res or not res["ok"]:
+        print(f"[labs] {'user.removed' if removed else 'user.registered'} not accepted, will retry:",
+              res and res["status"])
+        return
+    c = beta._db()
+    if removed:
+        c.execute("UPDATE console_members SET removed_at=? WHERE email=?", (beta.now_iso(), email))
+    else:
+        c.execute("UPDATE console_members SET sent=1 WHERE email=?", (email,))
+    c.commit()
+    c.close()
+
+
+def tester_signed_in(email):
+    """First sign-in (or first since losing access) registers them with the
+    Console, in the background so sign-in never waits on it."""
+    if not _creds():
+        return
+    c = beta._db()
+    row = c.execute("SELECT removed_at FROM console_members WHERE email=?", (email,)).fetchone()
+    if row and row["removed_at"] is None:
+        c.close()
+        return
+    at = beta.now_iso()
+    c.execute("INSERT OR REPLACE INTO console_members VALUES (?,?,0,NULL)", (email, at))
+    c.commit()
+    c.close()
+    threading.Thread(target=_member_event, args=(email, at), daemon=True).start()
+
+
+@labs_bp.post("/api/labs/refresh")
+def refresh():
+    """The Console's Update button: re-send today's snapshot (so far) now.
+    Signed by the Console with this product's secret, over the raw body."""
+    creds = _creds()
+    if not creds:
+        abort(404)
+    ts = request.headers.get("X-Labs-Timestamp", "")
+    sig = request.headers.get("X-Labs-Signature", "")
+    try:
+        fresh = abs(time.time() - int(ts)) <= 300
+    except ValueError:
+        fresh = False
+    if not fresh or not hmac.compare_digest(_sign(creds[1], ts, request.get_data(as_text=True)), sig):
+        abort(401)
+    day = datetime.datetime.now(UTC).date()
+    daily, activity = snapshot(day)
+    sent = labs_event("metrics.daily", daily)
+    labs_event("metrics.activity.daily", activity)
+    if not sent or not sent["ok"]:
+        return jsonify(error="The Console didn't accept the snapshot."), 502
+    return jsonify(ok=True, as_of_date=day.isoformat())

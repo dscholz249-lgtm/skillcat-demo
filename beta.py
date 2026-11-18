@@ -21,7 +21,7 @@ Unlike the rest of the mock, this data must survive restarts and deploys, so
 it lives in its own SQLite file on the Railway volume ($BETA_DATA_DIR, default
 /data), never in mock_platform.db, which is wiped on every boot.
 
-Environment:
+Environment (the Labs Console variables are in labs_console.py):
   INTERNAL_EMAILS     SkillCat staff allowed into the internal demo (@skillcatapp.com only)
   BETA_EMAILS         approved tester emails, comma or space separated
   BETA_REQUIRE_CODE   optional; "1" makes testers use an emailed code too
@@ -103,6 +103,8 @@ def setup(app):
                       SESSION_COOKIE_SECURE=bool(os.environ.get("RAILWAY_ENVIRONMENT")))
     init_beta_db()
     app.register_blueprint(beta_bp)
+    import labs_console  # PRD-547: the Beta Group comes from the Labs Console
+    labs_console.init()
 
 
 def now_iso():
@@ -124,7 +126,10 @@ def _list(var):
 
 
 def approved_emails():
-    return _list("BETA_EMAILS")
+    """The Beta Group as last read from the Labs Console (labs_console.py),
+    plus anyone in BETA_EMAILS for one-off access."""
+    import labs_console
+    return _list("BETA_EMAILS") | labs_console.synced_emails()
 
 
 def internal_emails():
@@ -247,6 +252,9 @@ def sign_in(email, role):
     session.permanent = True
     session["email"] = email
     session["verified"] = True
+    if role == "beta":
+        import labs_console
+        labs_console.tester_signed_in(email)  # in the background; never delays sign-in
 
 
 # ------------------------------------------------------------------- sign-in
