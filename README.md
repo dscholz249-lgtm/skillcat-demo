@@ -93,7 +93,7 @@ deploys (the mock DB doesn't). Variables:
 | `ANTHROPIC_API_KEY` | optional, for the written analysis |
 | `SESSION_SECRET` | optional; otherwise generated and kept on the volume |
 
-Cron service (schedule `55 3,4 * * *`; only the run at 11pm ET does anything):
+Cron service (schedule `55 3,4 * * *`; only the run at 11pm ET does anything, and a run that starts late, after midnight ET, reports the day that just ended). The cron service's variable must be named `CRON_SECRET`; set it as a reference, `${{skillcat-demo.CRON_SECRET}}`:
 
 ```
 sh -c 'apk add --no-cache curl >/dev/null 2>&1; curl -fsS -X POST -H "authorization: Bearer $CRON_SECRET" "https://<demo-domain>/api/beta/daily-report"'

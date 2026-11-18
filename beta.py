@@ -674,9 +674,14 @@ def daily_report():
     day = now.date()
     if request.args.get("day"):
         day = datetime.date.fromisoformat(request.args["day"])
+    elif not force and now.hour == 0:
+        # Railway can start the 11:55pm run a few minutes late (Nov 18 started
+        # at 00:01). A run in the 12am hour reports the day that just ended;
+        # the "already sent" check below stops a double send.
+        day = day - datetime.timedelta(days=1)
     elif not force and now.hour != 23:
         # Railway cron runs in UTC; two schedules cover EST and EDT and only the
-        # one that lands at 11pm ET does anything.
+        # one that lands at 11pm ET (or just after midnight, above) does anything.
         return jsonify(skipped="not 11pm ET", et=now.isoformat(timespec="minutes"))
     c = _db()
     done = c.execute("SELECT 1 FROM reports WHERE day=?", (day.isoformat(),)).fetchone()
