@@ -25,10 +25,12 @@ from flask import Flask, request, jsonify, Response, abort
 
 from portfolio_mock import (portfolio_bp, create_portfolio_tables, seed_portfolio)
 import beta
+from labs_console import labs_bp
 
 APP = Flask(__name__)
 APP.register_blueprint(portfolio_bp)
 beta.setup(APP)  # PRD-543: sign-in, /beta, notes, tracking, daily report
+APP.register_blueprint(labs_bp)  # PRD-539: daily snapshot to the Labs Console
 
 
 # Mock-only CORS: lets a separately-hosted mini-app call the API cross-origin.

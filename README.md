@@ -99,6 +99,38 @@ Cron service (schedule `55 3,4 * * *`; only the run at 11pm ET does anything):
 sh -c 'apk add --no-cache curl >/dev/null 2>&1; curl -fsS -X POST -H "authorization: Bearer $CRON_SECRET" "https://<demo-domain>/api/beta/daily-report"'
 ```
 
+## Labs Console (PRD-539)
+
+Registered in the Labs Console as **Beta Demo Dashboard**. Once a day a cron
+calls `POST /api/internal/labs-metrics` (bearer `CRON_SECRET`), which posts
+yesterday's snapshot (a UTC day) as two signed events: `metrics.daily` and
+`metrics.activity.daily`. No user events: the Console has no user model for
+this product. The code is in `labs_console.py`.
+
+- **Users** are the Beta Group testers in `BETA_EMAILS`. Staff are never
+  tracked, so they never count. The breakdown is Active to date / Not yet active.
+- **Active** means a tester with any tracked screen view, time on a screen,
+  click or note that day. DAU, MAU, last active and retention (d1/w1/m1/m6,
+  from the first tracked day) are all built on that.
+- **Activity** is the day's Screen views, Clicks, Notes, Sessions and Minutes
+  on screens, sent as explicit zeros on a quiet day.
+- Only counts are sent, never note text or click labels. With the variables
+  unset, the route does nothing; every Console failure is swallowed.
+- `?dry_run=1` shows the payloads without sending; `?day=YYYY-MM-DD` sends
+  another day.
+
+| Variable | |
+|---|---|
+| `LABS_CONSOLE_PRODUCT_ID` | `8fd67d58-0705-4ee3-851f-8bf42254a781` |
+| `LABS_CONSOLE_SECRET` | from the Console (shown once; rotate on the product page if lost). Never commit it |
+| `LABS_CONSOLE_ENDPOINT` | optional; defaults to the production Console |
+
+Cron service: image `curlimages/curl`, schedule `0 6 * * *` (UTC), start command
+
+```
+sh -c 'curl -fsS -X POST -H "authorization: Bearer $CRON_SECRET" "https://<demo-domain>/api/internal/labs-metrics"'
+```
+
 ## Deploy to Railway
 
 The repo includes `requirements.txt` and a `Procfile` — Railway/Nixpacks
