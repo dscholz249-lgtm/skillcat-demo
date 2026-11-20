@@ -1488,11 +1488,6 @@
 
     <div class="nav-label">Labs Products</div>
     <nav class="nav-group">
-      <a class="nav-link" href="https://skillcat-assessments-production.up.railway.app/" target="_blank" rel="noopener">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg>
-        Assessments
-        <svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-      </a>
       <a class="nav-link" href="https://technician-logbook-production.up.railway.app/" target="_blank" rel="noopener">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>
         Logbook
@@ -1586,11 +1581,10 @@
             </div>
           </div>
           <div class="un-card un-ares" id="unAresCard">
-            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--violet)"></span><span class="un-card-title">Assessment Results</span></div><a class="btn btn-primary btn-sm un-ext" href="https://skillcat-assessments-production.up.railway.app/admin" target="_blank" rel="noopener" title="Opens Assessments, where you pick the assessment and who gets it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Send Assessment</a></div>
-            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Andre Lewis<span class="un-tag">Candidate</span></span><span class="un-ar-what">HVAC Pre-Hire</span><span class="un-ar-date">Jun 1</span><span class="un-score un-sc-hi">82%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
-            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Tyler Brooks<span class="un-tag">Candidate</span></span><span class="un-ar-what">Maintenance Pre-Hire</span><span class="un-ar-date">May 30</span><span class="un-score un-sc-lo">54%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
-            <a class="un-ares-row" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener" title="Opens this result in Assessments"><span class="un-ar-who">Nicole Anderson</span><span class="un-ar-what">TechBuilder Placement · Recommendation - Level 1</span><span class="un-ar-date">May 29</span><span class="un-score un-sc-mid">61%</span><span class="un-ar-view">View<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg></span></a>
-            <a class="un-view-more" href="https://skillcat-assessments-production.up.railway.app/admin/assessments" target="_blank" rel="noopener">View More<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+            <div class="un-card-head"><div class="un-card-head-left"><span class="un-dot" style="background:var(--violet)"></span><span class="un-card-title">Assessment Results</span></div></div>
+            <div class="un-ares-row"><span class="un-ar-who">Andre Lewis<span class="un-tag">Candidate</span></span><span class="un-ar-what">HVAC Pre-Hire</span><span class="un-ar-date">Jun 1</span><span class="un-score un-sc-hi">82%</span></div>
+            <div class="un-ares-row"><span class="un-ar-who">Tyler Brooks<span class="un-tag">Candidate</span></span><span class="un-ar-what">Maintenance Pre-Hire</span><span class="un-ar-date">May 30</span><span class="un-score un-sc-lo">54%</span></div>
+            <div class="un-ares-row"><span class="un-ar-who">Nicole Anderson</span><span class="un-ar-what">TechBuilder Placement · Recommendation - Level 1</span><span class="un-ar-date">May 29</span><span class="un-score un-sc-mid">61%</span></div>
           </div>
         </section>
 
@@ -8927,6 +8921,7 @@ a.un-ext, a.un-ext:hover, .un-ares-row, .un-view-more { text-decoration: none; }
 
 .un-ares-row { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1.5fr) auto auto auto; gap: 12px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border-soft); color: var(--text); text-decoration: none; }
 .un-ares-row:hover { background: #17171b; }
+div.un-ares-row:hover { background: none; } /* results stay in the demo: rows aren't links */
 .un-ares-row:hover .un-ar-view { color: var(--text); border-color: var(--text-faint); }
 .un-ar-who { font-weight: 600; font-size: 13px; min-width: 0; }
 .un-ar-what { font-size: 12px; color: var(--text-dim); min-width: 0; }
@@ -9032,7 +9027,6 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
 
   var TODAY = '2026-06-01', DAY = 864e5, SPAN = 365;
   var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var ASSESS = 'https://skillcat-assessments-production.up.railway.app/admin/assessments';
   var X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var EXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 17L17 7M9 7h8v8"/></svg>';
   var $ = function (id) { return document.getElementById(id); };
@@ -9707,7 +9701,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   var REPORT = (function () { var r = { o: 29, n: 0, len: 30, kind: '30d' }; return { cur: metrics(SEATS.roster, r).certs, prev: metrics(SEATS.roster, prevRange(r)).certs }; })();
   // Each task carries "b": the facts the briefing sentence is built from.
   var TASKS = [
-    { id: 't1', ic: 'violet', who: "Review Michael Chen's field assessment", what: 'Capacitor Testing · 4 photos submitted May 31', act: { label: 'Review', kind: 'external', primary: true },
+    { id: 't1', ic: 'violet', who: "Review Michael Chen's field assessment", what: 'Capacitor Testing · 4 photos submitted May 31', act: { label: 'Review', kind: 'page', page: 'reviews', primary: true },
       b: { type: 'review', name: 'Michael Chen', item: 'Capacitor Testing', date: 'May 31' } },
     { id: 't2', ic: 'red', who: 'Nudge David Kim', what: 'Overdue on Safety Onboarding · 90 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to David Kim' },
       b: { type: 'nudge', name: 'David Kim', days: 90 } },
@@ -9715,7 +9709,7 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
       b: { type: 'nudge', name: 'Daniel Garcia', days: 60 } },
     { id: 't4', ic: 'red', who: 'Nudge Amanda Lee', what: 'HVAC Basics at 21%, due May 5 · 45 days since last access', act: { label: 'Nudge', kind: 'inplace', primary: true, done: 'Nudge sent to Amanda Lee' },
       b: { type: 'nudge', name: 'Amanda Lee', days: 45 } },
-    { id: 't5', ic: 'violet', who: 'Andre Lewis finished the HVAC Pre-Hire <span class="un-tag">Candidate</span>', what: 'Scored <span class="un-score un-sc-hi">82%</span> · today', act: { label: 'Results', kind: 'external' },
+    { id: 't5', ic: 'violet', who: 'Andre Lewis finished the HVAC Pre-Hire <span class="un-tag">Candidate</span>', what: 'Scored <span class="un-score un-sc-hi">82%</span> · today', act: { label: 'Mark seen', kind: 'inplace', done: "Andre Lewis's result marked as seen" },
       b: { type: 'result', name: 'Andre Lewis', item: 'HVAC Pre-Hire', score: '82%' } },
     { id: 't6', ic: 'amber', who: "Move Olivia Davis's seat", what: 'Never logged in · ' + (BENCH ? BENCH + (BENCH === 1 ? ' person is' : ' people are') + ' waiting on the bench' : 'nobody is waiting on the bench'), act: { label: 'Reassign', kind: 'page', page: 'seats' },
       b: { type: 'seat', name: 'Olivia Davis', bench: BENCH } },
@@ -9770,7 +9764,6 @@ th .un-arr { font-size: 10px; color: var(--orange-bright); margin-left: 4px; }
   function strip(s) { return String(s).replace(/<[^>]+>/g, ''); }
   function actionHtml(t) {
     var cls = 'btn btn-sm ' + (t.act.primary ? 'btn-primary' : 'btn-ghost');
-    if (t.act.kind === 'external') return '<a class="' + cls + ' un-ext" href="' + ASSESS + '" target="_blank" rel="noopener">' + t.act.label + EXT + '</a>';
     return '<button class="' + cls + '" data-un-act="' + t.id + '">' + t.act.label + '</button>';
   }
   function renderTasks() {
